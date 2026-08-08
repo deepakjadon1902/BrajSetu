@@ -5,6 +5,7 @@ import { ContactActions } from "@/components/ContactActions";
 import { MapPlaceholder } from "@/components/MapPlaceholder";
 import { PropertyCard } from "@/components/PropertyCard";
 import { SmartImage } from "@/components/SmartImage";
+import type { Property } from "@/types/property";
 import { formatArea, formatPrice, getPropertyById, getSimilarProperties } from "@/lib/api";
 
 export const Route = createFileRoute("/property/$propertyId")({
@@ -83,7 +84,7 @@ function PropertyDetailPage() {
             />
           </button>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-1">
-            {property.images.slice(1, 3).map((image, i) => (
+            {property.images.slice(1, 3).map((image: string, i: number) => (
               <button
                 key={i}
                 type="button"
@@ -130,7 +131,7 @@ function PropertyDetailPage() {
                   Amenities
                 </h3>
                 <ul className="mt-4 flex flex-wrap gap-2">
-                  {property.amenities.map((amenity) => (
+                  {property.amenities.map((amenity: string) => (
                     <li
                       key={amenity}
                       className="flex items-center gap-2 rounded-full bg-ice px-4 py-2 text-xs font-medium text-navy"
@@ -183,7 +184,7 @@ function PropertyDetailPage() {
             Similar listings
           </h2>
           <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {similar.map((item) => (
+            {similar.map((item: Property) => (
               <PropertyCard key={item.id} property={item} />
             ))}
           </div>
