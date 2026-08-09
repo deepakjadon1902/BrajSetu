@@ -21,6 +21,7 @@ import { Route as RentRouteImport } from './routes/rent'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SaleRouteImport } from './routes/sale'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
 import { Route as PropertyPropertyIdRouteImport } from './routes/property.$propertyId'
 
@@ -84,6 +85,11 @@ const TermsRoute = TermsRouteImport.update({
   path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminLoginRoute = AdminLoginRouteImport.update({
   id: '/admin/login',
   path: '/admin/login',
@@ -110,6 +116,7 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/admin/login': typeof AdminLoginRoute
   '/property/$propertyId': typeof PropertyPropertyIdRoute
+  '/admin/': typeof AdminIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -126,6 +133,7 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/admin/login': typeof AdminLoginRoute
   '/property/$propertyId': typeof PropertyPropertyIdRoute
+  '/admin': typeof AdminIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -143,6 +151,7 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/admin/login': typeof AdminLoginRoute
   '/property/$propertyId': typeof PropertyPropertyIdRoute
+  '/admin/': typeof AdminIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -161,6 +170,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/admin/login'
     | '/property/$propertyId'
+    | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -177,6 +187,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/admin/login'
     | '/property/$propertyId'
+    | '/admin'
   id:
     | '__root__'
     | '/'
@@ -193,6 +204,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/admin/login'
     | '/property/$propertyId'
+    | '/admin/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -210,6 +222,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   AdminLoginRoute: typeof AdminLoginRoute
   PropertyPropertyIdRoute: typeof PropertyPropertyIdRoute
+  AdminIndexRoute: typeof AdminIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -298,6 +311,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/': {
+      id: '/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/login': {
       id: '/admin/login'
       path: '/admin/login'
@@ -330,6 +350,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   AdminLoginRoute: AdminLoginRoute,
   PropertyPropertyIdRoute: PropertyPropertyIdRoute,
+  AdminIndexRoute: AdminIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
