@@ -28,7 +28,7 @@ export interface AppUser {
   role: UserRole;
   status: "Active" | "Suspended";
   createdAt: string;
-  resetToken?: string;
+  resetToken?: string | undefined;
 }
 
 export interface Enquiry {
