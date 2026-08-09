@@ -13,11 +13,20 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as BuyRouteImport } from './routes/buy'
 import { Route as ContactRouteImport } from './routes/contact'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as RegisterRouteImport } from './routes/register'
 import { Route as RentRouteImport } from './routes/rent'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SaleRouteImport } from './routes/sale'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as AdminEnquiriesRouteImport } from './routes/admin/enquiries'
+import { Route as AdminLoginRouteImport } from './routes/admin/login'
+import { Route as AdminNewsRouteImport } from './routes/admin/news'
+import { Route as AdminPropertiesRouteImport } from './routes/admin/properties'
+import { Route as AdminUsersRouteImport } from './routes/admin/users'
 import { Route as PropertyPropertyIdRouteImport } from './routes/property.$propertyId'
 
 const IndexRoute = IndexRouteImport.update({
@@ -40,6 +49,11 @@ const ContactRoute = ContactRouteImport.update({
   path: '/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -50,9 +64,19 @@ const PrivacyRoute = PrivacyRouteImport.update({
   path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RentRoute = RentRouteImport.update({
   id: '/rent',
   path: '/rent',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SaleRoute = SaleRouteImport.update({
@@ -63,6 +87,36 @@ const SaleRoute = SaleRouteImport.update({
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminEnquiriesRoute = AdminEnquiriesRouteImport.update({
+  id: '/admin/enquiries',
+  path: '/admin/enquiries',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminLoginRoute = AdminLoginRouteImport.update({
+  id: '/admin/login',
+  path: '/admin/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminNewsRoute = AdminNewsRouteImport.update({
+  id: '/admin/news',
+  path: '/admin/news',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminPropertiesRoute = AdminPropertiesRouteImport.update({
+  id: '/admin/properties',
+  path: '/admin/properties',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminUsersRoute = AdminUsersRouteImport.update({
+  id: '/admin/users',
+  path: '/admin/users',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PropertyPropertyIdRoute = PropertyPropertyIdRouteImport.update({
@@ -76,24 +130,42 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/buy': typeof BuyRoute
   '/contact': typeof ContactRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
+  '/register': typeof RegisterRoute
   '/rent': typeof RentRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/sale': typeof SaleRoute
   '/terms': typeof TermsRoute
+  '/admin/enquiries': typeof AdminEnquiriesRoute
+  '/admin/login': typeof AdminLoginRoute
+  '/admin/news': typeof AdminNewsRoute
+  '/admin/properties': typeof AdminPropertiesRoute
+  '/admin/users': typeof AdminUsersRoute
   '/property/$propertyId': typeof PropertyPropertyIdRoute
+  '/admin/': typeof AdminIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/buy': typeof BuyRoute
   '/contact': typeof ContactRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
+  '/register': typeof RegisterRoute
   '/rent': typeof RentRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/sale': typeof SaleRoute
   '/terms': typeof TermsRoute
+  '/admin/enquiries': typeof AdminEnquiriesRoute
+  '/admin/login': typeof AdminLoginRoute
+  '/admin/news': typeof AdminNewsRoute
+  '/admin/properties': typeof AdminPropertiesRoute
+  '/admin/users': typeof AdminUsersRoute
   '/property/$propertyId': typeof PropertyPropertyIdRoute
+  '/admin': typeof AdminIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -101,12 +173,21 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/buy': typeof BuyRoute
   '/contact': typeof ContactRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
+  '/register': typeof RegisterRoute
   '/rent': typeof RentRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/sale': typeof SaleRoute
   '/terms': typeof TermsRoute
+  '/admin/enquiries': typeof AdminEnquiriesRoute
+  '/admin/login': typeof AdminLoginRoute
+  '/admin/news': typeof AdminNewsRoute
+  '/admin/properties': typeof AdminPropertiesRoute
+  '/admin/users': typeof AdminUsersRoute
   '/property/$propertyId': typeof PropertyPropertyIdRoute
+  '/admin/': typeof AdminIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -115,36 +196,63 @@ export interface FileRouteTypes {
     | '/about'
     | '/buy'
     | '/contact'
+    | '/forgot-password'
     | '/login'
     | '/privacy'
+    | '/register'
     | '/rent'
+    | '/reset-password'
     | '/sale'
     | '/terms'
+    | '/admin/enquiries'
+    | '/admin/login'
+    | '/admin/news'
+    | '/admin/properties'
+    | '/admin/users'
     | '/property/$propertyId'
+    | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/about'
     | '/buy'
     | '/contact'
+    | '/forgot-password'
     | '/login'
     | '/privacy'
+    | '/register'
     | '/rent'
+    | '/reset-password'
     | '/sale'
     | '/terms'
+    | '/admin/enquiries'
+    | '/admin/login'
+    | '/admin/news'
+    | '/admin/properties'
+    | '/admin/users'
     | '/property/$propertyId'
+    | '/admin'
   id:
     | '__root__'
     | '/'
     | '/about'
     | '/buy'
     | '/contact'
+    | '/forgot-password'
     | '/login'
     | '/privacy'
+    | '/register'
     | '/rent'
+    | '/reset-password'
     | '/sale'
     | '/terms'
+    | '/admin/enquiries'
+    | '/admin/login'
+    | '/admin/news'
+    | '/admin/properties'
+    | '/admin/users'
     | '/property/$propertyId'
+    | '/admin/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -152,12 +260,21 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   BuyRoute: typeof BuyRoute
   ContactRoute: typeof ContactRoute
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   PrivacyRoute: typeof PrivacyRoute
+  RegisterRoute: typeof RegisterRoute
   RentRoute: typeof RentRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   SaleRoute: typeof SaleRoute
   TermsRoute: typeof TermsRoute
+  AdminEnquiriesRoute: typeof AdminEnquiriesRoute
+  AdminLoginRoute: typeof AdminLoginRoute
+  AdminNewsRoute: typeof AdminNewsRoute
+  AdminPropertiesRoute: typeof AdminPropertiesRoute
+  AdminUsersRoute: typeof AdminUsersRoute
   PropertyPropertyIdRoute: typeof PropertyPropertyIdRoute
+  AdminIndexRoute: typeof AdminIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -190,6 +307,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ContactRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -204,11 +328,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/rent': {
       id: '/rent'
       path: '/rent'
       fullPath: '/rent'
       preLoaderRoute: typeof RentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sale': {
@@ -223,6 +361,48 @@ declare module '@tanstack/react-router' {
       path: '/terms'
       fullPath: '/terms'
       preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/enquiries': {
+      id: '/admin/enquiries'
+      path: '/admin/enquiries'
+      fullPath: '/admin/enquiries'
+      preLoaderRoute: typeof AdminEnquiriesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/login': {
+      id: '/admin/login'
+      path: '/admin/login'
+      fullPath: '/admin/login'
+      preLoaderRoute: typeof AdminLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/news': {
+      id: '/admin/news'
+      path: '/admin/news'
+      fullPath: '/admin/news'
+      preLoaderRoute: typeof AdminNewsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/properties': {
+      id: '/admin/properties'
+      path: '/admin/properties'
+      fullPath: '/admin/properties'
+      preLoaderRoute: typeof AdminPropertiesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/users': {
+      id: '/admin/users'
+      path: '/admin/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminUsersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/property/$propertyId': {
@@ -240,12 +420,21 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   BuyRoute: BuyRoute,
   ContactRoute: ContactRoute,
+  ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   PrivacyRoute: PrivacyRoute,
+  RegisterRoute: RegisterRoute,
   RentRoute: RentRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   SaleRoute: SaleRoute,
   TermsRoute: TermsRoute,
+  AdminEnquiriesRoute: AdminEnquiriesRoute,
+  AdminLoginRoute: AdminLoginRoute,
+  AdminNewsRoute: AdminNewsRoute,
+  AdminPropertiesRoute: AdminPropertiesRoute,
+  AdminUsersRoute: AdminUsersRoute,
   PropertyPropertyIdRoute: PropertyPropertyIdRoute,
+  AdminIndexRoute: AdminIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

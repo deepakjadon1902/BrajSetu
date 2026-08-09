@@ -1,5 +1,15 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ShieldCheck } from "lucide-react";
+import { useState, type FormEvent } from "react";
+import { toast } from "sonner";
+
+import {
+  AuthLayout,
+  Field,
+  inputClass,
+  primaryButtonClass,
+} from "@/components/auth/AuthLayout";
+import { useStore } from "@/lib/mock-store";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -8,7 +18,7 @@ export const Route = createFileRoute("/login")({
       {
         name: "description",
         content:
-          "Sign in to PropVista with Google to save searches, shortlist properties and track your enquiries.",
+          "Sign in to PropVista to save searches, shortlist properties and track your enquiries.",
       },
       { property: "og:title", content: "Sign in to PropVista" },
       {
@@ -44,42 +54,38 @@ function GoogleMark() {
 }
 
 function LoginPage() {
+  const { login } = useStore();
+  const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | undefined>();
+
+  function onSubmit(event: FormEvent) {
+    event.preventDefault();
+    if (!email.trim() || !password) {
+      setError("Enter your email and password.");
+      return;
+    }
+    const result = login(email, password);
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
+    toast.success("Welcome back to PropVista.");
+    navigate({ to: "/" });
+  }
+
   return (
-    <div className="flex min-h-[calc(100vh-5rem)] items-center bg-ice py-14">
-      <div className="pv-container">
-        <div className="mx-auto w-full max-w-md rounded-3xl bg-card p-7 shadow-[var(--shadow-lift)] sm:p-10">
-          <div className="flex items-center gap-2">
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-navy text-sm font-extrabold text-background">
-              PV
-            </span>
-            <span className="text-lg font-extrabold tracking-tight text-navy">
-              PropVista
-            </span>
-          </div>
-
-          <h1 className="mt-8 text-2xl font-extrabold tracking-tight text-navy sm:text-3xl">
-            Sign in to continue
-          </h1>
-          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-            Save searches, shortlist properties and pick up enquiries where you left
-            them. One account, no passwords to remember.
-          </p>
-
-          <button
-            type="button"
-            className="pv-tap mt-8 flex w-full items-center justify-center gap-3 rounded-full border border-border bg-background px-6 text-sm font-semibold text-navy shadow-[var(--shadow-soft)] transition-transform duration-200 hover:scale-[1.01]"
-          >
-            <GoogleMark />
-            Continue with Google
-          </button>
-
-          <p className="mt-6 flex items-start gap-2 text-xs leading-relaxed text-muted-foreground">
-            <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-gold-deep" />
-            We only read your name and email address. We never post anything on your
-            behalf.
-          </p>
-
-          <p className="mt-8 border-t border-border pt-6 text-xs text-muted-foreground">
+    <AuthLayout
+      title="Sign in to continue"
+      subtitle="Save searches, shortlist properties and pick up enquiries where you left them."
+      footer={
+        <>
+          New to PropVista?{" "}
+          <Link to="/register" className="font-semibold text-navy hover:text-gold-deep">
+            Create an account
+          </Link>
+          <p className="mt-4 text-xs">
             By continuing you agree to our{" "}
             <Link to="/terms" className="font-semibold text-navy hover:text-gold-deep">
               Terms
@@ -90,8 +96,62 @@ function LoginPage() {
             </Link>
             .
           </p>
+        </>
+      }
+    >
+      <form onSubmit={onSubmit} className="space-y-4">
+        <Field label="Email address">
+          <input
+            type="email"
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@example.com"
+            className={inputClass}
+          />
+        </Field>
+        <Field label="Password" error={error}>
+          <input
+            type="password"
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="••••••••"
+            className={inputClass}
+          />
+        </Field>
+
+        <div className="flex justify-end">
+          <Link
+            to="/forgot-password"
+            className="text-xs font-semibold text-navy hover:text-gold-deep"
+          >
+            Forgot password?
+          </Link>
         </div>
+
+        <button type="submit" className={primaryButtonClass}>
+          Sign in
+        </button>
+      </form>
+
+      <div className="my-6 flex items-center gap-3 text-xs uppercase tracking-wide text-muted-foreground">
+        <span className="h-px flex-1 bg-border" /> or <span className="h-px flex-1 bg-border" />
       </div>
-    </div>
+
+      <button
+        type="button"
+        onClick={() => toast("Google sign-in is not wired up in this demo.")}
+        className="pv-tap flex w-full items-center justify-center gap-3 rounded-full border border-border bg-background px-6 py-3.5 text-sm font-semibold text-navy shadow-[var(--shadow-soft)] transition-transform duration-200 hover:scale-[1.01]"
+      >
+        <GoogleMark />
+        Continue with Google
+      </button>
+
+      <p className="mt-6 flex items-start gap-2 text-xs leading-relaxed text-muted-foreground">
+        <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-gold-deep" />
+        Demo account: riya@example.com / Riya@1234
+      </p>
+    </AuthLayout>
   );
 }
