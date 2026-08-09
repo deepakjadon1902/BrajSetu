@@ -18,6 +18,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as RentRouteImport } from './routes/rent'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SaleRouteImport } from './routes/sale'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as PropertyPropertyIdRouteImport } from './routes/property.$propertyId'
@@ -67,6 +68,11 @@ const RentRoute = RentRouteImport.update({
   path: '/rent',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SaleRoute = SaleRouteImport.update({
   id: '/sale',
   path: '/sale',
@@ -93,6 +99,7 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/register': typeof RegisterRoute
   '/rent': typeof RentRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/sale': typeof SaleRoute
   '/terms': typeof TermsRoute
   '/property/$propertyId': typeof PropertyPropertyIdRoute
@@ -107,6 +114,7 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/register': typeof RegisterRoute
   '/rent': typeof RentRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/sale': typeof SaleRoute
   '/terms': typeof TermsRoute
   '/property/$propertyId': typeof PropertyPropertyIdRoute
@@ -122,6 +130,7 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/register': typeof RegisterRoute
   '/rent': typeof RentRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/sale': typeof SaleRoute
   '/terms': typeof TermsRoute
   '/property/$propertyId': typeof PropertyPropertyIdRoute
@@ -138,6 +147,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/register'
     | '/rent'
+    | '/reset-password'
     | '/sale'
     | '/terms'
     | '/property/$propertyId'
@@ -152,6 +162,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/register'
     | '/rent'
+    | '/reset-password'
     | '/sale'
     | '/terms'
     | '/property/$propertyId'
@@ -166,6 +177,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/register'
     | '/rent'
+    | '/reset-password'
     | '/sale'
     | '/terms'
     | '/property/$propertyId'
@@ -181,6 +193,7 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   RegisterRoute: typeof RegisterRoute
   RentRoute: typeof RentRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   SaleRoute: typeof SaleRoute
   TermsRoute: typeof TermsRoute
   PropertyPropertyIdRoute: typeof PropertyPropertyIdRoute
@@ -251,6 +264,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RentRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sale': {
       id: '/sale'
       path: '/sale'
@@ -285,6 +305,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   RegisterRoute: RegisterRoute,
   RentRoute: RentRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   SaleRoute: SaleRoute,
   TermsRoute: TermsRoute,
   PropertyPropertyIdRoute: PropertyPropertyIdRoute,
