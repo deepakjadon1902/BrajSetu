@@ -30,12 +30,12 @@ export const Route = createFileRoute("/register")({
 });
 
 interface Errors {
-  name?: string;
-  email?: string;
-  phone?: string;
-  password?: string;
-  confirm?: string;
-  terms?: string;
+  name?: string | undefined;
+  email?: string | undefined;
+  phone?: string | undefined;
+  password?: string | undefined;
+  confirm?: string | undefined;
+  terms?: string | undefined;
 }
 
 function RegisterPage() {

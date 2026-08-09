@@ -15,6 +15,7 @@ import { Route as BuyRouteImport } from './routes/buy'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as RegisterRouteImport } from './routes/register'
 import { Route as RentRouteImport } from './routes/rent'
 import { Route as SaleRouteImport } from './routes/sale'
 import { Route as TermsRouteImport } from './routes/terms'
@@ -50,6 +51,11 @@ const PrivacyRoute = PrivacyRouteImport.update({
   path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RentRoute = RentRouteImport.update({
   id: '/rent',
   path: '/rent',
@@ -78,6 +84,7 @@ export interface FileRoutesByFullPath {
   '/contact': typeof ContactRoute
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
+  '/register': typeof RegisterRoute
   '/rent': typeof RentRoute
   '/sale': typeof SaleRoute
   '/terms': typeof TermsRoute
@@ -90,6 +97,7 @@ export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
+  '/register': typeof RegisterRoute
   '/rent': typeof RentRoute
   '/sale': typeof SaleRoute
   '/terms': typeof TermsRoute
@@ -103,6 +111,7 @@ export interface FileRoutesById {
   '/contact': typeof ContactRoute
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
+  '/register': typeof RegisterRoute
   '/rent': typeof RentRoute
   '/sale': typeof SaleRoute
   '/terms': typeof TermsRoute
@@ -117,6 +126,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/login'
     | '/privacy'
+    | '/register'
     | '/rent'
     | '/sale'
     | '/terms'
@@ -129,6 +139,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/login'
     | '/privacy'
+    | '/register'
     | '/rent'
     | '/sale'
     | '/terms'
@@ -141,6 +152,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/login'
     | '/privacy'
+    | '/register'
     | '/rent'
     | '/sale'
     | '/terms'
@@ -154,6 +166,7 @@ export interface RootRouteChildren {
   ContactRoute: typeof ContactRoute
   LoginRoute: typeof LoginRoute
   PrivacyRoute: typeof PrivacyRoute
+  RegisterRoute: typeof RegisterRoute
   RentRoute: typeof RentRoute
   SaleRoute: typeof SaleRoute
   TermsRoute: typeof TermsRoute
@@ -204,6 +217,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/rent': {
       id: '/rent'
       path: '/rent'
@@ -242,6 +262,7 @@ const rootRouteChildren: RootRouteChildren = {
   ContactRoute: ContactRoute,
   LoginRoute: LoginRoute,
   PrivacyRoute: PrivacyRoute,
+  RegisterRoute: RegisterRoute,
   RentRoute: RentRoute,
   SaleRoute: SaleRoute,
   TermsRoute: TermsRoute,
