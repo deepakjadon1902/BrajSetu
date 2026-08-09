@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useStore } from "@/lib/mock-store";
 
 const links = [
   { to: "/buy", label: "Buy" },
@@ -13,6 +14,7 @@ const links = [
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
+  const { currentUser, logout } = useStore();
 
   return (
     <header className="sticky top-0 z-50 border-b border-border/70 bg-background/85 backdrop-blur-md">
@@ -41,12 +43,27 @@ export function Navbar() {
         </ul>
 
         <div className="flex items-center justify-end gap-2">
-          <Link
-            to="/login"
-            className="hidden rounded-full px-4 py-2 text-sm font-medium text-navy-soft transition-colors hover:text-navy sm:inline-flex"
-          >
-            Sign in
-          </Link>
+          {currentUser ? (
+            <>
+              <span className="hidden max-w-[10rem] truncate text-sm font-medium text-navy sm:inline">
+                {currentUser.name}
+              </span>
+              <button
+                type="button"
+                onClick={logout}
+                className="hidden rounded-full px-4 py-2 text-sm font-medium text-navy-soft transition-colors hover:text-navy sm:inline-flex"
+              >
+                Sign out
+              </button>
+            </>
+          ) : (
+            <Link
+              to="/login"
+              className="hidden rounded-full px-4 py-2 text-sm font-medium text-navy-soft transition-colors hover:text-navy sm:inline-flex"
+            >
+              Sign in
+            </Link>
+          )}
           <Link
             to="/contact"
             className="hidden items-center rounded-full bg-navy px-5 py-2.5 text-sm font-semibold text-background transition-transform duration-200 hover:scale-[1.02] sm:inline-flex"
