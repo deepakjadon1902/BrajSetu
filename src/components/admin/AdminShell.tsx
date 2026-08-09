@@ -48,7 +48,7 @@ export function AdminShell({
 
   if (!hydrated || !adminUser) {
     return (
-      <div className="grid min-h-screen place-items-center bg-charcoal text-sm text-background/70">
+      <div className="grid min-h-screen place-items-center bg-navy text-sm text-background/70">
         Checking your admin session…
       </div>
     );
@@ -58,13 +58,13 @@ export function AdminShell({
     <div className="min-h-screen bg-smoke">
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-charcoal transition-transform duration-300 lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-navy transition-transform duration-300 lg:translate-x-0",
           open ? "translate-x-0" : "-translate-x-full",
         )}
       >
         <div className="flex h-16 items-center justify-between px-5">
           <div className="flex items-center gap-2">
-            <span className="grid h-9 w-9 place-items-center rounded-xl bg-gold text-sm font-extrabold text-charcoal">
+            <span className="grid h-9 w-9 place-items-center rounded-xl bg-gold text-sm font-extrabold text-navy">
               PV
             </span>
             <span className="text-sm font-bold tracking-tight text-background">
@@ -124,7 +124,7 @@ export function AdminShell({
           type="button"
           aria-label="Close menu overlay"
           onClick={() => setOpen(false)}
-          className="fixed inset-0 z-40 bg-charcoal/50 lg:hidden"
+          className="fixed inset-0 z-40 bg-navy/50 lg:hidden"
         />
       ) : null}
 
