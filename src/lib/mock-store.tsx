@@ -51,6 +51,15 @@ export interface SiteSettings {
   contactEmail: string;
   contactPhone: string;
   address: string;
+  ogTitle: string;
+  ogDescription: string;
+  ogImage: string;
+  twitterCard: "summary" | "summary_large_image";
+  twitterHandle: string;
+  socialFacebook: string;
+  socialInstagram: string;
+  socialLinkedin: string;
+  socialX: string;
   announcementEnabled: boolean;
   announcementMessage: string;
   announcementTone: "navy" | "gold";
@@ -67,14 +76,51 @@ export const defaultSettings: SiteSettings = {
   contactEmail: "hello@propvista.in",
   contactPhone: "+91 90000 00000",
   address: "4th Floor, Meridian House, Baner Road, Pune 411045",
+  ogTitle: "PropVista | Premium Property Marketplace",
+  ogDescription:
+    "Buy, rent and sell verified property with a boutique advisory team.",
+  ogImage: "",
+  twitterCard: "summary_large_image",
+  twitterHandle: "@propvista",
+  socialFacebook: "https://facebook.com/propvista",
+  socialInstagram: "https://instagram.com/propvista",
+  socialLinkedin: "https://linkedin.com/company/propvista",
+  socialX: "https://x.com/propvista",
   announcementEnabled: true,
   announcementMessage:
     "New this week: 24 verified listings added across Pune, Mumbai and Goa.",
   announcementTone: "navy",
 };
 
+export type ActivityArea =
+  | "Settings"
+  | "Properties"
+  | "Users"
+  | "Enquiries"
+  | "News"
+  | "Auth";
+
+export interface ActivityEntry {
+  id: string;
+  actor: string;
+  area: ActivityArea;
+  action: string;
+  detail: string;
+  createdAt: string;
+}
+
+export interface SettingsVersion {
+  id: string;
+  actor: string;
+  summary: string;
+  createdAt: string;
+  settings: SiteSettings;
+}
+
 interface StoreShape {
   settings: SiteSettings;
+  activity: ActivityEntry[];
+  settingsHistory: SettingsVersion[];
   users: AppUser[];
   properties: Property[];
   news: NewsArticle[];
@@ -160,6 +206,8 @@ function seedState(): StoreShape {
       },
     ],
     settings: defaultSettings,
+    activity: [],
+    settingsHistory: [],
     sessionUserId: null,
     adminSessionId: null,
   };
@@ -176,6 +224,11 @@ function loadState(): StoreShape {
       ...base,
       ...parsed,
       settings: { ...base.settings, ...(parsed.settings ?? {}) },
+      activity: parsed.activity ?? [],
+      settingsHistory: (parsed.settingsHistory ?? []).map((v) => ({
+        ...v,
+        settings: { ...base.settings, ...v.settings },
+      })),
     };
   } catch {
     return seedState();
@@ -193,6 +246,10 @@ interface StoreContextValue {
   settings: SiteSettings;
   saveSettings: (settings: SiteSettings) => void;
   resetSettings: () => void;
+  activity: ActivityEntry[];
+  settingsHistory: SettingsVersion[];
+  restoreSettingsVersion: (id: string) => void;
+  clearActivity: () => void;
   users: AppUser[];
   properties: Property[];
   news: NewsArticle[];
