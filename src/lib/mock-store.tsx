@@ -42,7 +42,39 @@ export interface Enquiry {
   createdAt: string;
 }
 
+export interface SiteSettings {
+  siteName: string;
+  logoInitials: string;
+  tagline: string;
+  metaTitle: string;
+  metaDescription: string;
+  contactEmail: string;
+  contactPhone: string;
+  address: string;
+  announcementEnabled: boolean;
+  announcementMessage: string;
+  announcementTone: "navy" | "gold";
+}
+
+export const defaultSettings: SiteSettings = {
+  siteName: "PropVista",
+  logoInitials: "PV",
+  tagline:
+    "A boutique property consultancy helping owners and buyers move with clarity across shops, flats, plots, houses and farm houses.",
+  metaTitle: "PropVista | Premium Property Marketplace",
+  metaDescription:
+    "PropVista is a boutique property marketplace for buying, renting and selling flats, houses, plots, shops and farm houses.",
+  contactEmail: "hello@propvista.in",
+  contactPhone: "+91 90000 00000",
+  address: "4th Floor, Meridian House, Baner Road, Pune 411045",
+  announcementEnabled: true,
+  announcementMessage:
+    "New this week: 24 verified listings added across Pune, Mumbai and Goa.",
+  announcementTone: "navy",
+};
+
 interface StoreShape {
+  settings: SiteSettings;
   users: AppUser[];
   properties: Property[];
   news: NewsArticle[];
@@ -127,6 +159,7 @@ function seedState(): StoreShape {
         createdAt: iso(12),
       },
     ],
+    settings: defaultSettings,
     sessionUserId: null,
     adminSessionId: null,
   };
@@ -138,7 +171,12 @@ function loadState(): StoreShape {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return seedState();
     const parsed = JSON.parse(raw) as Partial<StoreShape>;
-    return { ...seedState(), ...parsed };
+    const base = seedState();
+    return {
+      ...base,
+      ...parsed,
+      settings: { ...base.settings, ...(parsed.settings ?? {}) },
+    };
   } catch {
     return seedState();
   }
@@ -152,6 +190,9 @@ export interface AuthResult {
 
 interface StoreContextValue {
   hydrated: boolean;
+  settings: SiteSettings;
+  saveSettings: (settings: SiteSettings) => void;
+  resetSettings: () => void;
   users: AppUser[];
   properties: Property[];
   news: NewsArticle[];
@@ -303,6 +344,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     const adminUser = state.users.find((u) => u.id === state.adminSessionId) ?? null;
     return {
       hydrated,
+      settings: state.settings,
+      saveSettings: (settings) => patch((prev) => ({ ...prev, settings })),
+      resetSettings: () => patch((prev) => ({ ...prev, settings: defaultSettings })),
       users: state.users,
       properties: state.properties,
       news: state.news,
