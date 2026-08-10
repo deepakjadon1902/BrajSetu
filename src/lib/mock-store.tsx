@@ -279,6 +279,17 @@ interface StoreContextValue {
   deleteEnquiry: (id: string) => void;
 }
 
+
+function describeSettingsDiff(prev: SiteSettings, next: SiteSettings): string {
+  const changed = (Object.keys(next) as Array<keyof SiteSettings>).filter(
+    (key) => prev[key] !== next[key],
+  );
+  if (changed.length === 0) return "No field changes";
+  return `${changed.length} field${changed.length > 1 ? "s" : ""} updated: ${changed
+    .slice(0, 4)
+    .join(", ")}${changed.length > 4 ? "…" : ""}`;
+}
+
 const StoreContext = createContext<StoreContextValue | null>(null);
 
 export function StoreProvider({ children }: { children: ReactNode }) {
@@ -399,11 +410,100 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const value = useMemo<StoreContextValue>(() => {
     const currentUser = state.users.find((u) => u.id === state.sessionUserId) ?? null;
     const adminUser = state.users.find((u) => u.id === state.adminSessionId) ?? null;
+    const actorName = adminUser?.email ?? currentUser?.email ?? "system";
+    const log = (
+      next: StoreShape,
+      area: ActivityArea,
+      action: string,
+      detail: string,
+    ): StoreShape => ({
+      ...next,
+      activity: [
+        {
+          id: uid("a"),
+          actor: actorName,
+          area,
+          action,
+          detail,
+          createdAt: new Date().toISOString(),
+        },
+        ...next.activity,
+      ].slice(0, 200),
+    });
     return {
       hydrated,
       settings: state.settings,
-      saveSettings: (settings) => patch((prev) => ({ ...prev, settings })),
-      resetSettings: () => patch((prev) => ({ ...prev, settings: defaultSettings })),
+      activity: state.activity,
+      settingsHistory: state.settingsHistory,
+      saveSettings: (settings) =>
+        patch((prev) =>
+          log(
+            {
+              ...prev,
+              settings,
+              settingsHistory: [
+                {
+                  id: uid("v"),
+                  actor: actorName,
+                  summary: describeSettingsDiff(prev.settings, settings),
+                  createdAt: new Date().toISOString(),
+                  settings: prev.settings,
+                },
+                ...prev.settingsHistory,
+              ].slice(0, 25),
+            },
+            "Settings",
+            "Updated site settings",
+            describeSettingsDiff(prev.settings, settings),
+          ),
+        ),
+      resetSettings: () =>
+        patch((prev) =>
+          log(
+            {
+              ...prev,
+              settings: defaultSettings,
+              settingsHistory: [
+                {
+                  id: uid("v"),
+                  actor: actorName,
+                  summary: "Before reset to defaults",
+                  createdAt: new Date().toISOString(),
+                  settings: prev.settings,
+                },
+                ...prev.settingsHistory,
+              ].slice(0, 25),
+            },
+            "Settings",
+            "Reset settings",
+            "Restored the default branding and metadata",
+          ),
+        ),
+      restoreSettingsVersion: (id) =>
+        patch((prev) => {
+          const version = prev.settingsHistory.find((v) => v.id === id);
+          if (!version) return prev;
+          return log(
+            {
+              ...prev,
+              settings: version.settings,
+              settingsHistory: [
+                {
+                  id: uid("v"),
+                  actor: actorName,
+                  summary: "Before rollback",
+                  createdAt: new Date().toISOString(),
+                  settings: prev.settings,
+                },
+                ...prev.settingsHistory,
+              ].slice(0, 25),
+            },
+            "Settings",
+            "Rolled back settings",
+            `Restored the version saved ${new Date(version.createdAt).toLocaleString()}`,
+          );
+        }),
+      clearActivity: () => patch((prev) => ({ ...prev, activity: [] })),
       users: state.users,
       properties: state.properties,
       news: state.news,
@@ -418,40 +518,81 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       adminLogin,
       adminLogout,
       saveProperty: (property) =>
-        patch((prev) => ({
-          ...prev,
-          properties: prev.properties.some((p) => p.id === property.id)
-            ? prev.properties.map((p) => (p.id === property.id ? property : p))
-            : [property, ...prev.properties],
-        })),
+        patch((prev) => {
+          const existing = prev.properties.some((p) => p.id === property.id);
+          return log(
+            {
+              ...prev,
+              properties: existing
+                ? prev.properties.map((p) => (p.id === property.id ? property : p))
+                : [property, ...prev.properties],
+            },
+            "Properties",
+            existing ? "Updated property" : "Created property",
+            property.title,
+          );
+        }),
       deleteProperty: (id) =>
-        patch((prev) => ({
-          ...prev,
-          properties: prev.properties.filter((p) => p.id !== id),
-        })),
+        patch((prev) =>
+          log(
+            { ...prev, properties: prev.properties.filter((p) => p.id !== id) },
+            "Properties",
+            "Deleted property",
+            prev.properties.find((p) => p.id === id)?.title ?? id,
+          ),
+        ),
       saveNews: (article) =>
-        patch((prev) => ({
-          ...prev,
-          news: prev.news.some((n) => n.id === article.id)
-            ? prev.news.map((n) => (n.id === article.id ? article : n))
-            : [article, ...prev.news],
-        })),
+        patch((prev) => {
+          const existing = prev.news.some((n) => n.id === article.id);
+          return log(
+            {
+              ...prev,
+              news: existing
+                ? prev.news.map((n) => (n.id === article.id ? article : n))
+                : [article, ...prev.news],
+            },
+            "News",
+            existing ? "Updated article" : "Published article",
+            article.title,
+          );
+        }),
       deleteNews: (id) =>
-        patch((prev) => ({ ...prev, news: prev.news.filter((n) => n.id !== id) })),
+        patch((prev) =>
+          log(
+            { ...prev, news: prev.news.filter((n) => n.id !== id) },
+            "News",
+            "Deleted article",
+            prev.news.find((n) => n.id === id)?.title ?? id,
+          ),
+        ),
       saveUser: (user) =>
-        patch((prev) => ({
-          ...prev,
-          users: prev.users.some((u) => u.id === user.id)
-            ? prev.users.map((u) => (u.id === user.id ? user : u))
-            : [...prev.users, user],
-        })),
+        patch((prev) => {
+          const existing = prev.users.some((u) => u.id === user.id);
+          return log(
+            {
+              ...prev,
+              users: existing
+                ? prev.users.map((u) => (u.id === user.id ? user : u))
+                : [...prev.users, user],
+            },
+            "Users",
+            existing ? "Updated user" : "Created user",
+            `${user.name} (${user.role}, ${user.status})`,
+          );
+        }),
       deleteUser: (id) =>
-        patch((prev) => ({
+        patch((prev) =>
+          log({
           ...prev,
           users: prev.users.filter((u) => u.id !== id),
           sessionUserId: prev.sessionUserId === id ? null : prev.sessionUserId,
           adminSessionId: prev.adminSessionId === id ? null : prev.adminSessionId,
-        })),
+        },
+          "Users",
+          "Deleted user",
+          prev.users.find((u) => u.id === id)?.email ?? id,
+          ),
+        ),
       addEnquiry: (input) =>
         patch((prev) => ({
           ...prev,
@@ -466,15 +607,26 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           ],
         })),
       setEnquiryStatus: (id, status) =>
-        patch((prev) => ({
-          ...prev,
-          enquiries: prev.enquiries.map((e) => (e.id === id ? { ...e, status } : e)),
-        })),
+        patch((prev) =>
+          log(
+            {
+              ...prev,
+              enquiries: prev.enquiries.map((e) => (e.id === id ? { ...e, status } : e)),
+            },
+            "Enquiries",
+            `Marked enquiry ${status}`,
+            prev.enquiries.find((e) => e.id === id)?.name ?? id,
+          ),
+        ),
       deleteEnquiry: (id) =>
-        patch((prev) => ({
-          ...prev,
-          enquiries: prev.enquiries.filter((e) => e.id !== id),
-        })),
+        patch((prev) =>
+          log(
+            { ...prev, enquiries: prev.enquiries.filter((e) => e.id !== id) },
+            "Enquiries",
+            "Deleted enquiry",
+            prev.enquiries.find((e) => e.id === id)?.name ?? id,
+          ),
+        ),
     };
   }, [
     state,
