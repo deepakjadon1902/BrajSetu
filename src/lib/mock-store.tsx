@@ -51,6 +51,15 @@ export interface SiteSettings {
   contactEmail: string;
   contactPhone: string;
   address: string;
+  ogTitle: string;
+  ogDescription: string;
+  ogImage: string;
+  twitterCard: "summary" | "summary_large_image";
+  twitterHandle: string;
+  socialFacebook: string;
+  socialInstagram: string;
+  socialLinkedin: string;
+  socialX: string;
   announcementEnabled: boolean;
   announcementMessage: string;
   announcementTone: "navy" | "gold";
@@ -67,14 +76,51 @@ export const defaultSettings: SiteSettings = {
   contactEmail: "hello@propvista.in",
   contactPhone: "+91 90000 00000",
   address: "4th Floor, Meridian House, Baner Road, Pune 411045",
+  ogTitle: "PropVista | Premium Property Marketplace",
+  ogDescription:
+    "Buy, rent and sell verified property with a boutique advisory team.",
+  ogImage: "",
+  twitterCard: "summary_large_image",
+  twitterHandle: "@propvista",
+  socialFacebook: "https://facebook.com/propvista",
+  socialInstagram: "https://instagram.com/propvista",
+  socialLinkedin: "https://linkedin.com/company/propvista",
+  socialX: "https://x.com/propvista",
   announcementEnabled: true,
   announcementMessage:
     "New this week: 24 verified listings added across Pune, Mumbai and Goa.",
   announcementTone: "navy",
 };
 
+export type ActivityArea =
+  | "Settings"
+  | "Properties"
+  | "Users"
+  | "Enquiries"
+  | "News"
+  | "Auth";
+
+export interface ActivityEntry {
+  id: string;
+  actor: string;
+  area: ActivityArea;
+  action: string;
+  detail: string;
+  createdAt: string;
+}
+
+export interface SettingsVersion {
+  id: string;
+  actor: string;
+  summary: string;
+  createdAt: string;
+  settings: SiteSettings;
+}
+
 interface StoreShape {
   settings: SiteSettings;
+  activity: ActivityEntry[];
+  settingsHistory: SettingsVersion[];
   users: AppUser[];
   properties: Property[];
   news: NewsArticle[];
@@ -160,6 +206,8 @@ function seedState(): StoreShape {
       },
     ],
     settings: defaultSettings,
+    activity: [],
+    settingsHistory: [],
     sessionUserId: null,
     adminSessionId: null,
   };
@@ -176,6 +224,11 @@ function loadState(): StoreShape {
       ...base,
       ...parsed,
       settings: { ...base.settings, ...(parsed.settings ?? {}) },
+      activity: parsed.activity ?? [],
+      settingsHistory: (parsed.settingsHistory ?? []).map((v) => ({
+        ...v,
+        settings: { ...base.settings, ...v.settings },
+      })),
     };
   } catch {
     return seedState();
@@ -193,6 +246,10 @@ interface StoreContextValue {
   settings: SiteSettings;
   saveSettings: (settings: SiteSettings) => void;
   resetSettings: () => void;
+  activity: ActivityEntry[];
+  settingsHistory: SettingsVersion[];
+  restoreSettingsVersion: (id: string) => void;
+  clearActivity: () => void;
   users: AppUser[];
   properties: Property[];
   news: NewsArticle[];
@@ -220,6 +277,17 @@ interface StoreContextValue {
   addEnquiry: (input: Omit<Enquiry, "id" | "createdAt" | "status">) => void;
   setEnquiryStatus: (id: string, status: Enquiry["status"]) => void;
   deleteEnquiry: (id: string) => void;
+}
+
+
+function describeSettingsDiff(prev: SiteSettings, next: SiteSettings): string {
+  const changed = (Object.keys(next) as Array<keyof SiteSettings>).filter(
+    (key) => prev[key] !== next[key],
+  );
+  if (changed.length === 0) return "No field changes";
+  return `${changed.length} field${changed.length > 1 ? "s" : ""} updated: ${changed
+    .slice(0, 4)
+    .join(", ")}${changed.length > 4 ? "…" : ""}`;
 }
 
 const StoreContext = createContext<StoreContextValue | null>(null);
@@ -329,7 +397,21 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         return { ok: false, error: "Incorrect email or password." };
       if (user.role !== "admin")
         return { ok: false, error: "This account does not have admin access." };
-      patch((prev) => ({ ...prev, adminSessionId: user.id }));
+      patch((prev) => ({
+        ...prev,
+        adminSessionId: user.id,
+        activity: [
+          {
+            id: uid("a"),
+            actor: user.email,
+            area: "Auth" as const,
+            action: "Admin signed in",
+            detail: "Signed in to the admin console",
+            createdAt: new Date().toISOString(),
+          },
+          ...prev.activity,
+        ].slice(0, 200),
+      }));
       return { ok: true };
     },
     [state.users, patch],
@@ -342,11 +424,100 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const value = useMemo<StoreContextValue>(() => {
     const currentUser = state.users.find((u) => u.id === state.sessionUserId) ?? null;
     const adminUser = state.users.find((u) => u.id === state.adminSessionId) ?? null;
+    const actorName = adminUser?.email ?? currentUser?.email ?? "system";
+    const log = (
+      next: StoreShape,
+      area: ActivityArea,
+      action: string,
+      detail: string,
+    ): StoreShape => ({
+      ...next,
+      activity: [
+        {
+          id: uid("a"),
+          actor: actorName,
+          area,
+          action,
+          detail,
+          createdAt: new Date().toISOString(),
+        },
+        ...next.activity,
+      ].slice(0, 200),
+    });
     return {
       hydrated,
       settings: state.settings,
-      saveSettings: (settings) => patch((prev) => ({ ...prev, settings })),
-      resetSettings: () => patch((prev) => ({ ...prev, settings: defaultSettings })),
+      activity: state.activity,
+      settingsHistory: state.settingsHistory,
+      saveSettings: (settings) =>
+        patch((prev) =>
+          log(
+            {
+              ...prev,
+              settings,
+              settingsHistory: [
+                {
+                  id: uid("v"),
+                  actor: actorName,
+                  summary: describeSettingsDiff(prev.settings, settings),
+                  createdAt: new Date().toISOString(),
+                  settings: prev.settings,
+                },
+                ...prev.settingsHistory,
+              ].slice(0, 25),
+            },
+            "Settings",
+            "Updated site settings",
+            describeSettingsDiff(prev.settings, settings),
+          ),
+        ),
+      resetSettings: () =>
+        patch((prev) =>
+          log(
+            {
+              ...prev,
+              settings: defaultSettings,
+              settingsHistory: [
+                {
+                  id: uid("v"),
+                  actor: actorName,
+                  summary: "Before reset to defaults",
+                  createdAt: new Date().toISOString(),
+                  settings: prev.settings,
+                },
+                ...prev.settingsHistory,
+              ].slice(0, 25),
+            },
+            "Settings",
+            "Reset settings",
+            "Restored the default branding and metadata",
+          ),
+        ),
+      restoreSettingsVersion: (id) =>
+        patch((prev) => {
+          const version = prev.settingsHistory.find((v) => v.id === id);
+          if (!version) return prev;
+          return log(
+            {
+              ...prev,
+              settings: version.settings,
+              settingsHistory: [
+                {
+                  id: uid("v"),
+                  actor: actorName,
+                  summary: "Before rollback",
+                  createdAt: new Date().toISOString(),
+                  settings: prev.settings,
+                },
+                ...prev.settingsHistory,
+              ].slice(0, 25),
+            },
+            "Settings",
+            "Rolled back settings",
+            `Restored the version saved ${new Date(version.createdAt).toLocaleString()}`,
+          );
+        }),
+      clearActivity: () => patch((prev) => ({ ...prev, activity: [] })),
       users: state.users,
       properties: state.properties,
       news: state.news,
@@ -361,40 +532,81 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       adminLogin,
       adminLogout,
       saveProperty: (property) =>
-        patch((prev) => ({
-          ...prev,
-          properties: prev.properties.some((p) => p.id === property.id)
-            ? prev.properties.map((p) => (p.id === property.id ? property : p))
-            : [property, ...prev.properties],
-        })),
+        patch((prev) => {
+          const existing = prev.properties.some((p) => p.id === property.id);
+          return log(
+            {
+              ...prev,
+              properties: existing
+                ? prev.properties.map((p) => (p.id === property.id ? property : p))
+                : [property, ...prev.properties],
+            },
+            "Properties",
+            existing ? "Updated property" : "Created property",
+            property.title,
+          );
+        }),
       deleteProperty: (id) =>
-        patch((prev) => ({
-          ...prev,
-          properties: prev.properties.filter((p) => p.id !== id),
-        })),
+        patch((prev) =>
+          log(
+            { ...prev, properties: prev.properties.filter((p) => p.id !== id) },
+            "Properties",
+            "Deleted property",
+            prev.properties.find((p) => p.id === id)?.title ?? id,
+          ),
+        ),
       saveNews: (article) =>
-        patch((prev) => ({
-          ...prev,
-          news: prev.news.some((n) => n.id === article.id)
-            ? prev.news.map((n) => (n.id === article.id ? article : n))
-            : [article, ...prev.news],
-        })),
+        patch((prev) => {
+          const existing = prev.news.some((n) => n.id === article.id);
+          return log(
+            {
+              ...prev,
+              news: existing
+                ? prev.news.map((n) => (n.id === article.id ? article : n))
+                : [article, ...prev.news],
+            },
+            "News",
+            existing ? "Updated article" : "Published article",
+            article.title,
+          );
+        }),
       deleteNews: (id) =>
-        patch((prev) => ({ ...prev, news: prev.news.filter((n) => n.id !== id) })),
+        patch((prev) =>
+          log(
+            { ...prev, news: prev.news.filter((n) => n.id !== id) },
+            "News",
+            "Deleted article",
+            prev.news.find((n) => n.id === id)?.title ?? id,
+          ),
+        ),
       saveUser: (user) =>
-        patch((prev) => ({
-          ...prev,
-          users: prev.users.some((u) => u.id === user.id)
-            ? prev.users.map((u) => (u.id === user.id ? user : u))
-            : [...prev.users, user],
-        })),
+        patch((prev) => {
+          const existing = prev.users.some((u) => u.id === user.id);
+          return log(
+            {
+              ...prev,
+              users: existing
+                ? prev.users.map((u) => (u.id === user.id ? user : u))
+                : [...prev.users, user],
+            },
+            "Users",
+            existing ? "Updated user" : "Created user",
+            `${user.name} (${user.role}, ${user.status})`,
+          );
+        }),
       deleteUser: (id) =>
-        patch((prev) => ({
+        patch((prev) =>
+          log({
           ...prev,
           users: prev.users.filter((u) => u.id !== id),
           sessionUserId: prev.sessionUserId === id ? null : prev.sessionUserId,
           adminSessionId: prev.adminSessionId === id ? null : prev.adminSessionId,
-        })),
+        },
+          "Users",
+          "Deleted user",
+          prev.users.find((u) => u.id === id)?.email ?? id,
+          ),
+        ),
       addEnquiry: (input) =>
         patch((prev) => ({
           ...prev,
@@ -409,15 +621,26 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           ],
         })),
       setEnquiryStatus: (id, status) =>
-        patch((prev) => ({
-          ...prev,
-          enquiries: prev.enquiries.map((e) => (e.id === id ? { ...e, status } : e)),
-        })),
+        patch((prev) =>
+          log(
+            {
+              ...prev,
+              enquiries: prev.enquiries.map((e) => (e.id === id ? { ...e, status } : e)),
+            },
+            "Enquiries",
+            `Marked enquiry ${status}`,
+            prev.enquiries.find((e) => e.id === id)?.name ?? id,
+          ),
+        ),
       deleteEnquiry: (id) =>
-        patch((prev) => ({
-          ...prev,
-          enquiries: prev.enquiries.filter((e) => e.id !== id),
-        })),
+        patch((prev) =>
+          log(
+            { ...prev, enquiries: prev.enquiries.filter((e) => e.id !== id) },
+            "Enquiries",
+            "Deleted enquiry",
+            prev.enquiries.find((e) => e.id === id)?.name ?? id,
+          ),
+        ),
     };
   }, [
     state,

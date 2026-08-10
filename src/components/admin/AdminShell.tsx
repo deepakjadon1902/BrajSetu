@@ -5,6 +5,7 @@ import {
   LogOut,
   Mail,
   Menu,
+  History,
   Newspaper,
   Settings,
   Users,
@@ -22,6 +23,7 @@ const nav = [
   { to: "/admin/enquiries", label: "Enquiries", icon: Mail, exact: false },
   { to: "/admin/news", label: "News", icon: Newspaper, exact: false },
   { to: "/admin/settings", label: "Settings", icon: Settings, exact: false },
+  { to: "/admin/activity", label: "Activity", icon: History, exact: false },
 ] as const;
 
 export function AdminShell({

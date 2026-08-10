@@ -165,16 +165,35 @@ function SiteMeta() {
   useEffect(() => {
     if (!hydrated) return;
     document.title = settings.metaTitle;
-    const selectors: Array<[string, string]> = [
-      ['meta[name="description"]', settings.metaDescription],
-      ['meta[property="og:title"]', settings.metaTitle],
-      ['meta[property="og:description"]', settings.metaDescription],
-    ];
-    for (const [selector, content] of selectors) {
-      const el = document.head.querySelector(selector);
-      if (el) el.setAttribute("content", content);
-    }
-  }, [hydrated, settings.metaTitle, settings.metaDescription]);
+    const upsert = (attr: "name" | "property", key: string, content: string) => {
+      if (!content) return;
+      let el = document.head.querySelector(`meta[${attr}="${key}"]`);
+      if (!el) {
+        el = document.createElement("meta");
+        el.setAttribute(attr, key);
+        document.head.appendChild(el);
+      }
+      el.setAttribute("content", content);
+    };
+
+    upsert("name", "description", settings.metaDescription);
+    upsert("property", "og:title", settings.ogTitle || settings.metaTitle);
+    upsert(
+      "property",
+      "og:description",
+      settings.ogDescription || settings.metaDescription,
+    );
+    upsert("property", "og:image", settings.ogImage);
+    upsert("name", "twitter:card", settings.twitterCard);
+    upsert("name", "twitter:title", settings.ogTitle || settings.metaTitle);
+    upsert(
+      "name",
+      "twitter:description",
+      settings.ogDescription || settings.metaDescription,
+    );
+    upsert("name", "twitter:image", settings.ogImage);
+    upsert("name", "twitter:site", settings.twitterHandle);
+  }, [hydrated, settings]);
 
   return null;
 }
