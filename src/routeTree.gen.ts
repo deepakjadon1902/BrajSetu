@@ -22,6 +22,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SaleRouteImport } from './routes/sale'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as AdminActivityRouteImport } from './routes/admin/activity'
 import { Route as AdminEnquiriesRouteImport } from './routes/admin/enquiries'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
 import { Route as AdminNewsRouteImport } from './routes/admin/news'
@@ -95,6 +96,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/admin/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminActivityRoute = AdminActivityRouteImport.update({
+  id: '/admin/activity',
+  path: '/admin/activity',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminEnquiriesRoute = AdminEnquiriesRouteImport.update({
   id: '/admin/enquiries',
   path: '/admin/enquiries',
@@ -144,6 +150,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/sale': typeof SaleRoute
   '/terms': typeof TermsRoute
+  '/admin/activity': typeof AdminActivityRoute
   '/admin/enquiries': typeof AdminEnquiriesRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/news': typeof AdminNewsRoute
@@ -166,6 +173,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/sale': typeof SaleRoute
   '/terms': typeof TermsRoute
+  '/admin/activity': typeof AdminActivityRoute
   '/admin/enquiries': typeof AdminEnquiriesRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/news': typeof AdminNewsRoute
@@ -189,6 +197,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/sale': typeof SaleRoute
   '/terms': typeof TermsRoute
+  '/admin/activity': typeof AdminActivityRoute
   '/admin/enquiries': typeof AdminEnquiriesRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/news': typeof AdminNewsRoute
@@ -213,6 +222,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/sale'
     | '/terms'
+    | '/admin/activity'
     | '/admin/enquiries'
     | '/admin/login'
     | '/admin/news'
@@ -235,6 +245,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/sale'
     | '/terms'
+    | '/admin/activity'
     | '/admin/enquiries'
     | '/admin/login'
     | '/admin/news'
@@ -257,6 +268,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/sale'
     | '/terms'
+    | '/admin/activity'
     | '/admin/enquiries'
     | '/admin/login'
     | '/admin/news'
@@ -280,6 +292,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SaleRoute: typeof SaleRoute
   TermsRoute: typeof TermsRoute
+  AdminActivityRoute: typeof AdminActivityRoute
   AdminEnquiriesRoute: typeof AdminEnquiriesRoute
   AdminLoginRoute: typeof AdminLoginRoute
   AdminNewsRoute: typeof AdminNewsRoute
@@ -383,6 +396,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/activity': {
+      id: '/admin/activity'
+      path: '/admin/activity'
+      fullPath: '/admin/activity'
+      preLoaderRoute: typeof AdminActivityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/enquiries': {
       id: '/admin/enquiries'
       path: '/admin/enquiries'
@@ -448,6 +468,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SaleRoute: SaleRoute,
   TermsRoute: TermsRoute,
+  AdminActivityRoute: AdminActivityRoute,
   AdminEnquiriesRoute: AdminEnquiriesRoute,
   AdminLoginRoute: AdminLoginRoute,
   AdminNewsRoute: AdminNewsRoute,
