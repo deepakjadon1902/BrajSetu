@@ -1,7 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
-import { NotificationBar } from "@/components/NotificationBar";
 import { OverlayCard } from "@/components/OverlayCard";
 import { PropertyCard } from "@/components/PropertyCard";
 import { SearchPill } from "@/components/SearchPill";
@@ -58,10 +57,6 @@ function HomePage() {
 
   return (
     <div>
-      <NotificationBar>
-        New this week: 24 verified listings added across Pune, Mumbai and Goa.
-      </NotificationBar>
-
       {/* Hero */}
       <section className="bg-background">
         <div className="pv-container pt-10 pb-0 sm:pt-14">

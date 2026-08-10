@@ -1,20 +1,21 @@
 import { Link } from "@tanstack/react-router";
 import { Facebook, Instagram, Linkedin, Mail, MapPin, Phone } from "lucide-react";
+import { useStore } from "@/lib/mock-store";
 
 export function Footer() {
+  const { settings } = useStore();
   return (
     <footer className="mt-20 bg-navy text-background/80">
       <div className="pv-container grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <div className="flex items-center gap-2">
             <span className="grid h-9 w-9 place-items-center rounded-xl bg-background text-sm font-extrabold text-navy">
-              PV
+              {settings.logoInitials}
             </span>
-            <span className="text-lg font-extrabold text-background">PropVista</span>
+            <span className="text-lg font-extrabold text-background">{settings.siteName}</span>
           </div>
           <p className="mt-4 max-w-xs text-sm leading-relaxed">
-            A boutique property consultancy helping owners and buyers move with
-            clarity across shops, flats, plots, houses and farm houses.
+            {settings.tagline}
           </p>
           <div className="mt-5 flex gap-2">
             {[Instagram, Facebook, Linkedin].map((Icon, i) => (
@@ -61,15 +62,15 @@ export function Footer() {
           <ul className="mt-4 space-y-3 text-sm">
             <li className="flex gap-3">
               <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-gold" />
-              <span>4th Floor, Meridian House, Baner Road, Pune 411045</span>
+              <span>{settings.address}</span>
             </li>
             <li className="flex gap-3">
               <Phone className="h-4 w-4 shrink-0 text-gold" />
-              <a href="tel:+919000000000" className="hover:text-gold">+91 90000 00000</a>
+              <a href={`tel:${settings.contactPhone.replace(/\s/g, "")}`} className="hover:text-gold">{settings.contactPhone}</a>
             </li>
             <li className="flex gap-3">
               <Mail className="h-4 w-4 shrink-0 text-gold" />
-              <a href="mailto:hello@propvista.in" className="hover:text-gold">hello@propvista.in</a>
+              <a href={`mailto:${settings.contactEmail}`} className="hover:text-gold">{settings.contactEmail}</a>
             </li>
           </ul>
         </div>
@@ -77,7 +78,7 @@ export function Footer() {
 
       <div className="border-t border-background/10">
         <div className="pv-container flex flex-col gap-2 py-6 text-xs sm:flex-row sm:items-center sm:justify-between">
-          <p>© {new Date().getFullYear()} PropVista Realty. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} {settings.siteName}. All rights reserved.</p>
           <p>RERA registered · Independent advisory</p>
         </div>
       </div>

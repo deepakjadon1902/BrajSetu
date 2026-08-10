@@ -15,7 +15,8 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Toaster } from "@/components/ui/sonner";
-import { StoreProvider } from "@/lib/mock-store";
+import { StoreProvider, useStore } from "@/lib/mock-store";
+import { NotificationBar } from "@/components/NotificationBar";
 
 function NotFoundComponent() {
   return (
@@ -136,11 +137,13 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <StoreProvider>
+        <SiteMeta />
         {isAdmin ? (
           /* Admin console renders standalone, without the public site chrome. */
           <Outlet />
         ) : (
           <div className="flex min-h-screen flex-col">
+            <SiteAnnouncement />
             <Navbar />
             <main className="flex-1">
               {/* Required: nested routes render here. */}
@@ -152,5 +155,37 @@ function RootComponent() {
         <Toaster />
       </StoreProvider>
     </QueryClientProvider>
+  );
+}
+
+/** Applies admin-managed metadata to the document head on the client. */
+function SiteMeta() {
+  const { settings, hydrated } = useStore();
+
+  useEffect(() => {
+    if (!hydrated) return;
+    document.title = settings.metaTitle;
+    const selectors: Array<[string, string]> = [
+      ['meta[name="description"]', settings.metaDescription],
+      ['meta[property="og:title"]', settings.metaTitle],
+      ['meta[property="og:description"]', settings.metaDescription],
+    ];
+    for (const [selector, content] of selectors) {
+      const el = document.head.querySelector(selector);
+      if (el) el.setAttribute("content", content);
+    }
+  }, [hydrated, settings.metaTitle, settings.metaDescription]);
+
+  return null;
+}
+
+function SiteAnnouncement() {
+  const { settings, hydrated } = useStore();
+  if (!hydrated || !settings.announcementEnabled || !settings.announcementMessage)
+    return null;
+  return (
+    <NotificationBar key={settings.announcementMessage} tone={settings.announcementTone}>
+      {settings.announcementMessage}
+    </NotificationBar>
   );
 }
