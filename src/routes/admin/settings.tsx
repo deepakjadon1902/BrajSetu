@@ -4,6 +4,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 
 import { AdminShell } from "@/components/admin/AdminShell";
+import { SettingsPreview } from "@/components/admin/SettingsPreview";
 import { defaultSettings, useStore, type SiteSettings } from "@/lib/mock-store";
 
 export const Route = createFileRoute("/admin/settings")({
@@ -103,6 +104,7 @@ function AdminSettings() {
       }
     >
       {!hydrated ? null : (
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] xl:items-start">
         <form onSubmit={onSubmit} className="grid gap-6">
           <Card
             title="Brand"
@@ -159,6 +161,97 @@ function AdminSettings() {
                 />
               </Field>
             </div>
+          </Card>
+
+          <Card
+            title="Social sharing"
+            description="Open Graph and Twitter Card details used when your links are shared."
+          >
+            <div className="sm:col-span-2">
+              <Field label="OG title">
+                <input
+                  className={inputClass}
+                  value={form.ogTitle}
+                  onChange={(e) => set("ogTitle", e.target.value)}
+                />
+              </Field>
+            </div>
+            <div className="sm:col-span-2">
+              <Field label="OG description">
+                <textarea
+                  className={`${inputClass} min-h-20`}
+                  value={form.ogDescription}
+                  onChange={(e) => set("ogDescription", e.target.value)}
+                />
+              </Field>
+            </div>
+            <div className="sm:col-span-2">
+              <Field
+                label="OG image URL"
+                hint="Use a full https:// URL, ideally 1200×630."
+              >
+                <input
+                  className={inputClass}
+                  placeholder="https://…"
+                  value={form.ogImage}
+                  onChange={(e) => set("ogImage", e.target.value)}
+                />
+              </Field>
+            </div>
+            <Field label="Twitter card type">
+              <select
+                className={inputClass}
+                value={form.twitterCard}
+                onChange={(e) =>
+                  set("twitterCard", e.target.value as SiteSettings["twitterCard"])
+                }
+              >
+                <option value="summary_large_image">Large image</option>
+                <option value="summary">Summary</option>
+              </select>
+            </Field>
+            <Field label="Twitter / X handle">
+              <input
+                className={inputClass}
+                placeholder="@propvista"
+                value={form.twitterHandle}
+                onChange={(e) => set("twitterHandle", e.target.value)}
+              />
+            </Field>
+          </Card>
+
+          <Card
+            title="Social profiles"
+            description="Links shown in the footer and on the contact page."
+          >
+            <Field label="Facebook URL">
+              <input
+                className={inputClass}
+                value={form.socialFacebook}
+                onChange={(e) => set("socialFacebook", e.target.value)}
+              />
+            </Field>
+            <Field label="Instagram URL">
+              <input
+                className={inputClass}
+                value={form.socialInstagram}
+                onChange={(e) => set("socialInstagram", e.target.value)}
+              />
+            </Field>
+            <Field label="LinkedIn URL">
+              <input
+                className={inputClass}
+                value={form.socialLinkedin}
+                onChange={(e) => set("socialLinkedin", e.target.value)}
+              />
+            </Field>
+            <Field label="X (Twitter) URL">
+              <input
+                className={inputClass}
+                value={form.socialX}
+                onChange={(e) => set("socialX", e.target.value)}
+              />
+            </Field>
           </Card>
 
           <Card title="Contact details" description="Used in the site footer.">
@@ -246,6 +339,10 @@ function AdminSettings() {
             </span>
           </div>
         </form>
+        <div className="xl:sticky xl:top-24">
+          <SettingsPreview settings={form} />
+        </div>
+        </div>
       )}
     </AdminShell>
   );

@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Facebook, Instagram, Linkedin, Mail, MapPin, Phone } from "lucide-react";
+import { Facebook, Instagram, Linkedin, Mail, MapPin, Phone, X } from "lucide-react";
 import { useStore } from "@/lib/mock-store";
 
 export function Footer() {
@@ -18,11 +18,20 @@ export function Footer() {
             {settings.tagline}
           </p>
           <div className="mt-5 flex gap-2">
-            {[Instagram, Facebook, Linkedin].map((Icon, i) => (
+            {[
+              { href: settings.socialInstagram, Icon: Instagram, label: "Instagram" },
+              { href: settings.socialFacebook, Icon: Facebook, label: "Facebook" },
+              { href: settings.socialLinkedin, Icon: Linkedin, label: "LinkedIn" },
+              { href: settings.socialX, Icon: X, label: "X" },
+            ]
+              .filter((item) => item.href.trim().length > 0)
+              .map(({ href, Icon, label }) => (
               <a
-                key={i}
-                href="#"
-                aria-label="PropVista social profile"
+                key={label}
+                href={href}
+                target="_blank"
+                rel="noreferrer"
+                aria-label={`${settings.siteName} on ${label}`}
                 className="grid h-11 w-11 place-items-center rounded-full border border-background/20 transition-colors hover:border-gold hover:text-gold"
               >
                 <Icon className="h-4 w-4" />
