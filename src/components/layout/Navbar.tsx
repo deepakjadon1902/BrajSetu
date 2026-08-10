@@ -14,17 +14,17 @@ const links = [
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
-  const { currentUser, logout } = useStore();
+  const { currentUser, logout, settings } = useStore();
 
   return (
     <header className="sticky top-0 z-50 border-b border-border/70 bg-background/85 backdrop-blur-md">
       <nav className="pv-container grid h-16 grid-cols-[minmax(0,1fr)_auto] items-center gap-4 md:h-20 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
         <Link to="/" className="flex min-w-0 items-center gap-2">
           <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-navy text-sm font-extrabold text-background">
-            PV
+            {settings.logoInitials}
           </span>
           <span className="truncate text-lg font-extrabold tracking-tight text-navy">
-            PropVista
+            {settings.siteName}
           </span>
         </Link>
 

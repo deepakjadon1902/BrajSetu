@@ -6,6 +6,7 @@ import {
   Mail,
   Menu,
   Newspaper,
+  Settings,
   Users,
   X,
 } from "lucide-react";
@@ -20,6 +21,7 @@ const nav = [
   { to: "/admin/users", label: "Users", icon: Users, exact: false },
   { to: "/admin/enquiries", label: "Enquiries", icon: Mail, exact: false },
   { to: "/admin/news", label: "News", icon: Newspaper, exact: false },
+  { to: "/admin/settings", label: "Settings", icon: Settings, exact: false },
 ] as const;
 
 export function AdminShell({
