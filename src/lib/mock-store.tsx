@@ -397,7 +397,21 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         return { ok: false, error: "Incorrect email or password." };
       if (user.role !== "admin")
         return { ok: false, error: "This account does not have admin access." };
-      patch((prev) => ({ ...prev, adminSessionId: user.id }));
+      patch((prev) => ({
+        ...prev,
+        adminSessionId: user.id,
+        activity: [
+          {
+            id: uid("a"),
+            actor: user.email,
+            area: "Auth" as const,
+            action: "Admin signed in",
+            detail: "Signed in to the admin console",
+            createdAt: new Date().toISOString(),
+          },
+          ...prev.activity,
+        ].slice(0, 200),
+      }));
       return { ok: true };
     },
     [state.users, patch],
