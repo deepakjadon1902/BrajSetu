@@ -269,6 +269,8 @@ function ContactPage() {
             compact
             pins={[{ id: "office", label: "PropVista, Baner", x: 50, y: 55 }]}
           />
+
+          <SocialLinks />
         </div>
       </div>
     </div>
