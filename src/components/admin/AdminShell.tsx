@@ -6,6 +6,7 @@ import {
   Mail,
   Menu,
   Newspaper,
+  Settings,
   Users,
   X,
 } from "lucide-react";
