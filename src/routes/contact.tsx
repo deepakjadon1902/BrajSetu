@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Clock, Mail, MapPin, Phone } from "lucide-react";
+import { Clock, Facebook, Instagram, Linkedin, Mail, MapPin, Phone, X } from "lucide-react";
+import { useStore } from "@/lib/mock-store";
 import { ContactActions } from "@/components/ContactActions";
 import { MapPlaceholder } from "@/components/MapPlaceholder";
 import { cn } from "@/lib/utils";
@@ -47,6 +48,40 @@ function validate(values: FormState): Errors {
 
 const fieldClass =
   "min-h-11 w-full rounded-2xl border bg-background px-4 py-3 text-sm text-navy outline-none transition-colors placeholder:text-muted-foreground focus:border-gold";
+
+function SocialLinks() {
+  const { settings } = useStore();
+  const socials = [
+    { href: settings.socialInstagram, Icon: Instagram, label: "Instagram" },
+    { href: settings.socialFacebook, Icon: Facebook, label: "Facebook" },
+    { href: settings.socialLinkedin, Icon: Linkedin, label: "LinkedIn" },
+    { href: settings.socialX, Icon: X, label: "X" },
+  ].filter((item) => item.href.trim().length > 0);
+
+  if (socials.length === 0) return null;
+
+  return (
+    <div className="mt-8 rounded-3xl border border-border bg-background p-6">
+      <h2 className="text-sm font-semibold tracking-wide text-navy uppercase">
+        Follow {settings.siteName}
+      </h2>
+      <div className="mt-4 flex flex-wrap gap-2">
+        {socials.map(({ href, Icon, label }) => (
+          <a
+            key={label}
+            href={href}
+            target="_blank"
+            rel="noreferrer"
+            aria-label={`${settings.siteName} on ${label}`}
+            className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2.5 text-sm font-medium text-navy transition-colors hover:border-gold hover:text-gold"
+          >
+            <Icon className="h-4 w-4" /> {label}
+          </a>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function ContactPage() {
   const [values, setValues] = useState<FormState>({
