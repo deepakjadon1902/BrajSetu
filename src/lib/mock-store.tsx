@@ -441,8 +441,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const user = state.users.find((u) => u.email.toLowerCase() === normalized);
       if (!user || user.password !== password)
         return { ok: false, error: "Incorrect email or password." };
-      if (user.role !== "admin")
+      if (permissionsFor(user).length === 0)
         return { ok: false, error: "This account does not have admin access." };
+      if (user.status === "Suspended")
+        return { ok: false, error: "This account has been suspended." };
       patch((prev) => ({
         ...prev,
         adminSessionId: user.id,
