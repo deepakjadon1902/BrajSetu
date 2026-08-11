@@ -122,6 +122,9 @@ export function AdminShell({
 
         <div className="border-t border-background/10 p-4">
           <p className="truncate text-xs text-background/50">{adminUser.email}</p>
+          <p className="mt-1 inline-flex rounded-full bg-background/10 px-2.5 py-1 text-[10px] font-semibold tracking-wide text-background/80 uppercase">
+            {roleLabels[adminUser.role]}
+          </p>
           <button
             type="button"
             onClick={() => {
