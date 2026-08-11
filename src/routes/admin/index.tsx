@@ -63,6 +63,7 @@ function AdminDashboard() {
 
   return (
     <AdminShell
+      permission="dashboard"
       title="Dashboard"
       description="A live snapshot of the PropVista marketplace."
     >

@@ -48,6 +48,7 @@ function AdminActivity() {
 
   return (
     <AdminShell
+      permission="activity"
       title="Activity & versions"
       description="Every admin change is recorded here, and settings can be rolled back to any earlier version."
       actions={

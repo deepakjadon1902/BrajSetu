@@ -58,6 +58,7 @@ function AdminNews() {
 
   return (
     <AdminShell
+      permission="news"
       title="News & insights"
       description="Short market notes surfaced on the homepage carousel."
       actions={

@@ -63,6 +63,7 @@ function AdminUsers() {
 
   return (
     <AdminShell
+      permission="users"
       title="Users"
       description="Accounts registered on the public site plus admin staff."
       actions={

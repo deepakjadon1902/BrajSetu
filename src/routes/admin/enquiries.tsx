@@ -33,6 +33,7 @@ function AdminEnquiries() {
 
   return (
     <AdminShell
+      permission="enquiries"
       title="Enquiries"
       description="Every lead captured from the contact form and property pages."
     >

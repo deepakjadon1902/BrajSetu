@@ -88,6 +88,7 @@ function AdminSettings() {
 
   return (
     <AdminShell
+      permission="settings"
       title="Settings"
       description="Branding, metadata, contact details and announcements for the public site."
       actions={
