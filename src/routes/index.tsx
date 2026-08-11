@@ -155,6 +155,7 @@ function HomePage() {
           <div className="mt-10 flex justify-center">
             <Link
               to="/buy"
+              search={{}}
               className="pv-tap inline-flex items-center rounded-full border border-navy px-7 text-sm font-semibold text-navy transition-colors hover:bg-navy hover:text-background"
             >
               Browse all listings
@@ -192,6 +193,7 @@ function HomePage() {
             </ul>
             <Link
               to="/sale"
+              search={{}}
               className="pv-tap mt-8 inline-flex items-center rounded-full bg-gold px-7 text-sm font-semibold text-primary-foreground transition-transform duration-200 hover:scale-[1.02]"
             >
               Learn more
