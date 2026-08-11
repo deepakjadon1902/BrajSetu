@@ -2,6 +2,7 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   Building2,
   LayoutDashboard,
+  Lock,
   LogOut,
   Mail,
   Menu,
@@ -13,7 +14,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 
-import { useStore, type AdminPermission } from "@/lib/mock-store";
+import { permissionLabels, roleLabels, useStore, type AdminPermission } from "@/lib/mock-store";
 import { cn } from "@/lib/utils";
 
 const nav = [
@@ -179,7 +180,23 @@ export function AdminShell({
             </div>
             {actions}
           </div>
-          <div className="mt-8">{children}</div>
+          <div className="mt-8">
+            {allowed ? (
+              children
+            ) : (
+              <div className="rounded-3xl border border-border bg-background p-10 text-center">
+                <Lock className="mx-auto h-6 w-6 text-gold" />
+                <h2 className="mt-4 text-lg font-bold text-navy">
+                  You don't have access to this area
+                </h2>
+                <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+                  Your role ({roleLabels[adminUser.role]}) doesn't include the
+                  {permission ? ` "${permissionLabels[permission]}" ` : " required "}
+                  permission. Ask an admin to grant it from Users.
+                </p>
+              </div>
+            )}
+          </div>
         </main>
       </div>
     </div>
