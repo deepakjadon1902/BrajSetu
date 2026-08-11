@@ -13,31 +13,39 @@ import {
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 
-import { useStore } from "@/lib/mock-store";
+import { useStore, type AdminPermission } from "@/lib/mock-store";
 import { cn } from "@/lib/utils";
 
 const nav = [
-  { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
-  { to: "/admin/properties", label: "Properties", icon: Building2, exact: false },
-  { to: "/admin/users", label: "Users", icon: Users, exact: false },
-  { to: "/admin/enquiries", label: "Enquiries", icon: Mail, exact: false },
-  { to: "/admin/news", label: "News", icon: Newspaper, exact: false },
-  { to: "/admin/settings", label: "Settings", icon: Settings, exact: false },
-  { to: "/admin/activity", label: "Activity", icon: History, exact: false },
-] as const;
+  { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true, permission: "dashboard" },
+  { to: "/admin/properties", label: "Properties", icon: Building2, exact: false, permission: "properties" },
+  { to: "/admin/users", label: "Users", icon: Users, exact: false, permission: "users" },
+  { to: "/admin/enquiries", label: "Enquiries", icon: Mail, exact: false, permission: "enquiries" },
+  { to: "/admin/news", label: "News", icon: Newspaper, exact: false, permission: "news" },
+  { to: "/admin/settings", label: "Settings", icon: Settings, exact: false, permission: "settings" },
+  { to: "/admin/activity", label: "Activity", icon: History, exact: false, permission: "activity" },
+] as const satisfies ReadonlyArray<{
+  to: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  exact: boolean;
+  permission: AdminPermission;
+}>;
 
 export function AdminShell({
   title,
   description,
   actions,
+  permission,
   children,
 }: {
   title: string;
   description?: string;
   actions?: ReactNode;
+  permission?: AdminPermission;
   children: ReactNode;
 }) {
-  const { adminUser, adminLogout, hydrated } = useStore();
+  const { adminUser, adminLogout, hydrated, can } = useStore();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -57,6 +65,10 @@ export function AdminShell({
       </div>
     );
   }
+
+  const allowed = !permission || can(permission);
+  const visibleNav = nav.filter((item) => can(item.permission));
+
 
   return (
     <div className="min-h-screen bg-smoke">
