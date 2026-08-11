@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Plus, ShieldCheck, Trash2 } from "lucide-react";
-import { useState, type FormEvent } from "react";
+import { Fragment, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 
 import { AdminShell } from "@/components/admin/AdminShell";
@@ -229,7 +229,7 @@ function AdminUsers() {
                 </td>
               </tr>
               {accessFor === user.id ? (
-                <tr key={`${user.id}-access`} className="bg-smoke/50">
+                <tr className="bg-smoke/50">
                   <td colSpan={6} className="px-4 py-4">
                     <p className="text-xs font-semibold tracking-wide text-navy uppercase">
                       Admin areas for {user.name}
@@ -282,7 +282,7 @@ function AdminUsers() {
                   </td>
                 </tr>
               ) : null}
-              </>
+              </Fragment>
             ))}
           </tbody>
         </table>
