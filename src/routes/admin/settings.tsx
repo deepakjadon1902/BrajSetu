@@ -4,6 +4,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 
 import { AdminShell } from "@/components/admin/AdminShell";
+import { OgImageUploader } from "@/components/admin/OgImageUploader";
 import { SettingsPreview } from "@/components/admin/SettingsPreview";
 import { defaultSettings, useStore, type SiteSettings } from "@/lib/mock-store";
 
