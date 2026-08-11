@@ -22,38 +22,40 @@ export const Route = createFileRoute("/admin/")({
 });
 
 function AdminDashboard() {
-  const { properties, users, enquiries, news } = useStore();
+  const { properties, users, enquiries, news, can } = useStore();
 
-  const stats = [
+  const allStats = [
     {
       label: "Listings",
       value: properties.length,
       hint: `${properties.filter((p) => p.featured).length} featured`,
       icon: Building2,
-      to: "/admin/properties",
+      to: "/admin/properties", permission: "properties" as const,
     },
     {
       label: "Registered users",
       value: users.filter((u) => u.role === "user").length,
       hint: `${users.filter((u) => u.role === "admin").length} admins`,
       icon: Users,
-      to: "/admin/users",
+      to: "/admin/users", permission: "users" as const,
     },
     {
       label: "Enquiries",
       value: enquiries.length,
       hint: `${enquiries.filter((e) => e.status === "New").length} unread`,
       icon: Mail,
-      to: "/admin/enquiries",
+      to: "/admin/enquiries", permission: "enquiries" as const,
     },
     {
       label: "News articles",
       value: news.length,
       hint: "Published",
       icon: Newspaper,
-      to: "/admin/news",
+      to: "/admin/news", permission: "news" as const,
     },
   ] as const;
+
+  const stats = allStats.filter((stat) => can(stat.permission));
 
   const forSale = properties.filter((p) => p.intent === "Sale");
   const avgPrice =
@@ -63,6 +65,7 @@ function AdminDashboard() {
 
   return (
     <AdminShell
+      permission="dashboard"
       title="Dashboard"
       description="A live snapshot of the PropVista marketplace."
     >

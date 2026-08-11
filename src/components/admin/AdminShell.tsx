@@ -2,6 +2,7 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   Building2,
   LayoutDashboard,
+  Lock,
   LogOut,
   Mail,
   Menu,
@@ -13,31 +14,39 @@ import {
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 
-import { useStore } from "@/lib/mock-store";
+import { permissionLabels, roleLabels, useStore, type AdminPermission } from "@/lib/mock-store";
 import { cn } from "@/lib/utils";
 
 const nav = [
-  { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
-  { to: "/admin/properties", label: "Properties", icon: Building2, exact: false },
-  { to: "/admin/users", label: "Users", icon: Users, exact: false },
-  { to: "/admin/enquiries", label: "Enquiries", icon: Mail, exact: false },
-  { to: "/admin/news", label: "News", icon: Newspaper, exact: false },
-  { to: "/admin/settings", label: "Settings", icon: Settings, exact: false },
-  { to: "/admin/activity", label: "Activity", icon: History, exact: false },
-] as const;
+  { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true, permission: "dashboard" },
+  { to: "/admin/properties", label: "Properties", icon: Building2, exact: false, permission: "properties" },
+  { to: "/admin/users", label: "Users", icon: Users, exact: false, permission: "users" },
+  { to: "/admin/enquiries", label: "Enquiries", icon: Mail, exact: false, permission: "enquiries" },
+  { to: "/admin/news", label: "News", icon: Newspaper, exact: false, permission: "news" },
+  { to: "/admin/settings", label: "Settings", icon: Settings, exact: false, permission: "settings" },
+  { to: "/admin/activity", label: "Activity", icon: History, exact: false, permission: "activity" },
+] as const satisfies ReadonlyArray<{
+  to: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  exact: boolean;
+  permission: AdminPermission;
+}>;
 
 export function AdminShell({
   title,
   description,
   actions,
+  permission,
   children,
 }: {
   title: string;
   description?: string;
   actions?: ReactNode;
+  permission?: AdminPermission;
   children: ReactNode;
 }) {
-  const { adminUser, adminLogout, hydrated } = useStore();
+  const { adminUser, adminLogout, hydrated, can } = useStore();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -57,6 +66,10 @@ export function AdminShell({
       </div>
     );
   }
+
+  const allowed = !permission || can(permission);
+  const visibleNav = nav.filter((item) => can(item.permission));
+
 
   return (
     <div className="min-h-screen bg-smoke">
@@ -86,7 +99,7 @@ export function AdminShell({
         </div>
 
         <nav className="flex-1 space-y-1 px-3 py-4">
-          {nav.map((item) => {
+          {visibleNav.map((item) => {
             const active = item.exact
               ? pathname === item.to
               : pathname.startsWith(item.to);
@@ -110,6 +123,9 @@ export function AdminShell({
 
         <div className="border-t border-background/10 p-4">
           <p className="truncate text-xs text-background/50">{adminUser.email}</p>
+          <p className="mt-1 inline-flex rounded-full bg-background/10 px-2.5 py-1 text-[10px] font-semibold tracking-wide text-background/80 uppercase">
+            {roleLabels[adminUser.role]}
+          </p>
           <button
             type="button"
             onClick={() => {
@@ -164,7 +180,23 @@ export function AdminShell({
             </div>
             {actions}
           </div>
-          <div className="mt-8">{children}</div>
+          <div className="mt-8">
+            {allowed ? (
+              children
+            ) : (
+              <div className="rounded-3xl border border-border bg-background p-10 text-center">
+                <Lock className="mx-auto h-6 w-6 text-gold" />
+                <h2 className="mt-4 text-lg font-bold text-navy">
+                  You don't have access to this area
+                </h2>
+                <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+                  Your role ({roleLabels[adminUser.role]}) doesn't include the
+                  {permission ? ` "${permissionLabels[permission]}" ` : " required "}
+                  permission. Ask an admin to grant it from Users.
+                </p>
+              </div>
+            )}
+          </div>
         </main>
       </div>
     </div>

@@ -17,7 +17,49 @@ import type { NewsArticle, Property } from "@/types/property";
  * bodies of these functions for HTTP calls later without touching the UI.
  */
 
-export type UserRole = "user" | "admin";
+export type UserRole = "user" | "editor" | "manager" | "admin";
+
+export type AdminPermission =
+  | "dashboard"
+  | "properties"
+  | "enquiries"
+  | "news"
+  | "users"
+  | "settings"
+  | "activity";
+
+export const permissionLabels: Record<AdminPermission, string> = {
+  dashboard: "Dashboard",
+  properties: "Properties",
+  enquiries: "Enquiries",
+  news: "News",
+  users: "Users",
+  settings: "Settings",
+  activity: "Activity",
+};
+
+export const allPermissions = Object.keys(permissionLabels) as AdminPermission[];
+
+export const roleLabels: Record<UserRole, string> = {
+  user: "User",
+  editor: "Editor",
+  manager: "Manager",
+  admin: "Admin",
+};
+
+/** Baseline access per role; individual users can override this list. */
+export const rolePermissions: Record<UserRole, AdminPermission[]> = {
+  user: [],
+  editor: ["dashboard", "properties", "news"],
+  manager: ["dashboard", "properties", "news", "enquiries", "users"],
+  admin: allPermissions,
+};
+
+export function permissionsFor(user: AppUser | null | undefined): AdminPermission[] {
+  if (!user) return [];
+  if (user.role === "admin") return allPermissions;
+  return user.permissions ?? rolePermissions[user.role];
+}
 
 export interface AppUser {
   id: string;
@@ -26,6 +68,8 @@ export interface AppUser {
   phone: string;
   password: string;
   role: UserRole;
+  /** Optional per-user override of the role's default admin permissions. */
+  permissions?: AdminPermission[] | undefined;
   status: "Active" | "Suspended";
   createdAt: string;
   resetToken?: string | undefined;
@@ -153,6 +197,16 @@ function seedState(): StoreShape {
         createdAt: iso(220),
       },
       {
+        id: "u-editor",
+        name: "Nikhil Deshpande",
+        email: "editor@propvista.in",
+        phone: "+91 98111 22334",
+        password: "Editor@123",
+        role: "editor",
+        status: "Active",
+        createdAt: iso(60),
+      },
+      {
         id: "u-demo",
         name: "Riya Menon",
         email: "riya@example.com",
@@ -256,6 +310,8 @@ interface StoreContextValue {
   enquiries: Enquiry[];
   currentUser: AppUser | null;
   adminUser: AppUser | null;
+  permissions: AdminPermission[];
+  can: (permission: AdminPermission) => boolean;
   register: (input: {
     name: string;
     email: string;
@@ -395,8 +451,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const user = state.users.find((u) => u.email.toLowerCase() === normalized);
       if (!user || user.password !== password)
         return { ok: false, error: "Incorrect email or password." };
-      if (user.role !== "admin")
+      if (permissionsFor(user).length === 0)
         return { ok: false, error: "This account does not have admin access." };
+      if (user.status === "Suspended")
+        return { ok: false, error: "This account has been suspended." };
       patch((prev) => ({
         ...prev,
         adminSessionId: user.id,
@@ -524,6 +582,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       enquiries: state.enquiries,
       currentUser,
       adminUser,
+      permissions: permissionsFor(adminUser),
+      can: (permission) => permissionsFor(adminUser).includes(permission),
       register,
       login,
       logout,

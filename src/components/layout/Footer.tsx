@@ -45,9 +45,9 @@ export function Footer() {
             Explore
           </h3>
           <ul className="mt-4 space-y-3 text-sm">
-            <li><Link to="/buy" className="hover:text-gold">Buy a property</Link></li>
-            <li><Link to="/rent" className="hover:text-gold">Rent a property</Link></li>
-            <li><Link to="/sale" className="hover:text-gold">Sell with us</Link></li>
+            <li><Link to="/buy" search={{}} className="hover:text-gold">Buy a property</Link></li>
+            <li><Link to="/rent" search={{}} className="hover:text-gold">Rent a property</Link></li>
+            <li><Link to="/sale" search={{}} className="hover:text-gold">Sell with us</Link></li>
             <li><Link to="/about" className="hover:text-gold">About PropVista</Link></li>
           </ul>
         </div>

@@ -72,6 +72,7 @@ function AdminProperties() {
 
   return (
     <AdminShell
+      permission="properties"
       title="Properties"
       description="Every listing shown across Buy, Rent and Sale."
       actions={
