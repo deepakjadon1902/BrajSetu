@@ -1,10 +1,21 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, ShieldCheck, Trash2 } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
 
 import { AdminShell } from "@/components/admin/AdminShell";
-import { uid, useStore, type AppUser } from "@/lib/mock-store";
+import {
+  allPermissions,
+  permissionLabels,
+  permissionsFor,
+  roleLabels,
+  rolePermissions,
+  uid,
+  useStore,
+  type AdminPermission,
+  type AppUser,
+  type UserRole,
+} from "@/lib/mock-store";
 
 export const Route = createFileRoute("/admin/users")({
   head: () => ({
@@ -28,6 +39,7 @@ const inputClass =
 function AdminUsers() {
   const { users, saveUser, deleteUser, adminUser } = useStore();
   const [creating, setCreating] = useState(false);
+  const [accessFor, setAccessFor] = useState<string | null>(null);
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -112,8 +124,11 @@ function AdminUsers() {
             value={form.role}
             onChange={(e) => setForm({ ...form, role: e.target.value as AppUser["role"] })}
           >
-            <option value="user">User</option>
-            <option value="admin">Admin</option>
+            {(Object.keys(roleLabels) as UserRole[]).map((role) => (
+              <option key={role} value={role}>
+                {roleLabels[role]}
+              </option>
+            ))}
           </select>
           <button
             type="submit"
@@ -149,12 +164,19 @@ function AdminUsers() {
                     aria-label={`Role for ${user.name}`}
                     value={user.role}
                     onChange={(e) =>
-                      saveUser({ ...user, role: e.target.value as AppUser["role"] })
+                      saveUser({
+                        ...user,
+                        role: e.target.value as UserRole,
+                        permissions: undefined,
+                      })
                     }
                     className="rounded-full border border-border bg-background px-3 py-1.5 text-xs font-semibold text-navy"
                   >
-                    <option value="user">User</option>
-                    <option value="admin">Admin</option>
+                    {(Object.keys(roleLabels) as UserRole[]).map((role) => (
+                      <option key={role} value={role}>
+                        {roleLabels[role]}
+                      </option>
+                    ))}
                   </select>
                 </td>
                 <td className="px-4 py-3">
