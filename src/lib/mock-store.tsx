@@ -300,6 +300,8 @@ interface StoreContextValue {
   enquiries: Enquiry[];
   currentUser: AppUser | null;
   adminUser: AppUser | null;
+  permissions: AdminPermission[];
+  can: (permission: AdminPermission) => boolean;
   register: (input: {
     name: string;
     email: string;
