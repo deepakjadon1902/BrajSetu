@@ -153,7 +153,8 @@ function AdminUsers() {
           </thead>
           <tbody className="divide-y divide-border">
             {users.map((user) => (
-              <tr key={user.id}>
+              <Fragment key={user.id}>
+              <tr>
                 <td className="px-4 py-3 font-semibold text-navy">{user.name}</td>
                 <td className="px-4 py-3 text-muted-foreground">
                   <span className="block">{user.email}</span>
