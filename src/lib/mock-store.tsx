@@ -197,6 +197,16 @@ function seedState(): StoreShape {
         createdAt: iso(220),
       },
       {
+        id: "u-editor",
+        name: "Nikhil Deshpande",
+        email: "editor@propvista.in",
+        phone: "+91 98111 22334",
+        password: "Editor@123",
+        role: "editor",
+        status: "Active",
+        createdAt: iso(60),
+      },
+      {
         id: "u-demo",
         name: "Riya Menon",
         email: "riya@example.com",
