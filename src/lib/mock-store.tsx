@@ -572,6 +572,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       enquiries: state.enquiries,
       currentUser,
       adminUser,
+      permissions: permissionsFor(adminUser),
+      can: (permission) => permissionsFor(adminUser).includes(permission),
       register,
       login,
       logout,
