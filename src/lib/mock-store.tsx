@@ -17,7 +17,49 @@ import type { NewsArticle, Property } from "@/types/property";
  * bodies of these functions for HTTP calls later without touching the UI.
  */
 
-export type UserRole = "user" | "admin";
+export type UserRole = "user" | "editor" | "manager" | "admin";
+
+export type AdminPermission =
+  | "dashboard"
+  | "properties"
+  | "enquiries"
+  | "news"
+  | "users"
+  | "settings"
+  | "activity";
+
+export const permissionLabels: Record<AdminPermission, string> = {
+  dashboard: "Dashboard",
+  properties: "Properties",
+  enquiries: "Enquiries",
+  news: "News",
+  users: "Users",
+  settings: "Settings",
+  activity: "Activity",
+};
+
+export const allPermissions = Object.keys(permissionLabels) as AdminPermission[];
+
+export const roleLabels: Record<UserRole, string> = {
+  user: "User",
+  editor: "Editor",
+  manager: "Manager",
+  admin: "Admin",
+};
+
+/** Baseline access per role; individual users can override this list. */
+export const rolePermissions: Record<UserRole, AdminPermission[]> = {
+  user: [],
+  editor: ["dashboard", "properties", "news"],
+  manager: ["dashboard", "properties", "news", "enquiries", "users"],
+  admin: allPermissions,
+};
+
+export function permissionsFor(user: AppUser | null | undefined): AdminPermission[] {
+  if (!user) return [];
+  if (user.role === "admin") return allPermissions;
+  return user.permissions ?? rolePermissions[user.role];
+}
 
 export interface AppUser {
   id: string;
@@ -26,6 +68,8 @@ export interface AppUser {
   phone: string;
   password: string;
   role: UserRole;
+  /** Optional per-user override of the role's default admin permissions. */
+  permissions?: AdminPermission[] | undefined;
   status: "Active" | "Suspended";
   createdAt: string;
   resetToken?: string | undefined;
