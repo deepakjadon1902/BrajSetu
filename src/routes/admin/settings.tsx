@@ -188,14 +188,12 @@ function AdminSettings() {
             </div>
             <div className="sm:col-span-2">
               <Field
-                label="OG image URL"
-                hint="Use a full https:// URL, ideally 1200×630."
+                label="OG image"
+                hint="Uploads are cropped to 1200×630 and used for both Open Graph and Twitter previews."
               >
-                <input
-                  className={inputClass}
-                  placeholder="https://…"
+                <OgImageUploader
                   value={form.ogImage}
-                  onChange={(e) => set("ogImage", e.target.value)}
+                  onChange={(next) => set("ogImage", next)}
                 />
               </Field>
             </div>
