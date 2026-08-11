@@ -98,7 +98,7 @@ export function AdminShell({
         </div>
 
         <nav className="flex-1 space-y-1 px-3 py-4">
-          {nav.map((item) => {
+          {visibleNav.map((item) => {
             const active = item.exact
               ? pathname === item.to
               : pathname.startsWith(item.to);
