@@ -50,9 +50,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
-        <h1 className="text-xl font-semibold tracking-tight text-navy">
-          This page didn't load
-        </h1>
+        <h1 className="text-xl font-semibold tracking-tight text-navy">This page didn't load</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Something went wrong on our end. You can try refreshing or head back home.
         </p>
@@ -178,19 +176,11 @@ function SiteMeta() {
 
     upsert("name", "description", settings.metaDescription);
     upsert("property", "og:title", settings.ogTitle || settings.metaTitle);
-    upsert(
-      "property",
-      "og:description",
-      settings.ogDescription || settings.metaDescription,
-    );
+    upsert("property", "og:description", settings.ogDescription || settings.metaDescription);
     upsert("property", "og:image", settings.ogImage);
     upsert("name", "twitter:card", settings.twitterCard);
     upsert("name", "twitter:title", settings.ogTitle || settings.metaTitle);
-    upsert(
-      "name",
-      "twitter:description",
-      settings.ogDescription || settings.metaDescription,
-    );
+    upsert("name", "twitter:description", settings.ogDescription || settings.metaDescription);
     upsert("name", "twitter:image", settings.ogImage);
     upsert("name", "twitter:site", settings.twitterHandle);
   }, [hydrated, settings]);
@@ -200,8 +190,7 @@ function SiteMeta() {
 
 function SiteAnnouncement() {
   const { settings, hydrated } = useStore();
-  if (!hydrated || !settings.announcementEnabled || !settings.announcementMessage)
-    return null;
+  if (!hydrated || !settings.announcementEnabled || !settings.announcementMessage) return null;
   return (
     <NotificationBar key={settings.announcementMessage} tone={settings.announcementTone}>
       {settings.announcementMessage}

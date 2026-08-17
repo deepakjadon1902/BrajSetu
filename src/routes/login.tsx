@@ -3,12 +3,7 @@ import { ShieldCheck } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
 
-import {
-  AuthLayout,
-  Field,
-  inputClass,
-  primaryButtonClass,
-} from "@/components/auth/AuthLayout";
+import { AuthLayout, Field, inputClass, primaryButtonClass } from "@/components/auth/AuthLayout";
 import { useStore } from "@/lib/mock-store";
 
 export const Route = createFileRoute("/login")({

@@ -14,12 +14,8 @@ interface PropertyCardProps {
 
 function MetaRow({ property, className }: { property: Property; className?: string }) {
   const items = [
-    property.specs.bedrooms
-      ? { icon: BedDouble, label: `${property.specs.bedrooms} Beds` }
-      : null,
-    property.specs.bathrooms
-      ? { icon: Bath, label: `${property.specs.bathrooms} Baths` }
-      : null,
+    property.specs.bedrooms ? { icon: BedDouble, label: `${property.specs.bedrooms} Beds` } : null,
+    property.specs.bathrooms ? { icon: Bath, label: `${property.specs.bathrooms} Baths` } : null,
     { icon: Maximize, label: formatArea(property.specs.area) },
   ].filter(Boolean) as { icon: typeof Bath; label: string }[];
 
@@ -96,11 +92,7 @@ export function PropertyCard({
         variant === "featured" && "ring-1 ring-gold/40",
       )}
     >
-      <Link
-        to="/property/$propertyId"
-        params={{ propertyId: property.id }}
-        className="block"
-      >
+      <Link to="/property/$propertyId" params={{ propertyId: property.id }} className="block">
         <div className="relative">
           <SmartImage src={property.images[0] ?? ""} alt={property.title} />
           {badge}

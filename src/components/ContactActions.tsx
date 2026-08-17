@@ -16,13 +16,7 @@ export function ContactActions({
   className,
 }: ContactActionsProps) {
   return (
-    <div
-      className={cn(
-        "flex gap-3",
-        layout === "stacked" ? "flex-col" : "flex-row",
-        className,
-      )}
-    >
+    <div className={cn("flex gap-3", layout === "stacked" ? "flex-col" : "flex-row", className)}>
       <a
         href={`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(message)}`}
         target="_blank"

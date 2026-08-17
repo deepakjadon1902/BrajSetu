@@ -30,28 +30,32 @@ function AdminDashboard() {
       value: properties.length,
       hint: `${properties.filter((p) => p.featured).length} featured`,
       icon: Building2,
-      to: "/admin/properties", permission: "properties" as const,
+      to: "/admin/properties",
+      permission: "properties" as const,
     },
     {
       label: "Registered users",
       value: users.filter((u) => u.role === "user").length,
       hint: `${users.filter((u) => u.role === "admin").length} admins`,
       icon: Users,
-      to: "/admin/users", permission: "users" as const,
+      to: "/admin/users",
+      permission: "users" as const,
     },
     {
       label: "Enquiries",
       value: enquiries.length,
       hint: `${enquiries.filter((e) => e.status === "New").length} unread`,
       icon: Mail,
-      to: "/admin/enquiries", permission: "enquiries" as const,
+      to: "/admin/enquiries",
+      permission: "enquiries" as const,
     },
     {
       label: "News articles",
       value: news.length,
       hint: "Published",
       icon: Newspaper,
-      to: "/admin/news", permission: "news" as const,
+      to: "/admin/news",
+      permission: "news" as const,
     },
   ] as const;
 
@@ -82,9 +86,7 @@ function AdminDashboard() {
               </span>
               <stat.icon className="h-4 w-4 text-gold-deep" />
             </div>
-            <p className="mt-4 text-3xl font-extrabold tracking-tight text-navy">
-              {stat.value}
-            </p>
+            <p className="mt-4 text-3xl font-extrabold tracking-tight text-navy">{stat.value}</p>
             <p className="mt-1 text-xs text-muted-foreground">{stat.hint}</p>
           </Link>
         ))}
@@ -92,9 +94,7 @@ function AdminDashboard() {
 
       <div className="mt-6 grid gap-4 lg:grid-cols-3">
         <div className="rounded-3xl border border-border bg-card p-6 lg:col-span-2">
-          <h2 className="text-sm font-bold uppercase tracking-wide text-navy">
-            Latest enquiries
-          </h2>
+          <h2 className="text-sm font-bold uppercase tracking-wide text-navy">Latest enquiries</h2>
           <ul className="mt-4 divide-y divide-border">
             {enquiries.slice(0, 5).map((enquiry) => (
               <li key={enquiry.id} className="flex items-start gap-4 py-4">

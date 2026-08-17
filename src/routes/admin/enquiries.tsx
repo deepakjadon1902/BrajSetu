@@ -28,8 +28,7 @@ function AdminEnquiries() {
   const { enquiries, setEnquiryStatus, deleteEnquiry, properties } = useStore();
   const [filter, setFilter] = useState<"All" | Enquiry["status"]>("All");
 
-  const visible =
-    filter === "All" ? enquiries : enquiries.filter((e) => e.status === filter);
+  const visible = filter === "All" ? enquiries : enquiries.filter((e) => e.status === filter);
 
   return (
     <AdminShell
@@ -58,10 +57,7 @@ function AdminEnquiries() {
         {visible.map((enquiry) => {
           const property = properties.find((p) => p.id === enquiry.propertyId);
           return (
-            <article
-              key={enquiry.id}
-              className="rounded-3xl border border-border bg-card p-6"
-            >
+            <article key={enquiry.id} className="rounded-3xl border border-border bg-card p-6">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <h2 className="text-sm font-bold text-navy">{enquiry.name}</h2>
@@ -96,9 +92,7 @@ function AdminEnquiries() {
                 </div>
               </div>
 
-              <p className="mt-4 text-sm leading-relaxed text-navy-soft">
-                {enquiry.message}
-              </p>
+              <p className="mt-4 text-sm leading-relaxed text-navy-soft">{enquiry.message}</p>
 
               <p className="mt-4 text-xs text-muted-foreground">
                 {new Date(enquiry.createdAt).toLocaleString("en-IN")}

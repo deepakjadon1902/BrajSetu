@@ -19,11 +19,23 @@ import { cn } from "@/lib/utils";
 
 const nav = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true, permission: "dashboard" },
-  { to: "/admin/properties", label: "Properties", icon: Building2, exact: false, permission: "properties" },
+  {
+    to: "/admin/properties",
+    label: "Properties",
+    icon: Building2,
+    exact: false,
+    permission: "properties",
+  },
   { to: "/admin/users", label: "Users", icon: Users, exact: false, permission: "users" },
   { to: "/admin/enquiries", label: "Enquiries", icon: Mail, exact: false, permission: "enquiries" },
   { to: "/admin/news", label: "News", icon: Newspaper, exact: false, permission: "news" },
-  { to: "/admin/settings", label: "Settings", icon: Settings, exact: false, permission: "settings" },
+  {
+    to: "/admin/settings",
+    label: "Settings",
+    icon: Settings,
+    exact: false,
+    permission: "settings",
+  },
   { to: "/admin/activity", label: "Activity", icon: History, exact: false, permission: "activity" },
 ] as const satisfies ReadonlyArray<{
   to: string;
@@ -70,7 +82,6 @@ export function AdminShell({
   const allowed = !permission || can(permission);
   const visibleNav = nav.filter((item) => can(item.permission));
 
-
   return (
     <div className="min-h-screen bg-smoke">
       <aside
@@ -84,9 +95,7 @@ export function AdminShell({
             <span className="grid h-9 w-9 place-items-center rounded-xl bg-gold text-sm font-extrabold text-navy">
               PV
             </span>
-            <span className="text-sm font-bold tracking-tight text-background">
-              Admin Console
-            </span>
+            <span className="text-sm font-bold tracking-tight text-background">Admin Console</span>
           </div>
           <button
             type="button"
@@ -100,9 +109,7 @@ export function AdminShell({
 
         <nav className="flex-1 space-y-1 px-3 py-4">
           {visibleNav.map((item) => {
-            const active = item.exact
-              ? pathname === item.to
-              : pathname.startsWith(item.to);
+            const active = item.exact ? pathname === item.to : pathname.startsWith(item.to);
             return (
               <Link
                 key={item.to}
@@ -173,9 +180,7 @@ export function AdminShell({
                 {title}
               </h1>
               {description ? (
-                <p className="mt-2 max-w-xl text-sm text-muted-foreground">
-                  {description}
-                </p>
+                <p className="mt-2 max-w-xl text-sm text-muted-foreground">{description}</p>
               ) : null}
             </div>
             {actions}

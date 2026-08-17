@@ -20,17 +20,10 @@ export function PropertyPreview({ property, onClose, className }: PropertyPrevie
 
   return (
     <aside
-      className={cn(
-        "overflow-hidden rounded-2xl bg-card shadow-[var(--shadow-lift)]",
-        className,
-      )}
+      className={cn("overflow-hidden rounded-2xl bg-card shadow-[var(--shadow-lift)]", className)}
     >
       <div className="relative">
-        <SmartImage
-          src={property.images[0] ?? ""}
-          alt={property.title}
-          aspect="aspect-[16/9]"
-        />
+        <SmartImage src={property.images[0] ?? ""} alt={property.title} aspect="aspect-[16/9]" />
         <span className="absolute top-3 left-3 rounded-full bg-gold px-3 py-1 text-[11px] font-semibold text-primary-foreground">
           {property.status ?? "Active"}
         </span>
@@ -79,8 +72,8 @@ export function PropertyPreview({ property, onClose, className }: PropertyPrevie
           {tab === "Overview" && <p>{property.description}</p>}
           {tab === "Reviews" && (
             <p>
-              Rated 4.8/5 by 12 visitors. Buyers consistently mention the natural light,
-              the quality of the finishing and how quiet the street is after 8pm.
+              Rated 4.8/5 by 12 visitors. Buyers consistently mention the natural light, the quality
+              of the finishing and how quiet the street is after 8pm.
             </p>
           )}
           {tab === "Details" && (

@@ -7,17 +7,8 @@ import type { NewsArticle, Property, PropertyFilters } from "@/types/property";
  */
 
 function matches(property: Property, filters: PropertyFilters): boolean {
-  const {
-    intent,
-    query,
-    city,
-    minPrice,
-    maxPrice,
-    categories,
-    bedrooms,
-    bathrooms,
-    amenities,
-  } = filters;
+  const { intent, query, city, minPrice, maxPrice, categories, bedrooms, bathrooms, amenities } =
+    filters;
 
   if (intent && property.intent !== intent) return false;
 
@@ -34,9 +25,12 @@ function matches(property: Property, filters: PropertyFilters): boolean {
     if (!haystack.includes(query.trim().toLowerCase())) return false;
   }
 
-  if (city && !`${property.location.city} ${property.location.locality}`
-    .toLowerCase()
-    .includes(city.trim().toLowerCase()))
+  if (
+    city &&
+    !`${property.location.city} ${property.location.locality}`
+      .toLowerCase()
+      .includes(city.trim().toLowerCase())
+  )
     return false;
 
   if (typeof minPrice === "number" && property.price < minPrice) return false;
@@ -44,8 +38,7 @@ function matches(property: Property, filters: PropertyFilters): boolean {
   if (categories?.length && !categories.includes(property.category)) return false;
   if (bedrooms && (property.specs.bedrooms ?? 0) < bedrooms) return false;
   if (bathrooms && (property.specs.bathrooms ?? 0) < bathrooms) return false;
-  if (amenities?.length && !amenities.every((a) => property.amenities.includes(a)))
-    return false;
+  if (amenities?.length && !amenities.every((a) => property.amenities.includes(a))) return false;
 
   return true;
 }

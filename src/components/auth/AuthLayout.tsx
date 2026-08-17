@@ -20,9 +20,7 @@ export function AuthLayout({
             <span className="grid h-10 w-10 place-items-center rounded-xl bg-navy text-sm font-extrabold text-background">
               PV
             </span>
-            <span className="text-lg font-extrabold tracking-tight text-navy">
-              PropVista
-            </span>
+            <span className="text-lg font-extrabold tracking-tight text-navy">PropVista</span>
           </Link>
 
           <h1 className="mt-8 text-2xl font-extrabold tracking-tight text-navy sm:text-3xl">
@@ -54,9 +52,7 @@ export function Field({
 }) {
   return (
     <label className="block">
-      <span className="text-xs font-semibold uppercase tracking-wide text-navy-soft">
-        {label}
-      </span>
+      <span className="text-xs font-semibold uppercase tracking-wide text-navy-soft">{label}</span>
       <div className="mt-2">{children}</div>
       {error ? <span className="mt-1 block text-xs text-destructive">{error}</span> : null}
     </label>

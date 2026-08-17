@@ -55,12 +55,8 @@ export function ListingPage({
   return (
     <div className="bg-smoke pb-20">
       <div className="pv-container pt-8 pb-6">
-        <h1 className="text-3xl font-extrabold tracking-tight text-navy sm:text-4xl">
-          {heading}
-        </h1>
-        <p className="mt-2 max-w-2xl text-sm text-muted-foreground sm:text-base">
-          {subheading}
-        </p>
+        <h1 className="text-3xl font-extrabold tracking-tight text-navy sm:text-4xl">{heading}</h1>
+        <p className="mt-2 max-w-2xl text-sm text-muted-foreground sm:text-base">{subheading}</p>
 
         <div className="mt-6 flex flex-col gap-3 lg:flex-row lg:items-center">
           <SearchPill
@@ -184,9 +180,7 @@ export function ListingPage({
         <div className="hidden xl:block">
           <div className="sticky top-24 space-y-6">
             <MapPlaceholder pins={pins} className="h-[420px] min-h-0" />
-            {selected && (
-              <PropertyPreview property={selected} onClose={() => setSelected(null)} />
-            )}
+            {selected && <PropertyPreview property={selected} onClose={() => setSelected(null)} />}
           </div>
         </div>
       </div>

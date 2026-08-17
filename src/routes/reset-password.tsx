@@ -2,12 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
 
-import {
-  AuthLayout,
-  Field,
-  inputClass,
-  primaryButtonClass,
-} from "@/components/auth/AuthLayout";
+import { AuthLayout, Field, inputClass, primaryButtonClass } from "@/components/auth/AuthLayout";
 import { useStore } from "@/lib/mock-store";
 
 export const Route = createFileRoute("/reset-password")({
@@ -71,10 +66,7 @@ function ResetPasswordPage() {
       footer={
         <>
           Need a new code?{" "}
-          <Link
-            to="/forgot-password"
-            className="font-semibold text-navy hover:text-gold-deep"
-          >
+          <Link to="/forgot-password" className="font-semibold text-navy hover:text-gold-deep">
             Request another
           </Link>
         </>

@@ -15,9 +15,7 @@ export function LegalPage({ title, updated, intro, sections }: LegalPageProps) {
     <div className="bg-background">
       <div className="border-b border-border bg-ice">
         <div className="pv-container py-14 sm:py-20">
-          <p className="text-xs font-semibold tracking-widest text-gold-deep uppercase">
-            Legal
-          </p>
+          <p className="text-xs font-semibold tracking-widest text-gold-deep uppercase">Legal</p>
           <h1 className="mt-3 text-3xl font-extrabold tracking-tight text-navy sm:text-5xl">
             {title}
           </h1>

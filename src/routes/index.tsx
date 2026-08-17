@@ -25,8 +25,7 @@ export const Route = createFileRoute("/")({
       { property: "og:title", content: "PropVista | Buy, Rent & Sell Property" },
       {
         property: "og:description",
-        content:
-          "Verified listings, map-led search and one advisor from first visit to handover.",
+        content: "Verified listings, map-led search and one advisor from first visit to handover.",
       },
     ],
   }),
@@ -67,9 +66,8 @@ function HomePage() {
               you'll keep for years.
             </h1>
             <p className="max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base">
-              Flats, houses, plots, shops and farm houses — each one visited,
-              photographed and title-checked by a PropVista advisor before it reaches
-              this page.
+              Flats, houses, plots, shops and farm houses — each one visited, photographed and
+              title-checked by a PropVista advisor before it reaches this page.
             </p>
           </div>
 
@@ -155,7 +153,7 @@ function HomePage() {
           <div className="mt-10 flex justify-center">
             <Link
               to="/buy"
-              search={{}}
+              search={{ q: undefined }}
               className="pv-tap inline-flex items-center rounded-full border border-navy px-7 text-sm font-semibold text-navy transition-colors hover:bg-navy hover:text-background"
             >
               Browse all listings
@@ -169,13 +167,11 @@ function HomePage() {
         <div className="pv-container grid gap-10 lg:grid-cols-2 lg:items-center">
           <div>
             <h2 className="text-2xl leading-tight font-extrabold tracking-tight text-navy sm:text-4xl">
-              The smarter way to{" "}
-              <span className="text-muted-foreground">sell your home.</span>
+              The smarter way to <span className="text-muted-foreground">sell your home.</span>
             </h2>
             <p className="mt-4 max-w-lg text-sm leading-relaxed text-muted-foreground sm:text-base">
-              We price from recent, verifiable transactions in your own micro-market,
-              then bring qualified buyers to the door instead of broadcasting your
-              address across every portal.
+              We price from recent, verifiable transactions in your own micro-market, then bring
+              qualified buyers to the door instead of broadcasting your address across every portal.
             </p>
             <ul className="mt-7 space-y-3">
               {[
@@ -193,7 +189,7 @@ function HomePage() {
             </ul>
             <Link
               to="/sale"
-              search={{}}
+              search={{ q: undefined }}
               className="pv-tap mt-8 inline-flex items-center rounded-full bg-gold px-7 text-sm font-semibold text-primary-foreground transition-transform duration-200 hover:scale-[1.02]"
             >
               Learn more

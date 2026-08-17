@@ -39,8 +39,7 @@ function validate(values: FormState): Errors {
   if (values.name.trim().length < 2) errors.name = "Please enter your full name.";
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(values.email))
     errors.email = "Enter a valid email address.";
-  if (!/^[0-9+\-\s()]{8,15}$/.test(values.phone))
-    errors.phone = "Enter a valid phone number.";
+  if (!/^[0-9+\-\s()]{8,15}$/.test(values.phone)) errors.phone = "Enter a valid phone number.";
   if (values.message.trim().length < 10)
     errors.message = "Tell us a little more (at least 10 characters).";
   return errors;
@@ -117,15 +116,13 @@ function ContactPage() {
     <div className="bg-smoke pb-16">
       <div className="bg-ice">
         <div className="pv-container py-14 sm:py-20">
-          <p className="text-xs font-semibold tracking-widest text-gold-deep uppercase">
-            Contact
-          </p>
+          <p className="text-xs font-semibold tracking-widest text-gold-deep uppercase">Contact</p>
           <h1 className="mt-3 max-w-2xl text-3xl leading-[1.05] font-extrabold tracking-tight text-navy sm:text-5xl">
             Tell us what you're looking for.
           </h1>
           <p className="mt-4 max-w-xl text-base text-muted-foreground">
-            One advisor picks up your enquiry and stays with it. Most messages get a
-            reply the same working day.
+            One advisor picks up your enquiry and stays with it. Most messages get a reply the same
+            working day.
           </p>
         </div>
       </div>
@@ -155,11 +152,13 @@ function ContactPage() {
                 onChange={(e) => update("name", e.target.value)}
                 aria-invalid={Boolean(errors.name)}
                 placeholder="Ananya Rao"
-                className={cn(fieldClass, "mt-2", errors.name ? "border-destructive" : "border-border")}
+                className={cn(
+                  fieldClass,
+                  "mt-2",
+                  errors.name ? "border-destructive" : "border-border",
+                )}
               />
-              {errors.name && (
-                <p className="mt-1.5 text-xs text-destructive">{errors.name}</p>
-              )}
+              {errors.name && <p className="mt-1.5 text-xs text-destructive">{errors.name}</p>}
             </div>
 
             <div className="grid gap-5 sm:grid-cols-2">
@@ -174,11 +173,13 @@ function ContactPage() {
                   onChange={(e) => update("email", e.target.value)}
                   aria-invalid={Boolean(errors.email)}
                   placeholder="you@example.com"
-                  className={cn(fieldClass, "mt-2", errors.email ? "border-destructive" : "border-border")}
+                  className={cn(
+                    fieldClass,
+                    "mt-2",
+                    errors.email ? "border-destructive" : "border-border",
+                  )}
                 />
-                {errors.email && (
-                  <p className="mt-1.5 text-xs text-destructive">{errors.email}</p>
-                )}
+                {errors.email && <p className="mt-1.5 text-xs text-destructive">{errors.email}</p>}
               </div>
               <div>
                 <label htmlFor="phone" className="text-sm font-semibold text-navy">
@@ -191,11 +192,13 @@ function ContactPage() {
                   onChange={(e) => update("phone", e.target.value)}
                   aria-invalid={Boolean(errors.phone)}
                   placeholder="+91 90000 00000"
-                  className={cn(fieldClass, "mt-2", errors.phone ? "border-destructive" : "border-border")}
+                  className={cn(
+                    fieldClass,
+                    "mt-2",
+                    errors.phone ? "border-destructive" : "border-border",
+                  )}
                 />
-                {errors.phone && (
-                  <p className="mt-1.5 text-xs text-destructive">{errors.phone}</p>
-                )}
+                {errors.phone && <p className="mt-1.5 text-xs text-destructive">{errors.phone}</p>}
               </div>
             </div>
 
@@ -210,7 +213,11 @@ function ContactPage() {
                 onChange={(e) => update("message", e.target.value)}
                 aria-invalid={Boolean(errors.message)}
                 placeholder="A 3 BHK in Baner under ₹1.4 Cr, ready to move…"
-                className={cn(fieldClass, "mt-2 resize-y", errors.message ? "border-destructive" : "border-border")}
+                className={cn(
+                  fieldClass,
+                  "mt-2 resize-y",
+                  errors.message ? "border-destructive" : "border-border",
+                )}
               />
               {errors.message && (
                 <p className="mt-1.5 text-xs text-destructive">{errors.message}</p>

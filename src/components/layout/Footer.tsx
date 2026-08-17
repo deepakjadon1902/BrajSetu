@@ -14,9 +14,7 @@ export function Footer() {
             </span>
             <span className="text-lg font-extrabold text-background">{settings.siteName}</span>
           </div>
-          <p className="mt-4 max-w-xs text-sm leading-relaxed">
-            {settings.tagline}
-          </p>
+          <p className="mt-4 max-w-xs text-sm leading-relaxed">{settings.tagline}</p>
           <div className="mt-5 flex gap-2">
             {[
               { href: settings.socialInstagram, Icon: Instagram, label: "Instagram" },
@@ -26,41 +24,69 @@ export function Footer() {
             ]
               .filter((item) => item.href.trim().length > 0)
               .map(({ href, Icon, label }) => (
-              <a
-                key={label}
-                href={href}
-                target="_blank"
-                rel="noreferrer"
-                aria-label={`${settings.siteName} on ${label}`}
-                className="grid h-11 w-11 place-items-center rounded-full border border-background/20 transition-colors hover:border-gold hover:text-gold"
-              >
-                <Icon className="h-4 w-4" />
-              </a>
-            ))}
+                <a
+                  key={label}
+                  href={href}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label={`${settings.siteName} on ${label}`}
+                  className="grid h-11 w-11 place-items-center rounded-full border border-background/20 transition-colors hover:border-gold hover:text-gold"
+                >
+                  <Icon className="h-4 w-4" />
+                </a>
+              ))}
           </div>
         </div>
 
         <div>
-          <h3 className="text-sm font-semibold tracking-wide text-background uppercase">
-            Explore
-          </h3>
+          <h3 className="text-sm font-semibold tracking-wide text-background uppercase">Explore</h3>
           <ul className="mt-4 space-y-3 text-sm">
-            <li><Link to="/buy" search={{}} className="hover:text-gold">Buy a property</Link></li>
-            <li><Link to="/rent" search={{}} className="hover:text-gold">Rent a property</Link></li>
-            <li><Link to="/sale" search={{}} className="hover:text-gold">Sell with us</Link></li>
-            <li><Link to="/about" className="hover:text-gold">About PropVista</Link></li>
+            <li>
+              <Link to="/buy" search={{ q: undefined }} className="hover:text-gold">
+                Buy a property
+              </Link>
+            </li>
+            <li>
+              <Link to="/rent" search={{ q: undefined }} className="hover:text-gold">
+                Rent a property
+              </Link>
+            </li>
+            <li>
+              <Link to="/sale" search={{ q: undefined }} className="hover:text-gold">
+                Sell with us
+              </Link>
+            </li>
+            <li>
+              <Link to="/about" className="hover:text-gold">
+                About PropVista
+              </Link>
+            </li>
           </ul>
         </div>
 
         <div>
-          <h3 className="text-sm font-semibold tracking-wide text-background uppercase">
-            Company
-          </h3>
+          <h3 className="text-sm font-semibold tracking-wide text-background uppercase">Company</h3>
           <ul className="mt-4 space-y-3 text-sm">
-            <li><Link to="/contact" className="hover:text-gold">Contact us</Link></li>
-            <li><Link to="/login" className="hover:text-gold">Sign in</Link></li>
-            <li><Link to="/terms" className="hover:text-gold">Terms &amp; Conditions</Link></li>
-            <li><Link to="/privacy" className="hover:text-gold">Privacy Policy</Link></li>
+            <li>
+              <Link to="/contact" className="hover:text-gold">
+                Contact us
+              </Link>
+            </li>
+            <li>
+              <Link to="/login" className="hover:text-gold">
+                Sign in
+              </Link>
+            </li>
+            <li>
+              <Link to="/terms" className="hover:text-gold">
+                Terms &amp; Conditions
+              </Link>
+            </li>
+            <li>
+              <Link to="/privacy" className="hover:text-gold">
+                Privacy Policy
+              </Link>
+            </li>
           </ul>
         </div>
 
@@ -75,11 +101,18 @@ export function Footer() {
             </li>
             <li className="flex gap-3">
               <Phone className="h-4 w-4 shrink-0 text-gold" />
-              <a href={`tel:${settings.contactPhone.replace(/\s/g, "")}`} className="hover:text-gold">{settings.contactPhone}</a>
+              <a
+                href={`tel:${settings.contactPhone.replace(/\s/g, "")}`}
+                className="hover:text-gold"
+              >
+                {settings.contactPhone}
+              </a>
             </li>
             <li className="flex gap-3">
               <Mail className="h-4 w-4 shrink-0 text-gold" />
-              <a href={`mailto:${settings.contactEmail}`} className="hover:text-gold">{settings.contactEmail}</a>
+              <a href={`mailto:${settings.contactEmail}`} className="hover:text-gold">
+                {settings.contactEmail}
+              </a>
             </li>
           </ul>
         </div>
@@ -87,7 +120,9 @@ export function Footer() {
 
       <div className="border-t border-background/10">
         <div className="pv-container flex flex-col gap-2 py-6 text-xs sm:flex-row sm:items-center sm:justify-between">
-          <p>© {new Date().getFullYear()} {settings.siteName}. All rights reserved.</p>
+          <p>
+            © {new Date().getFullYear()} {settings.siteName}. All rights reserved.
+          </p>
           <p>RERA registered · Independent advisory</p>
         </div>
       </div>

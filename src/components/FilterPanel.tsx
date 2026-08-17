@@ -101,9 +101,7 @@ export function FilterPanel({ filters, onChange, onApply, className }: FilterPan
         </div>
 
         <div>
-          <p className="text-xs font-semibold tracking-wide text-navy uppercase">
-            Price range
-          </p>
+          <p className="text-xs font-semibold tracking-wide text-navy uppercase">Price range</p>
           <div className="mt-3 space-y-3">
             <input
               type="range"
@@ -143,9 +141,7 @@ export function FilterPanel({ filters, onChange, onApply, className }: FilterPan
         </div>
 
         <div>
-          <p className="text-xs font-semibold tracking-wide text-navy uppercase">
-            Property type
-          </p>
+          <p className="text-xs font-semibold tracking-wide text-navy uppercase">Property type</p>
           <div className="mt-3 grid grid-cols-2 gap-2">
             {categories.map(({ value, icon: Icon }) => {
               const active = selectedCategories.includes(value);
@@ -186,9 +182,7 @@ export function FilterPanel({ filters, onChange, onApply, className }: FilterPan
         </div>
 
         <div>
-          <p className="text-xs font-semibold tracking-wide text-navy uppercase">
-            Amenities
-          </p>
+          <p className="text-xs font-semibold tracking-wide text-navy uppercase">Amenities</p>
           <div className="mt-3 flex flex-wrap gap-2">
             {AMENITY_OPTIONS.map((amenity) => {
               const active = selectedAmenities.includes(amenity);

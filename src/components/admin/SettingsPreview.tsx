@@ -79,9 +79,7 @@ export function SettingsPreview({ settings }: { settings: SiteSettings }) {
       </div>
 
       <div className="mt-5 rounded-2xl border border-border p-4">
-        <p className="text-xs font-semibold tracking-wide text-navy uppercase">
-          Social share card
-        </p>
+        <p className="text-xs font-semibold tracking-wide text-navy uppercase">Social share card</p>
         {settings.ogImage ? (
           <img
             src={settings.ogImage}

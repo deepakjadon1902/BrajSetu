@@ -17,7 +17,10 @@ export const Route = createFileRoute("/property/$propertyId")({
   head: ({ loaderData }) => {
     if (!loaderData) {
       return {
-        meta: [{ title: "Listing unavailable | PropVista" }, { name: "robots", content: "noindex" }],
+        meta: [
+          { title: "Listing unavailable | PropVista" },
+          { name: "robots", content: "noindex" },
+        ],
       };
     }
     const { property } = loaderData;
@@ -171,8 +174,8 @@ function PropertyDetailPage() {
               message={`Hi PropVista, I'm interested in ${property.title} (${property.id}) in ${property.location.locality}. Could you share more details?`}
             />
             <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
-              An advisor who knows this micro-market will respond, usually within a few
-              hours on working days.
+              An advisor who knows this micro-market will respond, usually within a few hours on
+              working days.
             </p>
           </div>
         </aside>
@@ -180,9 +183,7 @@ function PropertyDetailPage() {
 
       {similar.length > 0 && (
         <section className="pv-container mt-16">
-          <h2 className="text-2xl font-extrabold tracking-tight text-navy">
-            Similar listings
-          </h2>
+          <h2 className="text-2xl font-extrabold tracking-tight text-navy">Similar listings</h2>
           <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {similar.map((item: Property) => (
               <PropertyCard key={item.id} property={item} />
