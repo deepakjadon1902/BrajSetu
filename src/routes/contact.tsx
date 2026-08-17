@@ -83,6 +83,7 @@ function SocialLinks() {
 }
 
 function ContactPage() {
+  const { addEnquiry } = useStore();
   const [values, setValues] = useState<FormState>({
     name: "",
     email: "",
@@ -97,14 +98,15 @@ function ContactPage() {
     const nextErrors = validate(values);
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
-    // Placeholder handler — a transactional email service is wired in later.
-    onSubmit(values);
+    // Lands in the admin Enquiries inbox; swap for an API call later.
+    addEnquiry({
+      name: values.name.trim(),
+      email: values.email.trim().toLowerCase(),
+      phone: values.phone.trim(),
+      message: values.message.trim(),
+    });
     setSubmitted(true);
     setValues({ name: "", email: "", phone: "", message: "" });
-  }
-
-  function onSubmit(payload: FormState) {
-    console.info("Contact enquiry submitted", payload);
   }
 
   function update(key: keyof FormState, value: string) {
