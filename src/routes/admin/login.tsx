@@ -70,8 +70,8 @@ function AdminLoginPage() {
             <Lock className="h-5 w-5 text-gold" /> Restricted access
           </h1>
           <p className="mt-3 text-sm leading-relaxed text-background/60">
-            This console is separate from the public site. Only accounts with an admin
-            role can sign in.
+            This console is separate from the public site. Only accounts with an admin role can sign
+            in.
           </p>
 
           <form onSubmit={onSubmit} className="mt-8 space-y-4">
@@ -100,9 +100,7 @@ function AdminLoginPage() {
                 placeholder="••••••••"
                 className={`mt-2 ${inputClass}`}
               />
-              {error ? (
-                <span className="mt-2 block text-xs text-gold">{error}</span>
-              ) : null}
+              {error ? <span className="mt-2 block text-xs text-gold">{error}</span> : null}
             </label>
 
             <button

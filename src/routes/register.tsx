@@ -2,12 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
 
-import {
-  AuthLayout,
-  Field,
-  inputClass,
-  primaryButtonClass,
-} from "@/components/auth/AuthLayout";
+import { AuthLayout, Field, inputClass, primaryButtonClass } from "@/components/auth/AuthLayout";
 import { useStore } from "@/lib/mock-store";
 
 export const Route = createFileRoute("/register")({
@@ -61,10 +56,8 @@ function RegisterPage() {
     if (form.name.trim().length < 2) next.name = "Enter your full name.";
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()))
       next.email = "Enter a valid email address.";
-    if (form.phone.replace(/\D/g, "").length < 10)
-      next.phone = "Enter a valid phone number.";
-    if (form.password.length < 8)
-      next.password = "Use at least 8 characters.";
+    if (form.phone.replace(/\D/g, "").length < 10) next.phone = "Enter a valid phone number.";
+    if (form.password.length < 8) next.password = "Use at least 8 characters.";
     else if (!/[A-Za-z]/.test(form.password) || !/\d/.test(form.password))
       next.password = "Include at least one letter and one number.";
     if (form.confirm !== form.password) next.confirm = "Passwords do not match.";

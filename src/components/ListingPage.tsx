@@ -6,7 +6,8 @@ import { PropertyCard } from "@/components/PropertyCard";
 import { PropertyPreview } from "@/components/PropertyPreview";
 import { SearchPill, type SearchIntent } from "@/components/SearchPill";
 import { EmptyState } from "@/components/States";
-import { getProperties } from "@/lib/api";
+import { filterProperties } from "@/lib/api";
+import { useStore } from "@/lib/mock-store";
 import { cn } from "@/lib/utils";
 import type { Property, PropertyFilters, PropertyIntent } from "@/types/property";
 
@@ -36,14 +37,16 @@ export function ListingPage({
   const [mobilePanel, setMobilePanel] = useState<"filters" | "map" | null>(null);
   const [selected, setSelected] = useState<Property | null>(null);
 
+  const { properties } = useStore();
+
   const results = useMemo(() => {
-    const list = getProperties(filters);
+    const list = filterProperties(properties, filters);
     const sorted = [...list];
     if (sort === "price-asc") sorted.sort((a, b) => a.price - b.price);
     if (sort === "price-desc") sorted.sort((a, b) => b.price - a.price);
     if (sort === "area-desc") sorted.sort((a, b) => b.specs.area - a.specs.area);
     return sorted;
-  }, [filters, sort]);
+  }, [properties, filters, sort]);
 
   const pins = results.slice(0, 6).map((property, i) => ({
     id: property.id,
@@ -55,12 +58,8 @@ export function ListingPage({
   return (
     <div className="bg-smoke pb-20">
       <div className="pv-container pt-8 pb-6">
-        <h1 className="text-3xl font-extrabold tracking-tight text-navy sm:text-4xl">
-          {heading}
-        </h1>
-        <p className="mt-2 max-w-2xl text-sm text-muted-foreground sm:text-base">
-          {subheading}
-        </p>
+        <h1 className="text-3xl font-extrabold tracking-tight text-navy sm:text-4xl">{heading}</h1>
+        <p className="mt-2 max-w-2xl text-sm text-muted-foreground sm:text-base">{subheading}</p>
 
         <div className="mt-6 flex flex-col gap-3 lg:flex-row lg:items-center">
           <SearchPill
@@ -184,9 +183,7 @@ export function ListingPage({
         <div className="hidden xl:block">
           <div className="sticky top-24 space-y-6">
             <MapPlaceholder pins={pins} className="h-[420px] min-h-0" />
-            {selected && (
-              <PropertyPreview property={selected} onClose={() => setSelected(null)} />
-            )}
+            {selected && <PropertyPreview property={selected} onClose={() => setSelected(null)} />}
           </div>
         </div>
       </div>

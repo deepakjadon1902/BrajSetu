@@ -1,23 +1,31 @@
 import { useState } from "react";
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Check, X } from "lucide-react";
 import { ContactActions } from "@/components/ContactActions";
 import { MapPlaceholder } from "@/components/MapPlaceholder";
 import { PropertyCard } from "@/components/PropertyCard";
 import { SmartImage } from "@/components/SmartImage";
 import type { Property } from "@/types/property";
-import { formatArea, formatPrice, getPropertyById, getSimilarProperties } from "@/lib/api";
+import {
+  findProperty,
+  formatArea,
+  formatPrice,
+  getPropertyById,
+  similarProperties,
+} from "@/lib/api";
+import { useStore } from "@/lib/mock-store";
 
 export const Route = createFileRoute("/property/$propertyId")({
-  loader: ({ params }) => {
-    const property = getPropertyById(params.propertyId);
-    if (!property) throw notFound();
-    return { property, similar: getSimilarProperties(property.id) };
-  },
+  // Seed lookup powers SSR metadata; the page itself renders from the live
+  // (admin-managed) catalogue so newly created listings resolve too.
+  loader: ({ params }) => ({ property: getPropertyById(params.propertyId) ?? null }),
   head: ({ loaderData }) => {
-    if (!loaderData) {
+    if (!loaderData?.property) {
       return {
-        meta: [{ title: "Listing unavailable | PropVista" }, { name: "robots", content: "noindex" }],
+        meta: [
+          { title: "Listing unavailable | PropVista" },
+          { name: "robots", content: "noindex" },
+        ],
       };
     }
     const { property } = loaderData;
@@ -36,8 +44,38 @@ export const Route = createFileRoute("/property/$propertyId")({
 });
 
 function PropertyDetailPage() {
-  const { property, similar } = Route.useLoaderData();
+  const { propertyId } = Route.useParams();
+  const { properties, hydrated } = useStore();
   const [lightbox, setLightbox] = useState<string | null>(null);
+
+  const property = findProperty(properties, propertyId);
+  const similar = property ? similarProperties(properties, property.id) : [];
+
+  if (!property) {
+    return (
+      <div className="grid min-h-[60vh] place-items-center bg-smoke px-4">
+        <div className="max-w-md text-center">
+          <h1 className="text-2xl font-extrabold tracking-tight text-navy">
+            {hydrated ? "This listing is no longer available" : "Loading listing…"}
+          </h1>
+          {hydrated ? (
+            <>
+              <p className="mt-2 text-sm text-muted-foreground">
+                It may have been sold, rented or removed by our team.
+              </p>
+              <Link
+                to="/buy"
+                search={{ q: undefined }}
+                className="pv-tap mt-6 inline-flex items-center rounded-full bg-navy px-6 text-sm font-semibold text-background"
+              >
+                Browse listings
+              </Link>
+            </>
+          ) : null}
+        </div>
+      </div>
+    );
+  }
 
   const specs: [string, string][] = [
     ["Price", formatPrice(property.price, property.intent)],
@@ -171,8 +209,8 @@ function PropertyDetailPage() {
               message={`Hi PropVista, I'm interested in ${property.title} (${property.id}) in ${property.location.locality}. Could you share more details?`}
             />
             <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
-              An advisor who knows this micro-market will respond, usually within a few
-              hours on working days.
+              An advisor who knows this micro-market will respond, usually within a few hours on
+              working days.
             </p>
           </div>
         </aside>
@@ -180,9 +218,7 @@ function PropertyDetailPage() {
 
       {similar.length > 0 && (
         <section className="pv-container mt-16">
-          <h2 className="text-2xl font-extrabold tracking-tight text-navy">
-            Similar listings
-          </h2>
+          <h2 className="text-2xl font-extrabold tracking-tight text-navy">Similar listings</h2>
           <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {similar.map((item: Property) => (
               <PropertyCard key={item.id} property={item} />

@@ -7,17 +7,8 @@ import type { NewsArticle, Property, PropertyFilters } from "@/types/property";
  */
 
 function matches(property: Property, filters: PropertyFilters): boolean {
-  const {
-    intent,
-    query,
-    city,
-    minPrice,
-    maxPrice,
-    categories,
-    bedrooms,
-    bathrooms,
-    amenities,
-  } = filters;
+  const { intent, query, city, minPrice, maxPrice, categories, bedrooms, bathrooms, amenities } =
+    filters;
 
   if (intent && property.intent !== intent) return false;
 
@@ -34,9 +25,12 @@ function matches(property: Property, filters: PropertyFilters): boolean {
     if (!haystack.includes(query.trim().toLowerCase())) return false;
   }
 
-  if (city && !`${property.location.city} ${property.location.locality}`
-    .toLowerCase()
-    .includes(city.trim().toLowerCase()))
+  if (
+    city &&
+    !`${property.location.city} ${property.location.locality}`
+      .toLowerCase()
+      .includes(city.trim().toLowerCase())
+  )
     return false;
 
   if (typeof minPrice === "number" && property.price < minPrice) return false;
@@ -44,32 +38,49 @@ function matches(property: Property, filters: PropertyFilters): boolean {
   if (categories?.length && !categories.includes(property.category)) return false;
   if (bedrooms && (property.specs.bedrooms ?? 0) < bedrooms) return false;
   if (bathrooms && (property.specs.bathrooms ?? 0) < bathrooms) return false;
-  if (amenities?.length && !amenities.every((a) => property.amenities.includes(a)))
-    return false;
+  if (amenities?.length && !amenities.every((a) => property.amenities.includes(a))) return false;
 
   return true;
 }
 
-export function getProperties(filters: PropertyFilters = {}): Property[] {
-  return properties.filter((p) => matches(p, filters));
+/** List-based helpers so callers can pass the live (admin-managed) catalogue. */
+export function filterProperties(list: Property[], filters: PropertyFilters = {}): Property[] {
+  return list.filter((p) => matches(p, filters));
 }
 
-export function getFeaturedProperties(limit = 8): Property[] {
-  return [...properties]
+export function pickFeatured(list: Property[], limit = 8): Property[] {
+  return [...list]
     .sort((a, b) => Number(Boolean(b.featured)) - Number(Boolean(a.featured)))
     .slice(0, limit);
 }
 
+export function findProperty(list: Property[], id: string): Property | undefined {
+  return list.find((p) => p.id === id);
+}
+
+export function similarProperties(list: Property[], id: string, limit = 3): Property[] {
+  const base = findProperty(list, id);
+  if (!base) return [];
+  return list
+    .filter((p) => p.id !== id && (p.category === base.category || p.intent === base.intent))
+    .slice(0, limit);
+}
+
+/** Seed-backed convenience wrappers (used for SSR/SEO before hydration). */
+export function getProperties(filters: PropertyFilters = {}): Property[] {
+  return filterProperties(properties, filters);
+}
+
+export function getFeaturedProperties(limit = 8): Property[] {
+  return pickFeatured(properties, limit);
+}
+
 export function getPropertyById(id: string): Property | undefined {
-  return properties.find((p) => p.id === id);
+  return findProperty(properties, id);
 }
 
 export function getSimilarProperties(id: string, limit = 3): Property[] {
-  const base = getPropertyById(id);
-  if (!base) return [];
-  return properties
-    .filter((p) => p.id !== id && (p.category === base.category || p.intent === base.intent))
-    .slice(0, limit);
+  return similarProperties(properties, id, limit);
 }
 
 export function getNews(): NewsArticle[] {

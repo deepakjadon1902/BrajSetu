@@ -73,9 +73,7 @@ function AdminActivity() {
                 type="button"
                 onClick={() => setArea(item)}
                 className={`rounded-full px-4 py-2 text-xs font-semibold transition-colors ${
-                  area === item
-                    ? "bg-navy text-background"
-                    : "border border-border text-navy"
+                  area === item ? "bg-navy text-background" : "border border-border text-navy"
                 }`}
               >
                 {item}
@@ -90,10 +88,7 @@ function AdminActivity() {
           ) : (
             <ul className="mt-6 space-y-3">
               {rows.map((entry) => (
-                <li
-                  key={entry.id}
-                  className="rounded-2xl border border-border/70 bg-smoke/40 p-4"
-                >
+                <li key={entry.id} className="rounded-2xl border border-border/70 bg-smoke/40 p-4">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="rounded-full bg-navy/10 px-3 py-1 text-[11px] font-semibold text-navy">
                       {entry.area}
@@ -127,10 +122,7 @@ function AdminActivity() {
           ) : (
             <ul className="mt-5 space-y-3">
               {settingsHistory.map((version) => (
-                <li
-                  key={version.id}
-                  className="rounded-2xl border border-border/70 p-4"
-                >
+                <li key={version.id} className="rounded-2xl border border-border/70 p-4">
                   <p className="text-sm font-semibold text-navy">
                     {version.settings.siteName} · {version.summary}
                   </p>

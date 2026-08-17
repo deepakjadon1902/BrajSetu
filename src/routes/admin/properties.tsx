@@ -86,10 +86,7 @@ function AdminProperties() {
       }
     >
       {draft ? (
-        <form
-          onSubmit={onSubmit}
-          className="mb-6 rounded-3xl border border-border bg-card p-6"
-        >
+        <form onSubmit={onSubmit} className="mb-6 rounded-3xl border border-border bg-card p-6">
           <h2 className="text-sm font-bold uppercase tracking-wide text-navy">
             {properties.some((p) => p.id === draft.id) ? "Edit listing" : "New listing"}
           </h2>
@@ -103,9 +100,7 @@ function AdminProperties() {
             <select
               className={inputClass}
               value={draft.category}
-              onChange={(e) =>
-                setDraft({ ...draft, category: e.target.value as PropertyCategory })
-              }
+              onChange={(e) => setDraft({ ...draft, category: e.target.value as PropertyCategory })}
             >
               {categories.map((c) => (
                 <option key={c}>{c}</option>
@@ -114,9 +109,7 @@ function AdminProperties() {
             <select
               className={inputClass}
               value={draft.intent}
-              onChange={(e) =>
-                setDraft({ ...draft, intent: e.target.value as PropertyIntent })
-              }
+              onChange={(e) => setDraft({ ...draft, intent: e.target.value as PropertyIntent })}
             >
               {intents.map((i) => (
                 <option key={i}>{i}</option>

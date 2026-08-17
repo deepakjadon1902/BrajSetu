@@ -25,9 +25,7 @@ export function NotificationBar({
       )}
     >
       <div className="pv-container flex items-center justify-between gap-4 py-2.5">
-        <p className="min-w-0 flex-1 text-center text-xs font-medium sm:text-sm">
-          {children}
-        </p>
+        <p className="min-w-0 flex-1 text-center text-xs font-medium sm:text-sm">{children}</p>
         <button
           type="button"
           onClick={() => setVisible(false)}

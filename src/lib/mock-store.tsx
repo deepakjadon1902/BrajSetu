@@ -20,13 +20,7 @@ import type { NewsArticle, Property } from "@/types/property";
 export type UserRole = "user" | "editor" | "manager" | "admin";
 
 export type AdminPermission =
-  | "dashboard"
-  | "properties"
-  | "enquiries"
-  | "news"
-  | "users"
-  | "settings"
-  | "activity";
+  "dashboard" | "properties" | "enquiries" | "news" | "users" | "settings" | "activity";
 
 export const permissionLabels: Record<AdminPermission, string> = {
   dashboard: "Dashboard",
@@ -121,8 +115,7 @@ export const defaultSettings: SiteSettings = {
   contactPhone: "+91 90000 00000",
   address: "4th Floor, Meridian House, Baner Road, Pune 411045",
   ogTitle: "PropVista | Premium Property Marketplace",
-  ogDescription:
-    "Buy, rent and sell verified property with a boutique advisory team.",
+  ogDescription: "Buy, rent and sell verified property with a boutique advisory team.",
   ogImage: "",
   twitterCard: "summary_large_image",
   twitterHandle: "@propvista",
@@ -131,18 +124,11 @@ export const defaultSettings: SiteSettings = {
   socialLinkedin: "https://linkedin.com/company/propvista",
   socialX: "https://x.com/propvista",
   announcementEnabled: true,
-  announcementMessage:
-    "New this week: 24 verified listings added across Pune, Mumbai and Goa.",
+  announcementMessage: "New this week: 24 verified listings added across Pune, Mumbai and Goa.",
   announcementTone: "navy",
 };
 
-export type ActivityArea =
-  | "Settings"
-  | "Properties"
-  | "Users"
-  | "Enquiries"
-  | "News"
-  | "Auth";
+export type ActivityArea = "Settings" | "Properties" | "Users" | "Enquiries" | "News" | "Auth";
 
 export interface ActivityEntry {
   id: string;
@@ -312,12 +298,7 @@ interface StoreContextValue {
   adminUser: AppUser | null;
   permissions: AdminPermission[];
   can: (permission: AdminPermission) => boolean;
-  register: (input: {
-    name: string;
-    email: string;
-    phone: string;
-    password: string;
-  }) => AuthResult;
+  register: (input: { name: string; email: string; phone: string; password: string }) => AuthResult;
   login: (email: string, password: string) => AuthResult;
   logout: () => void;
   requestPasswordReset: (email: string) => AuthResult;
@@ -334,7 +315,6 @@ interface StoreContextValue {
   setEnquiryStatus: (id: string, status: Enquiry["status"]) => void;
   deleteEnquiry: (id: string) => void;
 }
-
 
 function describeSettingsDiff(prev: SiteSettings, next: SiteSettings): string {
   const changed = (Object.keys(next) as Array<keyof SiteSettings>).filter(
@@ -656,15 +636,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         }),
       deleteUser: (id) =>
         patch((prev) =>
-          log({
-          ...prev,
-          users: prev.users.filter((u) => u.id !== id),
-          sessionUserId: prev.sessionUserId === id ? null : prev.sessionUserId,
-          adminSessionId: prev.adminSessionId === id ? null : prev.adminSessionId,
-        },
-          "Users",
-          "Deleted user",
-          prev.users.find((u) => u.id === id)?.email ?? id,
+          log(
+            {
+              ...prev,
+              users: prev.users.filter((u) => u.id !== id),
+              sessionUserId: prev.sessionUserId === id ? null : prev.sessionUserId,
+              adminSessionId: prev.adminSessionId === id ? null : prev.adminSessionId,
+            },
+            "Users",
+            "Deleted user",
+            prev.users.find((u) => u.id === id)?.email ?? id,
           ),
         ),
       addEnquiry: (input) =>

@@ -153,8 +153,8 @@ export function OgImageUploader({
           </button>
         ) : null}
         <span className="text-xs text-muted-foreground">
-          PNG, JPG or WebP · min {MIN_WIDTH}×{MIN_HEIGHT} · max 5 MB · cropped to{" "}
-          {OG_WIDTH}×{OG_HEIGHT}
+          PNG, JPG or WebP · min {MIN_WIDTH}×{MIN_HEIGHT} · max 5 MB · cropped to {OG_WIDTH}×
+          {OG_HEIGHT}
         </span>
       </div>
 
@@ -241,8 +241,7 @@ export function OgImageUploader({
             </button>
           </div>
           <p className="mt-2 text-xs text-muted-foreground">
-            Drag to reposition, zoom to fill. The crop is saved at exactly {OG_WIDTH}×
-            {OG_HEIGHT}.
+            Drag to reposition, zoom to fill. The crop is saved at exactly {OG_WIDTH}×{OG_HEIGHT}.
           </p>
         </div>
       ) : value ? (

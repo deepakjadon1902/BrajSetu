@@ -62,10 +62,9 @@ function AboutPage() {
               built on evidence.
             </h1>
             <p className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground">
-              PropVista started in 2016 with a simple frustration: listings that
-              looked nothing like the property, and advisors who disappeared after
-              the deposit. We rebuilt the process around verification, one advisor
-              per client, and pricing you can audit.
+              PropVista started in 2016 with a simple frustration: listings that looked nothing like
+              the property, and advisors who disappeared after the deposit. We rebuilt the process
+              around verification, one advisor per client, and pricing you can audit.
             </p>
           </div>
           <SmartImage
@@ -111,10 +110,9 @@ function AboutPage() {
               <span className="text-muted-foreground">Six cities. One standard.</span>
             </h2>
             <p className="mt-4 text-base leading-relaxed text-muted-foreground">
-              Our team covers Pune, Mumbai, Bengaluru, Hyderabad, Goa and Chandigarh.
-              Each advisor specialises in a handful of micro-markets rather than
-              covering a whole city thinly — which is why they can tell you what the
-              flat two floors down actually sold for.
+              Our team covers Pune, Mumbai, Bengaluru, Hyderabad, Goa and Chandigarh. Each advisor
+              specialises in a handful of micro-markets rather than covering a whole city thinly —
+              which is why they can tell you what the flat two floors down actually sold for.
             </p>
             <dl className="mt-8 grid grid-cols-3 gap-4">
               {[
@@ -123,9 +121,7 @@ function AboutPage() {
                 ["4.8/5", "Client rating"],
               ].map(([stat, label]) => (
                 <div key={label}>
-                  <dt className="text-xl font-extrabold text-gold-deep sm:text-2xl">
-                    {stat}
-                  </dt>
+                  <dt className="text-xl font-extrabold text-gold-deep sm:text-2xl">{stat}</dt>
                   <dd className="mt-1 text-xs text-muted-foreground">{label}</dd>
                 </div>
               ))}
@@ -141,8 +137,8 @@ function AboutPage() {
               Thinking of listing this season?
             </h2>
             <p className="mt-3 text-sm leading-relaxed text-background/75">
-              Book a valuation visit and we'll bring the last six comparable
-              transactions from your locality with us.
+              Book a valuation visit and we'll bring the last six comparable transactions from your
+              locality with us.
             </p>
             <Link
               to="/contact"
