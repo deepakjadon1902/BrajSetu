@@ -43,26 +43,44 @@ function matches(property: Property, filters: PropertyFilters): boolean {
   return true;
 }
 
-export function getProperties(filters: PropertyFilters = {}): Property[] {
-  return properties.filter((p) => matches(p, filters));
+/** List-based helpers so callers can pass the live (admin-managed) catalogue. */
+export function filterProperties(list: Property[], filters: PropertyFilters = {}): Property[] {
+  return list.filter((p) => matches(p, filters));
 }
 
-export function getFeaturedProperties(limit = 8): Property[] {
-  return [...properties]
+export function pickFeatured(list: Property[], limit = 8): Property[] {
+  return [...list]
     .sort((a, b) => Number(Boolean(b.featured)) - Number(Boolean(a.featured)))
     .slice(0, limit);
 }
 
+export function findProperty(list: Property[], id: string): Property | undefined {
+  return list.find((p) => p.id === id);
+}
+
+export function similarProperties(list: Property[], id: string, limit = 3): Property[] {
+  const base = findProperty(list, id);
+  if (!base) return [];
+  return list
+    .filter((p) => p.id !== id && (p.category === base.category || p.intent === base.intent))
+    .slice(0, limit);
+}
+
+/** Seed-backed convenience wrappers (used for SSR/SEO before hydration). */
+export function getProperties(filters: PropertyFilters = {}): Property[] {
+  return filterProperties(properties, filters);
+}
+
+export function getFeaturedProperties(limit = 8): Property[] {
+  return pickFeatured(properties, limit);
+}
+
 export function getPropertyById(id: string): Property | undefined {
-  return properties.find((p) => p.id === id);
+  return findProperty(properties, id);
 }
 
 export function getSimilarProperties(id: string, limit = 3): Property[] {
-  const base = getPropertyById(id);
-  if (!base) return [];
-  return properties
-    .filter((p) => p.id !== id && (p.category === base.category || p.intent === base.intent))
-    .slice(0, limit);
+  return similarProperties(properties, id, limit);
 }
 
 export function getNews(): NewsArticle[] {

@@ -5,7 +5,8 @@ import { OverlayCard } from "@/components/OverlayCard";
 import { PropertyCard } from "@/components/PropertyCard";
 import { SearchPill } from "@/components/SearchPill";
 import { SmartImage } from "@/components/SmartImage";
-import { getFeaturedProperties, getNews, getProperties } from "@/lib/api";
+import { filterProperties, pickFeatured } from "@/lib/api";
+import { useStore } from "@/lib/mock-store";
 import { cn } from "@/lib/utils";
 import heroHouse from "@/assets/hero-house.jpg";
 import sellHome from "@/assets/sell-home.jpg";
@@ -45,10 +46,10 @@ const exploreFilters = [
 function HomePage() {
   const [activeFilter, setActiveFilter] = useState(exploreFilters[0]);
   const newsRef = useRef<HTMLDivElement>(null);
-  const news = getNews();
+  const { properties, news } = useStore();
 
-  const exploreCards = useMemo(() => getProperties().slice(0, 3), []);
-  const homesForYou = useMemo(() => getFeaturedProperties(8), []);
+  const exploreCards = useMemo(() => filterProperties(properties).slice(0, 3), [properties]);
+  const homesForYou = useMemo(() => pickFeatured(properties, 8), [properties]);
 
   function scrollNews(direction: -1 | 1) {
     newsRef.current?.scrollBy({ left: direction * 340, behavior: "smooth" });
