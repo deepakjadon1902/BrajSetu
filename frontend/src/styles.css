@@ -1,0 +1,174 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * PropVista design system — 60:30:10
+ * 60% light neutrals (white, white smoke, ice gray, cool gray blue)
+ * 30% deep navy / near-black (text, footer, dark pills)
+ * 10% warm gold (primary CTA, price, active states)
+ */
+
+@theme inline {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ring-offset-background: var(--background);
+  --color-navy: var(--navy);
+  --color-navy-soft: var(--navy-soft);
+  --color-gold: var(--gold);
+  --color-gold-deep: var(--gold-deep);
+  --color-smoke: var(--smoke);
+  --color-ice: var(--ice);
+  --color-coolgray: var(--coolgray);
+  --shadow-soft: 0 2px 10px -4px oklch(0.2 0.03 255 / 0.12);
+  --shadow-lift: 0 18px 40px -18px oklch(0.2 0.03 255 / 0.28);
+  --shadow-float: 0 26px 60px -20px oklch(0.18 0.03 255 / 0.35);
+}
+
+:root {
+  --radius: 1rem;
+
+  /* neutrals (60%) */
+  --background: oklch(1 0 0);
+  --smoke: oklch(0.985 0 0); /* #FAFAFA */
+  --ice: oklch(0.955 0.003 250); /* #EFF1F2 */
+  --coolgray: oklch(0.928 0.008 255); /* #E8EBF1 */
+
+  /* navy / charcoal (30%) */
+  --navy: oklch(0.24 0.035 258); /* #0F1B2B */
+  --navy-soft: oklch(0.31 0.032 256); /* #1C2B3A */
+
+  /* gold (10%) */
+  --gold: oklch(0.72 0.104 82); /* #C9A24B */
+  --gold-deep: oklch(0.64 0.098 66); /* #B8894A */
+
+  --foreground: var(--navy);
+  --card: oklch(1 0 0);
+  --card-foreground: var(--navy);
+  --popover: oklch(1 0 0);
+  --popover-foreground: var(--navy);
+  --primary: var(--gold);
+  --primary-foreground: oklch(0.18 0.02 258);
+  --secondary: var(--navy);
+  --secondary-foreground: oklch(0.99 0 0);
+  --muted: var(--ice);
+  --muted-foreground: oklch(0.55 0.015 258);
+  --accent: var(--coolgray);
+  --accent-foreground: var(--navy);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.99 0 0);
+  --border: oklch(0.912 0.008 255);
+  --input: oklch(0.912 0.008 255);
+  --ring: var(--gold);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    overflow-x: hidden;
+  }
+
+  h1,
+  h2,
+  h3 {
+    letter-spacing: -0.025em;
+  }
+}
+
+@utility pv-container {
+  width: 100%;
+  max-width: 80rem;
+  margin-inline: auto;
+  padding-inline: 1.25rem;
+  @media (min-width: 1024px) {
+    padding-inline: 2rem;
+  }
+}
+
+@utility pv-lift {
+  transition:
+    transform 200ms ease-out,
+    box-shadow 200ms ease-out;
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lift);
+  }
+}
+
+@utility pv-tap {
+  min-height: 44px;
+}
+
+@utility pv-fade-up {
+  animation: pv-fade-up 600ms ease-out both;
+}
+
+@keyframes pv-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@utility pv-shimmer {
+  background: linear-gradient(90deg, var(--ice) 25%, var(--coolgray) 37%, var(--ice) 63%);
+  background-size: 400% 100%;
+  animation: pv-shimmer 1.4s ease infinite;
+}
+
+@keyframes pv-shimmer {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}
+
+@utility pv-no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
