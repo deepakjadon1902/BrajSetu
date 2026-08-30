@@ -13,14 +13,7 @@ export default defineConfig({
     react(),
     tailwindcss(),
     tsconfigPaths(),
-    nitro({
-      preset: "cloudflare-module",
-      cloudflare: {
-        wrangler: {
-          name: "braj-setu-frontend",
-        },
-      },
-    }),
+    nitro(),
   ],
   resolve: {
     dedupe: ["react", "react-dom", "@tanstack/react-start", "@tanstack/react-router"],

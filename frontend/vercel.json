@@ -1,5 +1,5 @@
 {
-  "framework": "vite",
+  "framework": "tanstack-start",
   "installCommand": "npm install",
   "buildCommand": "npm run build"
 }
