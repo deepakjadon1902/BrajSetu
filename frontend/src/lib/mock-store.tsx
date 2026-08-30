@@ -189,10 +189,14 @@ interface StoreContextValue extends StoreShape {
   clearActivity: () => Promise<void>;
 }
 
-export const API_BASE = (
-  import.meta.env.VITE_API_BASE_URL ||
-  (import.meta.env.PROD ? "https://brajsetu.onrender.com/api" : "http://localhost:5000/api")
-).replace(/\/$/, "");
+const localApiBase = import.meta.env.DEV
+  ? import.meta.env.VITE_API_BASE_URL?.trim() || "http://localhost:5000/api"
+  : "";
+const productionApiBase = import.meta.env.PROD
+  ? import.meta.env.VITE_PRODUCTION_API_BASE_URL?.trim() || "https://brajsetu.onrender.com/api"
+  : "";
+
+export const API_BASE = (productionApiBase || localApiBase).replace(/\/$/, "");
 const USER_TOKEN_KEY = "braj-setu-user-token";
 const ADMIN_TOKEN_KEY = "braj-setu-admin-token";
 

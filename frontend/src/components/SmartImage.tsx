@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 interface SmartImageProps {
@@ -26,12 +26,18 @@ export function SmartImage({
   width,
   height,
 }: SmartImageProps) {
+  const imageRef = useRef<HTMLImageElement>(null);
   const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    if (imageRef.current?.complete) setLoaded(true);
+  }, [src]);
 
   return (
     <div className={cn("relative overflow-hidden bg-ice", aspect, wrapperClassName)}>
       {!loaded && <div className="pv-shimmer absolute inset-0" aria-hidden="true" />}
       <img
+        ref={imageRef}
         src={src}
         alt={alt}
         width={width}
