@@ -7,13 +7,13 @@ export const Route = createFileRoute("/rent")({
   }),
   head: () => ({
     meta: [
-      { title: "Homes & Shops for Rent | PropVista" },
+      { title: "Homes & Shops for Rent | Braj Setu Properties" },
       {
         name: "description",
         content:
           "Find flats, houses, shops and farm houses on rent with transparent pricing, verified owners and flexible lease terms.",
       },
-      { property: "og:title", content: "Homes & Shops for Rent | PropVista" },
+      { property: "og:title", content: "Homes & Shops for Rent | Braj Setu Properties" },
       {
         property: "og:description",
         content: "Rental homes and commercial spaces with verified owners and clear terms.",
@@ -30,7 +30,7 @@ function RentPage() {
       intent="Rent"
       searchIntent="Rent"
       heading="Rent something you'll want to stay in"
-      subheading="Long-lease homes and commercial spaces, each one photographed and inspected by a PropVista advisor."
+      subheading="Long-lease homes and commercial spaces, each one photographed and inspected by a Braj Setu Properties advisor."
       initialQuery={q ?? ""}
     />
   );

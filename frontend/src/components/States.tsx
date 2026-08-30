@@ -27,11 +27,22 @@ export function PropertyCardSkeleton({ compact }: { compact?: boolean }) {
   );
 }
 
-export function PropertyGridSkeleton({ count = 6 }: { count?: number }) {
+export function PropertyGridSkeleton({
+  count = 6,
+  compact = false,
+}: {
+  count?: number;
+  compact?: boolean;
+}) {
   return (
-    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <div
+      className={cn(
+        "grid gap-6",
+        compact ? "grid-cols-1" : "sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4",
+      )}
+    >
       {Array.from({ length: count }).map((_, i) => (
-        <PropertyCardSkeleton key={i} />
+        <PropertyCardSkeleton key={i} compact={compact} />
       ))}
     </div>
   );

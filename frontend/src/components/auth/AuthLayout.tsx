@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
+import { BrandLogo } from "@/components/BrandLogo";
 
 export function AuthLayout({
   title,
@@ -16,11 +17,8 @@ export function AuthLayout({
     <div className="flex min-h-[calc(100vh-5rem)] items-center bg-ice py-14">
       <div className="pv-container">
         <div className="mx-auto w-full max-w-md rounded-3xl bg-card p-7 shadow-[var(--shadow-lift)] sm:p-10">
-          <Link to="/" className="flex items-center gap-2">
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-navy text-sm font-extrabold text-background">
-              PV
-            </span>
-            <span className="text-lg font-extrabold tracking-tight text-navy">PropVista</span>
+          <Link to="/" className="flex items-center">
+            <BrandLogo compact />
           </Link>
 
           <h1 className="mt-8 text-2xl font-extrabold tracking-tight text-navy sm:text-3xl">

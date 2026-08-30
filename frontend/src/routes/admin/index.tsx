@@ -8,14 +8,14 @@ import { useStore } from "@/lib/mock-store";
 export const Route = createFileRoute("/admin/")({
   head: () => ({
     meta: [
-      { title: "Dashboard | PropVista Admin" },
+      { title: "Dashboard | Braj Setu Admin" },
       {
         name: "description",
-        content: "Overview of listings, users, enquiries and news for PropVista staff.",
+        content: "Overview of listings, users, enquiries and news for Braj Setu Properties staff.",
       },
       { name: "robots", content: "noindex" },
-      { property: "og:title", content: "Dashboard | PropVista Admin" },
-      { property: "og:description", content: "PropVista administration overview." },
+      { property: "og:title", content: "Dashboard | Braj Setu Admin" },
+      { property: "og:description", content: "Braj Setu Properties administration overview." },
     ],
   }),
   component: AdminDashboard,
@@ -71,7 +71,7 @@ function AdminDashboard() {
     <AdminShell
       permission="dashboard"
       title="Dashboard"
-      description="A live snapshot of the PropVista marketplace."
+      description="A live snapshot of the Braj Setu Properties marketplace."
     >
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {stats.map((stat) => (

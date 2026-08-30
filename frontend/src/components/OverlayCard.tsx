@@ -35,7 +35,7 @@ export function OverlayCard({
           <h3 className="truncate text-lg font-extrabold text-background">{title}</h3>
           <p className="mt-1 line-clamp-2 text-sm text-background/80">{subtitle}</p>
         </div>
-        <span className="pv-tap inline-flex shrink-0 items-center rounded-full bg-navy px-4 text-xs font-semibold text-background transition-transform duration-200 group-hover:scale-[1.02]">
+        <span className="pv-smooth-state pv-tap inline-flex shrink-0 items-center rounded-full bg-navy px-4 text-xs font-semibold text-background group-hover:scale-[1.02]">
           {cta}
         </span>
       </div>

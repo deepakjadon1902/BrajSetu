@@ -10,14 +10,14 @@ import type { NewsArticle } from "@/types/property";
 export const Route = createFileRoute("/admin/news")({
   head: () => ({
     meta: [
-      { title: "News | PropVista Admin" },
+      { title: "News | Braj Setu Admin" },
       {
         name: "description",
-        content: "Publish and edit the market insight articles shown on PropVista.",
+        content: "Publish and edit the market insight articles shown on Braj Setu Properties.",
       },
       { name: "robots", content: "noindex" },
-      { property: "og:title", content: "News | PropVista Admin" },
-      { property: "og:description", content: "Manage PropVista market insights." },
+      { property: "og:title", content: "News | Braj Setu Admin" },
+      { property: "og:description", content: "Manage Braj Setu Properties market insights." },
     ],
   }),
   component: AdminNews,

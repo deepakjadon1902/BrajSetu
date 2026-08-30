@@ -4,16 +4,16 @@ import { LegalPage } from "@/components/LegalPage";
 export const Route = createFileRoute("/privacy")({
   head: () => ({
     meta: [
-      { title: "Privacy Policy | PropVista" },
+      { title: "Privacy Policy | Braj Setu Properties" },
       {
         name: "description",
         content:
-          "How PropVista collects, uses and protects the personal information you share when enquiring about a property.",
+          "How Braj Setu Properties collects, uses and protects the personal information you share when enquiring about a property.",
       },
-      { property: "og:title", content: "Privacy Policy | PropVista" },
+      { property: "og:title", content: "Privacy Policy | Braj Setu Properties" },
       {
         property: "og:description",
-        content: "How PropVista handles and protects your personal information.",
+        content: "How Braj Setu Properties handles and protects your personal information.",
       },
     ],
   }),
@@ -57,7 +57,7 @@ function PrivacyPage() {
         {
           heading: "5. Your rights",
           body: [
-            "You can request a copy of your data, ask for corrections, or ask us to delete it by writing to hello@propvista.in.",
+            "You can request a copy of your data, ask for corrections, or ask us to delete it by writing to hello@brajsetuproperties.in.",
           ],
         },
         {

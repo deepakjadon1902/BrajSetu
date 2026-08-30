@@ -8,16 +8,20 @@ import agents from "@/assets/tile-agents.jpg";
 export const Route = createFileRoute("/about")({
   head: () => ({
     meta: [
-      { title: "About PropVista | Boutique Property Consultancy" },
+      { title: "About Braj Setu Properties | Boutique Property Consultancy" },
       {
         name: "description",
         content:
-          "PropVista is a boutique property consultancy pairing verified listings with advisors who visit every home before it is published.",
+          "Braj Setu Properties is a boutique property consultancy pairing verified listings with advisors who visit every home before it is published.",
       },
-      { property: "og:title", content: "About PropVista | Boutique Property Consultancy" },
+      {
+        property: "og:title",
+        content: "About Braj Setu Properties | Boutique Property Consultancy",
+      },
       {
         property: "og:description",
-        content: "Meet the advisory team behind PropVista and how we verify every listing.",
+        content:
+          "Meet the advisory team behind Braj Setu Properties and how we verify every listing.",
       },
     ],
   }),
@@ -54,7 +58,7 @@ function AboutPage() {
         <div className="pv-container grid gap-10 py-14 lg:grid-cols-2 lg:items-center lg:py-20">
           <div>
             <p className="text-xs font-semibold tracking-widest text-gold-deep uppercase">
-              About PropVista
+              About Braj Setu Properties
             </p>
             <h1 className="mt-4 text-3xl leading-[1.05] font-extrabold tracking-tight text-navy sm:text-5xl">
               A property consultancy
@@ -62,14 +66,14 @@ function AboutPage() {
               built on evidence.
             </h1>
             <p className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground">
-              PropVista started in 2016 with a simple frustration: listings that looked nothing like
-              the property, and advisors who disappeared after the deposit. We rebuilt the process
-              around verification, one advisor per client, and pricing you can audit.
+              Braj Setu Properties started in 2016 with a simple frustration: listings that looked
+              nothing like the property, and advisors who disappeared after the deposit. We rebuilt
+              the process around verification, one advisor per client, and pricing you can audit.
             </p>
           </div>
           <SmartImage
             src={heroHouse}
-            alt="Contemporary house represented by PropVista"
+            alt="Contemporary house represented by Braj Setu Properties"
             aspect="aspect-[4/3]"
             wrapperClassName="rounded-3xl shadow-[var(--shadow-lift)]"
           />
@@ -100,7 +104,7 @@ function AboutPage() {
         <div className="pv-container grid gap-10 py-14 lg:grid-cols-2 lg:items-center lg:py-20">
           <SmartImage
             src={agents}
-            alt="A PropVista advisor at the Pune office"
+            alt="A Braj Setu Properties advisor at the Pune office"
             aspect="aspect-[4/3]"
             wrapperClassName="rounded-3xl shadow-[var(--shadow-lift)] order-last lg:order-first"
           />
@@ -142,14 +146,14 @@ function AboutPage() {
             </p>
             <Link
               to="/contact"
-              className="pv-tap mt-6 inline-flex items-center rounded-full bg-gold px-7 text-sm font-semibold text-primary-foreground transition-transform duration-200 hover:scale-[1.02]"
+              className="pv-smooth-state pv-tap mt-6 inline-flex items-center rounded-full bg-gold px-7 text-sm font-semibold text-primary-foreground hover:scale-[1.02]"
             >
               Talk to an advisor
             </Link>
           </div>
           <SmartImage
             src={sellHome}
-            alt="Bright kitchen in a PropVista listed home"
+            alt="Bright kitchen in a Braj Setu Properties listed home"
             aspect="aspect-[16/10]"
             wrapperClassName="rounded-2xl"
           />

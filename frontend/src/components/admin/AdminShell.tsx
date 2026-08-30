@@ -93,7 +93,7 @@ export function AdminShell({
         <div className="flex h-16 items-center justify-between px-5">
           <div className="flex items-center gap-2">
             <span className="grid h-9 w-9 place-items-center rounded-xl bg-gold text-sm font-extrabold text-navy">
-              PV
+              BS
             </span>
             <span className="text-sm font-bold tracking-tight text-background">Admin Console</span>
           </div>

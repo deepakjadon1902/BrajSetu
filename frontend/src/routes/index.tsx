@@ -17,16 +17,24 @@ import tileAgents from "@/assets/tile-agents.jpg";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "PropVista | Buy, Rent & Sell Property with Confidence" },
+      { title: "Braj Setu Properties | Buy, Rent & Sell Property with Confidence" },
       {
         name: "description",
         content:
-          "Search verified flats, houses, plots, shops and farm houses across India. Every PropVista listing is visited and title-checked before it goes live.",
+          "Search verified flats, houses, plots, shops and farm houses across Vrindavan, Mathura, Govardhan, Barsana and nearby Braj Mandal locations.",
       },
-      { property: "og:title", content: "PropVista | Buy, Rent & Sell Property" },
+      { property: "og:title", content: "Braj Setu Properties | Buy, Rent & Sell Property" },
       {
         property: "og:description",
-        content: "Verified listings, map-led search and one advisor from first visit to handover.",
+        content: "Verified Braj Mandal listings with one advisor from first visit to handover.",
+      },
+    ],
+    links: [
+      {
+        rel: "preload",
+        as: "image",
+        href: heroHouse,
+        fetchPriority: "high",
       },
     ],
   }),
@@ -59,8 +67,8 @@ function HomePage() {
     <div>
       {/* Hero */}
       <section className="bg-background">
-        <div className="pv-container pt-10 pb-0 sm:pt-14">
-          <div className="pv-fade-up grid gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:items-end">
+        <div className="pv-container pt-2 pb-0 sm:pt-3">
+          <div className="hidden">
             <h1 className="text-3xl leading-[1.05] font-extrabold tracking-tight text-navy sm:text-5xl lg:text-6xl">
               Find the address
               <br />
@@ -68,21 +76,35 @@ function HomePage() {
             </h1>
             <p className="max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base">
               Flats, houses, plots, shops and farm houses — each one visited, photographed and
-              title-checked by a PropVista advisor before it reaches this page.
+              title-checked by a Braj Setu Properties advisor before it reaches this page.
             </p>
           </div>
 
-          <div className="relative mt-8 sm:mt-12">
+          <div className="pv-fade-up relative">
             <SmartImage
               src={heroHouse}
-              alt="Contemporary house with landscaped frontage listed by PropVista"
-              aspect="aspect-[16/10] sm:aspect-[16/8]"
-              wrapperClassName="rounded-3xl"
+              alt="Contemporary house with landscaped frontage listed by Braj Setu Properties"
+              aspect="aspect-[4/5] sm:aspect-[16/9] lg:aspect-[16/7]"
+              wrapperClassName="rounded-[1.75rem] sm:rounded-[2rem]"
+              className="object-center"
               priority
               width={1600}
               height={1008}
             />
-            <div className="mt-4 sm:absolute sm:inset-x-6 sm:-bottom-14 sm:mt-0 lg:inset-x-16">
+            <div className="pointer-events-none absolute inset-0 rounded-[1.75rem] bg-gradient-to-b from-navy/50 via-navy/5 to-navy/30 sm:rounded-[2rem]" />
+            <div className="absolute inset-x-5 top-6 max-w-2xl sm:inset-x-8 sm:top-8 lg:inset-x-12 lg:top-10">
+              <p className="text-xs font-bold tracking-wide text-background/80 uppercase">
+                Braj Mandal Property Advisory
+              </p>
+              <h1 className="mt-3 max-w-2xl text-3xl leading-[1.05] font-extrabold text-background drop-shadow-sm sm:text-5xl lg:text-6xl">
+                Buy, rent and sell around Shri Vrindavan.
+              </h1>
+              <p className="mt-4 max-w-xl text-sm leading-relaxed text-background/85 sm:text-base">
+                Verified shops, flats, plots, houses and farm houses across Vrindavan, Mathura,
+                Govardhan, Barsana and nearby villages.
+              </p>
+            </div>
+            <div className="relative z-10 mx-auto -mt-20 w-[calc(100%-2rem)] max-w-5xl sm:-mt-16 lg:-mt-20">
               <SearchPill />
             </div>
           </div>
@@ -97,7 +119,7 @@ function HomePage() {
               Explore our homes
             </h2>
             <p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground sm:text-base">
-              Start from how you're searching, not from a dropdown of postcodes.
+              Start with the places families ask us about most across Braj Mandal.
             </p>
           </div>
 
@@ -108,7 +130,7 @@ function HomePage() {
                 type="button"
                 onClick={() => setActiveFilter(filter)}
                 className={cn(
-                  "shrink-0 rounded-full border px-5 py-2.5 text-xs font-semibold transition-colors sm:text-sm",
+                  "pv-smooth-state shrink-0 rounded-full border px-5 py-2.5 text-xs font-semibold sm:text-sm",
                   activeFilter === filter
                     ? "border-navy bg-navy text-background"
                     : "border-border bg-background text-navy-soft hover:border-navy/40",
@@ -119,7 +141,7 @@ function HomePage() {
             ))}
           </div>
 
-          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="pv-no-scrollbar pv-snap-row mt-10 flex gap-6 overflow-x-auto pb-2 sm:grid sm:grid-cols-2 sm:overflow-visible lg:grid-cols-3">
             {exploreCards.map((property) => (
               <OverlayCard
                 key={property.id}
@@ -127,6 +149,7 @@ function HomePage() {
                 title={property.title}
                 subtitle={`${property.location.locality}, ${property.location.city}`}
                 to={property.intent === "Rent" ? "/rent" : "/buy"}
+                className="w-[82%] shrink-0 snap-start sm:w-auto"
               />
             ))}
           </div>
@@ -145,9 +168,11 @@ function HomePage() {
             </p>
           </div>
 
-          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="pv-no-scrollbar pv-snap-row mt-10 flex gap-6 overflow-x-auto pb-2 sm:grid sm:grid-cols-2 sm:overflow-visible lg:grid-cols-3 xl:grid-cols-4">
             {homesForYou.map((property) => (
-              <PropertyCard key={property.id} property={property} />
+              <div key={property.id} className="w-[82%] shrink-0 snap-start sm:w-auto">
+                <PropertyCard property={property} />
+              </div>
             ))}
           </div>
 
@@ -155,7 +180,7 @@ function HomePage() {
             <Link
               to="/buy"
               search={{ q: undefined }}
-              className="pv-tap inline-flex items-center rounded-full border border-navy px-7 text-sm font-semibold text-navy transition-colors hover:bg-navy hover:text-background"
+              className="pv-smooth-state pv-tap inline-flex items-center rounded-full border border-navy px-7 text-sm font-semibold text-navy hover:bg-navy hover:text-background"
             >
               Browse all listings
             </Link>
@@ -191,14 +216,14 @@ function HomePage() {
             <Link
               to="/sale"
               search={{ q: undefined }}
-              className="pv-tap mt-8 inline-flex items-center rounded-full bg-gold px-7 text-sm font-semibold text-primary-foreground transition-transform duration-200 hover:scale-[1.02]"
+              className="pv-smooth-state pv-tap mt-8 inline-flex items-center rounded-full bg-gold px-7 text-sm font-semibold text-primary-foreground hover:scale-[1.02]"
             >
               Learn more
             </Link>
           </div>
           <SmartImage
             src={sellHome}
-            alt="Bright kitchen and dining area in a home listed with PropVista"
+            alt="Bright kitchen and dining area in a home listed with Braj Setu Properties"
             aspect="aspect-[4/3]"
             wrapperClassName="rounded-3xl shadow-[var(--shadow-lift)]"
           />
@@ -249,7 +274,7 @@ function HomePage() {
                 type="button"
                 aria-label="Previous articles"
                 onClick={() => scrollNews(-1)}
-                className="grid h-11 w-11 place-items-center rounded-full border border-navy/20 bg-background text-navy transition-colors hover:border-navy"
+                className="pv-smooth-state grid h-11 w-11 place-items-center rounded-full border border-navy/20 bg-background text-navy hover:border-navy"
               >
                 <ArrowLeft className="h-4 w-4" />
               </button>
@@ -257,7 +282,7 @@ function HomePage() {
                 type="button"
                 aria-label="Next articles"
                 onClick={() => scrollNews(1)}
-                className="grid h-11 w-11 place-items-center rounded-full border border-navy/20 bg-background text-navy transition-colors hover:border-navy"
+                className="pv-smooth-state grid h-11 w-11 place-items-center rounded-full border border-navy/20 bg-background text-navy hover:border-navy"
               >
                 <ArrowRight className="h-4 w-4" />
               </button>
@@ -266,7 +291,7 @@ function HomePage() {
 
           <div
             ref={newsRef}
-            className="pv-no-scrollbar mt-8 flex snap-x snap-mandatory gap-6 overflow-x-auto pb-2"
+            className="pv-no-scrollbar pv-snap-row mt-8 flex gap-6 overflow-x-auto pb-2"
           >
             {news.map((article) => (
               <article

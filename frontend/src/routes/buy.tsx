@@ -7,13 +7,13 @@ export const Route = createFileRoute("/buy")({
   }),
   head: () => ({
     meta: [
-      { title: "Buy Property in India | PropVista" },
+      { title: "Buy Property in India | Braj Setu Properties" },
       {
         name: "description",
         content:
-          "Browse verified flats, houses, plots, shops and farm houses for sale with PropVista's map-led search and honest advisory.",
+          "Browse verified flats, houses, plots, shops and farm houses for sale with Braj Setu Properties' map-led search and honest advisory.",
       },
-      { property: "og:title", content: "Buy Property in India | PropVista" },
+      { property: "og:title", content: "Buy Property in India | Braj Setu Properties" },
       {
         property: "og:description",
         content: "Verified homes and commercial spaces for sale, filtered the way you search.",
@@ -30,7 +30,7 @@ function BuyPage() {
       intent="Sale"
       searchIntent="Buy"
       heading="Buy with confidence"
-      subheading="Every PropVista listing is title-checked and visited by our team before it reaches this page."
+      subheading="Every Braj Setu Properties listing is title-checked and visited by our team before it reaches this page."
       initialQuery={q ?? ""}
     />
   );

@@ -9,14 +9,14 @@ import { useStore, type Enquiry } from "@/lib/mock-store";
 export const Route = createFileRoute("/admin/enquiries")({
   head: () => ({
     meta: [
-      { title: "Enquiries | PropVista Admin" },
+      { title: "Enquiries | Braj Setu Admin" },
       {
         name: "description",
-        content: "Inbox of buyer, tenant and seller enquiries submitted on PropVista.",
+        content: "Inbox of buyer, tenant and seller enquiries submitted on Braj Setu Properties.",
       },
       { name: "robots", content: "noindex" },
-      { property: "og:title", content: "Enquiries | PropVista Admin" },
-      { property: "og:description", content: "PropVista enquiry inbox." },
+      { property: "og:title", content: "Enquiries | Braj Setu Admin" },
+      { property: "og:description", content: "Braj Setu Properties enquiry inbox." },
     ],
   }),
   component: AdminEnquiries,

@@ -33,7 +33,7 @@ export function SettingsPreview({ settings }: { settings: SiteSettings }) {
 
         <div className="flex items-center gap-3 border-b border-border bg-background px-4 py-3">
           <span className="grid h-8 w-8 place-items-center rounded-xl bg-navy text-xs font-extrabold text-background">
-            {settings.logoInitials || "PV"}
+            {settings.logoInitials || "BS"}
           </span>
           <span className="truncate text-sm font-extrabold text-navy">
             {settings.siteName || "Site name"}
@@ -55,7 +55,7 @@ export function SettingsPreview({ settings }: { settings: SiteSettings }) {
         <div className="bg-navy px-4 py-5 text-background/80">
           <div className="flex items-center gap-2">
             <span className="grid h-8 w-8 place-items-center rounded-xl bg-background text-xs font-extrabold text-navy">
-              {settings.logoInitials || "PV"}
+              {settings.logoInitials || "BS"}
             </span>
             <span className="text-sm font-extrabold text-background">
               {settings.siteName || "Site name"}

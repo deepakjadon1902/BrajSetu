@@ -81,20 +81,27 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "PropVista | Premium Property Marketplace" },
+      { title: "Braj Setu Properties | Premium Property Marketplace" },
       {
         name: "description",
         content:
-          "PropVista is a boutique property marketplace for buying, renting and selling flats, houses, plots, shops and farm houses.",
+          "Braj Setu Properties is a boutique property marketplace for buying, renting and selling flats, houses, plots, shops and farm houses.",
       },
-      { name: "author", content: "PropVista Realty" },
-      { property: "og:title", content: "PropVista | Premium Property Marketplace" },
+      { name: "author", content: "Braj Setu Properties" },
+      { property: "og:title", content: "Braj Setu Properties | Premium Property Marketplace" },
       {
         property: "og:description",
         content: "Buy, rent and sell verified property with a boutique advisory team.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:image", content: "/braj-setu-logo.jpeg" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Braj Setu Properties | Premium Property Marketplace" },
+      {
+        name: "twitter:description",
+        content: "Buy, rent and sell verified property with a boutique advisory team.",
+      },
+      { name: "twitter:image", content: "/braj-setu-logo.jpeg" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
@@ -104,7 +111,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap",
       },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", href: "/favicon.png", type: "image/png" },
     ],
   }),
   shellComponent: RootShell,
@@ -143,7 +150,7 @@ function RootComponent() {
           <div className="flex min-h-screen flex-col">
             <SiteAnnouncement />
             <Navbar />
-            <main className="flex-1">
+            <main key={pathname} className="pv-page-transition flex-1">
               {/* Required: nested routes render here. */}
               <Outlet />
             </main>

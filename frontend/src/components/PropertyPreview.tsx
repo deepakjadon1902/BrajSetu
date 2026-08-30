@@ -59,7 +59,7 @@ export function PropertyPreview({ property, onClose, className }: PropertyPrevie
               type="button"
               onClick={() => setTab(t)}
               className={cn(
-                "flex-1 rounded-full px-3 py-2 text-xs font-semibold transition-colors",
+                "pv-smooth-state flex-1 rounded-full px-3 py-2 text-xs font-semibold",
                 tab === t ? "bg-navy text-background" : "text-navy-soft hover:text-navy",
               )}
             >
@@ -111,7 +111,7 @@ export function PropertyPreview({ property, onClose, className }: PropertyPrevie
         <Link
           to="/property/$propertyId"
           params={{ propertyId: property.id }}
-          className="pv-tap mt-5 flex w-full items-center justify-center rounded-full bg-navy text-sm font-semibold text-background transition-transform duration-200 hover:scale-[1.01]"
+          className="pv-smooth-state pv-tap mt-5 flex w-full items-center justify-center rounded-full bg-navy text-sm font-semibold text-background hover:scale-[1.01]"
         >
           View full listing
         </Link>

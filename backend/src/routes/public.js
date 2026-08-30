@@ -69,7 +69,7 @@ publicRouter.post(
         from: process.env.RESEND_FROM,
         to: process.env.ADMIN_NOTIFY_EMAIL,
         replyTo: input.email,
-        subject: `New PropVista enquiry from ${input.name}`,
+        subject: `New Braj Setu Properties enquiry from ${input.name}`,
         html: `<p><strong>${input.name}</strong> submitted an enquiry.</p><p>${input.message}</p><p>${input.email} | ${input.phone}</p>`,
       });
     }

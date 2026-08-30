@@ -11,7 +11,7 @@ interface ContactActionsProps {
 }
 
 export function ContactActions({
-  message = "Hi PropVista, I'd like to know more about a property listed on your site.",
+  message = "Hi Braj Setu Properties, I'd like to know more about a property listed on your site.",
   layout = "stacked",
   className,
 }: ContactActionsProps) {
@@ -21,14 +21,14 @@ export function ContactActions({
         href={`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(message)}`}
         target="_blank"
         rel="noopener noreferrer"
-        className="pv-tap flex flex-1 items-center justify-center gap-2 rounded-full bg-gold px-5 text-sm font-semibold text-primary-foreground transition-transform duration-200 hover:scale-[1.02]"
+        className="pv-smooth-state pv-tap flex flex-1 items-center justify-center gap-2 rounded-full bg-gold px-5 text-sm font-semibold text-primary-foreground hover:scale-[1.02]"
       >
         <MessageCircle className="h-4 w-4" />
         WhatsApp
       </a>
       <a
         href={`tel:${PHONE}`}
-        className="pv-tap flex flex-1 items-center justify-center gap-2 rounded-full bg-navy px-5 text-sm font-semibold text-background transition-transform duration-200 hover:scale-[1.02]"
+        className="pv-smooth-state pv-tap flex flex-1 items-center justify-center gap-2 rounded-full bg-navy px-5 text-sm font-semibold text-background hover:scale-[1.02]"
       >
         <Phone className="h-4 w-4" />
         Call now

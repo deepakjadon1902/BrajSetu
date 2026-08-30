@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: propvista-api
+    name: braj-setu-api
     runtime: node
     rootDir: backend
     plan: free
@@ -31,4 +31,10 @@ services:
       - key: IMAGEKIT_URL_ENDPOINT
         sync: false
       - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: PERMANENT_ADMIN_EMAIL
+        sync: false
+      - key: PERMANENT_ADMIN_PASSWORD
+        sync: false
+      - key: PERMANENT_ADMIN_PHONE
         sync: false

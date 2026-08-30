@@ -7,13 +7,13 @@ export const Route = createFileRoute("/sale")({
   }),
   head: () => ({
     meta: [
-      { title: "Sell Your Property | PropVista" },
+      { title: "Sell Your Property | Braj Setu Properties" },
       {
         name: "description",
         content:
-          "List your flat, house, plot, shop or farm house with PropVista and see what comparable properties are selling for right now.",
+          "List your flat, house, plot, shop or farm house with Braj Setu Properties and see what comparable properties are selling for right now.",
       },
-      { property: "og:title", content: "Sell Your Property | PropVista" },
+      { property: "og:title", content: "Sell Your Property | Braj Setu Properties" },
       {
         property: "og:description",
         content: "See live comparables and list your property with a boutique advisory team.",

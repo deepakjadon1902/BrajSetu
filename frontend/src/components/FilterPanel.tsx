@@ -41,7 +41,7 @@ function Counter({
           type="button"
           aria-label={`Decrease ${label}`}
           onClick={() => onChange(Math.max(0, value - 1))}
-          className="h-9 w-9 rounded-full text-navy transition-colors hover:bg-ice"
+          className="pv-smooth-state h-9 w-9 rounded-full text-navy hover:bg-ice"
         >
           −
         </button>
@@ -52,7 +52,7 @@ function Counter({
           type="button"
           aria-label={`Increase ${label}`}
           onClick={() => onChange(Math.min(6, value + 1))}
-          className="h-9 w-9 rounded-full text-navy transition-colors hover:bg-ice"
+          className="pv-smooth-state h-9 w-9 rounded-full text-navy hover:bg-ice"
         >
           +
         </button>
@@ -96,7 +96,7 @@ export function FilterPanel({ filters, onChange, onApply, className }: FilterPan
             value={filters.city ?? ""}
             onChange={(e) => onChange({ ...filters, city: e.target.value })}
             placeholder="City or locality"
-            className="mt-2 min-h-11 w-full rounded-full border border-border bg-background px-4 text-sm text-navy outline-none focus:border-gold"
+            className="pv-smooth-state mt-2 min-h-11 w-full rounded-full border border-border bg-background px-4 text-sm text-navy outline-none focus:border-gold"
           />
         </div>
 
@@ -152,7 +152,7 @@ export function FilterPanel({ filters, onChange, onApply, className }: FilterPan
                   aria-pressed={active}
                   onClick={() => toggleCategory(value)}
                   className={cn(
-                    "pv-tap flex items-center gap-2 rounded-xl border px-3 text-xs font-semibold transition-colors",
+                    "pv-smooth-state pv-tap flex items-center gap-2 rounded-xl border px-3 text-xs font-semibold",
                     active
                       ? "border-navy bg-navy text-background"
                       : "border-border text-navy hover:border-navy/40",
@@ -193,7 +193,7 @@ export function FilterPanel({ filters, onChange, onApply, className }: FilterPan
                   aria-pressed={active}
                   onClick={() => toggleAmenity(amenity)}
                   className={cn(
-                    "rounded-full border px-4 py-2.5 text-xs font-medium transition-colors",
+                    "pv-smooth-state rounded-full border px-4 py-2.5 text-xs font-medium",
                     active
                       ? "border-gold bg-gold text-primary-foreground"
                       : "border-border text-navy-soft hover:border-navy/40",
@@ -211,7 +211,7 @@ export function FilterPanel({ filters, onChange, onApply, className }: FilterPan
         <button
           type="button"
           onClick={onApply}
-          className="pv-tap w-full rounded-full bg-gold text-sm font-semibold text-primary-foreground transition-transform duration-200 hover:scale-[1.01]"
+          className="pv-smooth-state pv-tap w-full rounded-full bg-gold text-sm font-semibold text-primary-foreground hover:scale-[1.01]"
         >
           Apply filters
         </button>

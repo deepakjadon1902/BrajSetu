@@ -6,6 +6,7 @@ import { NewsArticle } from "./models/NewsArticle.js";
 import { Property } from "./models/Property.js";
 import { SiteSettings, defaultSettings } from "./models/SiteSettings.js";
 import { User } from "./models/User.js";
+import { ensurePermanentAdmin, PERMANENT_ADMIN_EMAIL } from "./utils/permanentAdmin.js";
 
 const imageBase = process.env.IMAGEKIT_URL_ENDPOINT || "https://images.unsplash.com";
 
@@ -92,10 +93,10 @@ await Promise.all([
 
 await Promise.all([
   upsertUser({
-    name: "PropVista Admin",
-    email: "admin@propvista.in",
+    name: "Braj Setu Admin",
+    email: PERMANENT_ADMIN_EMAIL,
     phone: "+91 98200 00000",
-    password: "Admin@123",
+    password: process.env.PERMANENT_ADMIN_PASSWORD || "Admin@123",
     role: "admin",
     status: "Active",
   }),
@@ -108,6 +109,8 @@ await Promise.all([
     status: "Active",
   }),
 ]);
+
+await ensurePermanentAdmin();
 
 await Property.insertMany(properties);
 await NewsArticle.insertMany(news);
@@ -125,5 +128,5 @@ await Enquiry.create({
   status: "New",
 });
 
-console.log("PropVista seed complete.");
+console.log("Braj Setu Properties seed complete.");
 process.exit(0);

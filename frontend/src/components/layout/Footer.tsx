@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Facebook, Instagram, Linkedin, Mail, MapPin, Phone, X } from "lucide-react";
+import { BrandLogo } from "@/components/BrandLogo";
 import { useStore } from "@/lib/mock-store";
 
 export function Footer() {
@@ -8,12 +9,7 @@ export function Footer() {
     <footer className="mt-20 bg-navy text-background/80">
       <div className="pv-container grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-4">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="grid h-9 w-9 place-items-center rounded-xl bg-background text-sm font-extrabold text-navy">
-              {settings.logoInitials}
-            </span>
-            <span className="text-lg font-extrabold text-background">{settings.siteName}</span>
-          </div>
+          <BrandLogo compact inverted />
           <p className="mt-4 max-w-xs text-sm leading-relaxed">{settings.tagline}</p>
           <div className="mt-5 flex gap-2">
             {[
@@ -30,7 +26,7 @@ export function Footer() {
                   target="_blank"
                   rel="noreferrer"
                   aria-label={`${settings.siteName} on ${label}`}
-                  className="grid h-11 w-11 place-items-center rounded-full border border-background/20 transition-colors hover:border-gold hover:text-gold"
+                  className="pv-smooth-state grid h-11 w-11 place-items-center rounded-full border border-background/20 hover:border-gold hover:text-gold"
                 >
                   <Icon className="h-4 w-4" />
                 </a>
@@ -58,7 +54,7 @@ export function Footer() {
             </li>
             <li>
               <Link to="/about" className="hover:text-gold">
-                About PropVista
+                About Braj Setu
               </Link>
             </li>
           </ul>

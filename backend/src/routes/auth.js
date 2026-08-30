@@ -7,6 +7,7 @@ import { requireAuth, normalizeUser } from "../middleware/auth.js";
 import { User } from "../models/User.js";
 import { logActivity } from "../utils/activity.js";
 import { ApiError, asyncHandler } from "../utils/errors.js";
+import { PERMANENT_ADMIN_EMAIL } from "../utils/permanentAdmin.js";
 import { signToken } from "../utils/tokens.js";
 import {
   googleAuthSchema,
@@ -58,17 +59,28 @@ async function passwordLogin(req, res, audience) {
 authRouter.post("/login", asyncHandler((req, res) => passwordLogin(req, res, "user")));
 authRouter.post("/admin/login", asyncHandler((req, res) => passwordLogin(req, res, "admin")));
 
+authRouter.get("/google/config", (req, res) => {
+  res.json({ clientId: process.env.GOOGLE_CLIENT_ID || "" });
+});
+
 authRouter.post(
   "/google",
   asyncHandler(async (req, res) => {
     if (!googleClient) throw new ApiError(503, "Google OAuth is not configured.");
     const { credential } = googleAuthSchema.parse(req.body);
-    const ticket = await googleClient.verifyIdToken({
-      idToken: credential,
-      audience: process.env.GOOGLE_CLIENT_ID,
-    });
+    let ticket;
+    try {
+      ticket = await googleClient.verifyIdToken({
+        idToken: credential,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+    } catch {
+      throw new ApiError(401, "Google sign-in could not verify this account.");
+    }
     const profile = ticket.getPayload();
-    if (!profile?.email) throw new ApiError(401, "Google account email could not be verified.");
+    if (!profile?.email || profile.email_verified === false) {
+      throw new ApiError(401, "Google account email could not be verified.");
+    }
     let user = await User.findOne({ email: profile.email.toLowerCase() });
     if (!user) {
       user = await User.create({
@@ -76,10 +88,16 @@ authRouter.post(
         email: profile.email.toLowerCase(),
         phone: "",
         googleId: profile.sub,
-        role: "user",
+        role: profile.email.toLowerCase() === PERMANENT_ADMIN_EMAIL ? "admin" : "user",
       });
     } else if (!user.googleId) {
       user.googleId = profile.sub;
+      await user.save();
+    }
+    if (user.email === PERMANENT_ADMIN_EMAIL && user.role !== "admin") {
+      user.role = "admin";
+      user.permissions = undefined;
+      user.status = "Active";
       await user.save();
     }
     if (user.status === "Suspended") throw new ApiError(403, "This account has been suspended.");
@@ -106,8 +124,8 @@ authRouter.post(
       await resend.emails.send({
         from: process.env.RESEND_FROM,
         to: user.email,
-        subject: "Your PropVista reset code",
-        html: `<p>Your PropVista reset code is <strong>${token}</strong>. It expires in 20 minutes.</p>`,
+        subject: "Your Braj Setu Properties reset code",
+        html: `<p>Your Braj Setu Properties reset code is <strong>${token}</strong>. It expires in 20 minutes.</p>`,
       });
     }
     res.json({

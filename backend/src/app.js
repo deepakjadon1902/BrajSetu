@@ -12,8 +12,15 @@ export function createApp() {
   const allowedOrigins = [
     process.env.FRONTEND_URL,
     process.env.PUBLIC_SITE_URL,
+    "https://braj-setu.vercel.app",
+    "http://localhost:8080",
+    "http://localhost:8081",
+    "http://127.0.0.1:8080",
+    "http://127.0.0.1:8081",
     "http://localhost:5173",
     "http://localhost:4173",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:4173",
   ].filter(Boolean);
 
   app.set("trust proxy", 1);
@@ -31,7 +38,7 @@ export function createApp() {
   app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
   app.use(rateLimit({ windowMs: 15 * 60 * 1000, limit: 300, standardHeaders: true }));
 
-  app.get("/health", (_req, res) => res.json({ ok: true, service: "propvista-api" }));
+  app.get("/health", (_req, res) => res.json({ ok: true, service: "braj-setu-api" }));
   app.use("/api/auth", authRouter);
   app.use("/api", publicRouter);
   app.use("/api/admin", adminRouter);

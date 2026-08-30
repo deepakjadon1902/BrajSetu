@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Menu, X } from "lucide-react";
+import { BrandLogo } from "@/components/BrandLogo";
 import { cn } from "@/lib/utils";
 import { useStore } from "@/lib/mock-store";
 
@@ -18,14 +19,10 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-border/70 bg-background/85 backdrop-blur-md">
-      <nav className="pv-container grid h-16 grid-cols-[minmax(0,1fr)_auto] items-center gap-4 md:h-20 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
-        <Link to="/" className="flex min-w-0 items-center gap-2">
-          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-navy text-sm font-extrabold text-background">
-            {settings.logoInitials}
-          </span>
-          <span className="truncate text-lg font-extrabold tracking-tight text-navy">
-            {settings.siteName}
-          </span>
+      <nav className="pv-container grid h-16 grid-cols-[minmax(0,1fr)_auto] items-center gap-4 md:h-[4.5rem] lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
+        <Link to="/" className="flex min-w-0 items-center">
+          <BrandLogo compact />
+          <span className="sr-only">{settings.siteName}</span>
         </Link>
 
         <ul className="hidden items-center gap-1 lg:flex">
@@ -34,7 +31,7 @@ export function Navbar() {
               <Link
                 to={link.to}
                 activeProps={{ className: "text-navy font-semibold" }}
-                className="rounded-full px-4 py-2 text-sm font-medium text-navy-soft/80 transition-colors hover:text-navy"
+                className="pv-smooth-state rounded-full px-4 py-2 text-sm font-medium text-navy-soft/80 hover:text-navy"
               >
                 {link.label}
               </Link>
@@ -51,7 +48,7 @@ export function Navbar() {
               <button
                 type="button"
                 onClick={logout}
-                className="hidden rounded-full px-4 py-2 text-sm font-medium text-navy-soft transition-colors hover:text-navy sm:inline-flex"
+                className="pv-smooth-state hidden rounded-full px-4 py-2 text-sm font-medium text-navy-soft hover:text-navy sm:inline-flex"
               >
                 Sign out
               </button>
@@ -59,14 +56,14 @@ export function Navbar() {
           ) : (
             <Link
               to="/login"
-              className="hidden rounded-full px-4 py-2 text-sm font-medium text-navy-soft transition-colors hover:text-navy sm:inline-flex"
+              className="pv-smooth-state hidden rounded-full px-4 py-2 text-sm font-medium text-navy-soft hover:text-navy sm:inline-flex"
             >
               Sign in
             </Link>
           )}
           <Link
             to="/contact"
-            className="hidden items-center rounded-full bg-navy px-5 py-2.5 text-sm font-semibold text-background transition-transform duration-200 hover:scale-[1.02] sm:inline-flex"
+            className="pv-smooth-state hidden items-center rounded-full bg-navy px-5 py-2.5 text-sm font-semibold text-background hover:scale-[1.02] sm:inline-flex"
           >
             Contact Us
           </Link>
@@ -75,7 +72,7 @@ export function Navbar() {
             aria-label={open ? "Close menu" : "Open menu"}
             aria-expanded={open}
             onClick={() => setOpen((v) => !v)}
-            className="grid h-11 w-11 place-items-center rounded-full border border-border text-navy lg:hidden"
+            className="pv-smooth-state grid h-11 w-11 place-items-center rounded-full border border-border text-navy hover:border-navy/40 lg:hidden"
           >
             {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
@@ -84,7 +81,7 @@ export function Navbar() {
 
       <div
         className={cn(
-          "overflow-hidden border-t border-border bg-background transition-[max-height] duration-300 lg:hidden",
+          "overflow-hidden border-t border-border bg-background transition-[max-height] duration-[var(--motion-page)] ease-[var(--motion-ease)] lg:hidden",
           open ? "max-h-96" : "max-h-0",
         )}
       >

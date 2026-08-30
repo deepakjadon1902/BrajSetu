@@ -24,7 +24,8 @@ export async function requireAuth(req, _res, next) {
     if (!token) throw new ApiError(401, "Authentication required.");
     const payload = verifyToken(token);
     const user = await User.findById(payload.sub).lean();
-    if (!user || user.status !== "Active") throw new ApiError(401, "Session expired.");
+    if (!user || user.status !== "Active")
+      throw new ApiError(401, "Session expired.");
     req.user = normalizeUser(user);
     next();
   } catch (error) {
@@ -35,7 +36,23 @@ export async function requireAuth(req, _res, next) {
 export function requirePermission(permission) {
   return (req, _res, next) => {
     if (!permissionsFor(req.user).includes(permission)) {
-      return next(new ApiError(403, "You do not have access to this admin area."));
+      return next(
+        new ApiError(403, "You do not have access to this admin area."),
+      );
+    }
+    next();
+  };
+}
+
+export function requireAnyPermission(permissions) {
+  return (req, _res, next) => {
+    const userPermissions = permissionsFor(req.user);
+    if (
+      !permissions.some((permission) => userPermissions.includes(permission))
+    ) {
+      return next(
+        new ApiError(403, "You do not have access to this admin area."),
+      );
     }
     next();
   };

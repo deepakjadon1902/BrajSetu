@@ -11,15 +11,15 @@ export const Route = createFileRoute("/reset-password")({
   }),
   head: () => ({
     meta: [
-      { title: "Set a new PropVista password" },
+      { title: "Set a new Braj Setu Properties password" },
       {
         name: "description",
-        content: "Enter your reset code and choose a new password for PropVista.",
+        content: "Enter your reset code and choose a new password for Braj Setu Properties.",
       },
-      { property: "og:title", content: "Set a new PropVista password" },
+      { property: "og:title", content: "Set a new Braj Setu Properties password" },
       {
         property: "og:description",
-        content: "Choose a new password for your PropVista account.",
+        content: "Choose a new password for your Braj Setu Properties account.",
       },
     ],
   }),

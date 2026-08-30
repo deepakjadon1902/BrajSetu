@@ -9,14 +9,14 @@ import { useStore, type ActivityArea } from "@/lib/mock-store";
 export const Route = createFileRoute("/admin/activity")({
   head: () => ({
     meta: [
-      { title: "Activity Log | PropVista Admin" },
+      { title: "Activity Log | Braj Setu Admin" },
       {
         name: "description",
         content:
           "Audit trail of admin changes plus settings version history with one-click rollback.",
       },
       { name: "robots", content: "noindex" },
-      { property: "og:title", content: "Activity Log | PropVista Admin" },
+      { property: "og:title", content: "Activity Log | Braj Setu Admin" },
       { property: "og:description", content: "Who changed what, and when." },
     ],
   }),

@@ -20,14 +20,14 @@ import {
 export const Route = createFileRoute("/admin/users")({
   head: () => ({
     meta: [
-      { title: "Users | PropVista Admin" },
+      { title: "Users | Braj Setu Admin" },
       {
         name: "description",
-        content: "Manage PropVista accounts, roles and account status.",
+        content: "Manage Braj Setu Properties accounts, roles and account status.",
       },
       { name: "robots", content: "noindex" },
-      { property: "og:title", content: "Users | PropVista Admin" },
-      { property: "og:description", content: "Manage PropVista accounts and roles." },
+      { property: "og:title", content: "Users | Braj Setu Admin" },
+      { property: "og:description", content: "Manage Braj Setu Properties accounts and roles." },
     ],
   }),
   component: AdminUsers,

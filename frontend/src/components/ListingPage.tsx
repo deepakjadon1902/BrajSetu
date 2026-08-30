@@ -1,11 +1,12 @@
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { LayoutGrid, List, Map as MapIcon, SlidersHorizontal, X } from "lucide-react";
+import { toast } from "sonner";
 import { FilterPanel } from "@/components/FilterPanel";
 import { MapPlaceholder } from "@/components/MapPlaceholder";
 import { PropertyCard } from "@/components/PropertyCard";
 import { PropertyPreview } from "@/components/PropertyPreview";
+import { EmptyState, PropertyCardSkeleton, PropertyGridSkeleton } from "@/components/States";
 import { SearchPill, type SearchIntent } from "@/components/SearchPill";
-import { EmptyState } from "@/components/States";
 import { filterProperties } from "@/lib/api";
 import { useStore } from "@/lib/mock-store";
 import { cn } from "@/lib/utils";
@@ -36,8 +37,11 @@ export function ListingPage({
   const [view, setView] = useState<"list" | "grid">("list");
   const [mobilePanel, setMobilePanel] = useState<"filters" | "map" | null>(null);
   const [selected, setSelected] = useState<Property | null>(null);
+  const [isFiltering, setIsFiltering] = useState(false);
+  const didMount = useRef(false);
+  const didRestore = useRef(false);
 
-  const { properties } = useStore();
+  const { properties, hydrated } = useStore();
 
   const results = useMemo(() => {
     const list = filterProperties(properties, filters);
@@ -55,6 +59,74 @@ export function ListingPage({
     y: 24 + ((i * 21) % 58),
   }));
 
+  const scrollKey = `listing-scroll:${intent}`;
+  const stateKey = "listing-state";
+
+  useEffect(() => {
+    if (didRestore.current) return;
+    didRestore.current = true;
+    const saved = window.sessionStorage.getItem(stateKey);
+    if (!saved) return;
+    try {
+      const parsed = JSON.parse(saved) as {
+        filters?: Omit<PropertyFilters, "intent">;
+        sort?: SortKey;
+        view?: "list" | "grid";
+      };
+      setFilters({
+        ...(parsed.filters ?? {}),
+        query: initialQuery || parsed.filters?.query,
+        intent,
+      });
+      if (parsed.sort) setSort(parsed.sort);
+      if (parsed.view) setView(parsed.view);
+    } catch {
+      window.sessionStorage.removeItem(stateKey);
+    }
+  }, [initialQuery, intent]);
+
+  useEffect(() => {
+    setFilters((current) => ({
+      ...current,
+      intent,
+      query: initialQuery || current.query,
+    }));
+  }, [initialQuery, intent]);
+
+  useEffect(() => {
+    const saved = window.sessionStorage.getItem(scrollKey);
+    if (!saved) return;
+    window.requestAnimationFrame(() => window.scrollTo({ top: Number(saved), behavior: "auto" }));
+  }, [scrollKey]);
+
+  useEffect(() => {
+    return () => {
+      window.sessionStorage.setItem(scrollKey, String(window.scrollY));
+    };
+  }, [scrollKey]);
+
+  useEffect(() => {
+    if (!didMount.current) {
+      didMount.current = true;
+      return;
+    }
+    setIsFiltering(true);
+    const id = window.setTimeout(() => setIsFiltering(false), 260);
+    return () => window.clearTimeout(id);
+  }, [filters, sort, view]);
+
+  useEffect(() => {
+    const { intent: _intent, ...filtersToPersist } = filters;
+    window.sessionStorage.setItem(
+      stateKey,
+      JSON.stringify({ filters: filtersToPersist, sort, view }),
+    );
+  }, [filters, sort, view]);
+
+  const handleSearch = useCallback((query: string) => {
+    setFilters((f) => ({ ...f, query: query || undefined }));
+  }, []);
+
   return (
     <div className="bg-smoke pb-20">
       <div className="pv-container pt-8 pb-6">
@@ -67,12 +139,13 @@ export function ListingPage({
             defaultIntent={searchIntent}
             defaultQuery={initialQuery}
             className="flex-1"
-            onSearch={(query) => setFilters((f) => ({ ...f, query: query || undefined }))}
+            onSearch={handleSearch}
             onToggleFilters={() => setMobilePanel("filters")}
           />
           <button
             type="button"
-            className="pv-tap shrink-0 rounded-full border border-navy px-6 text-sm font-semibold text-navy transition-colors hover:bg-navy hover:text-background"
+            onClick={() => toast.success("Search saved for this session.")}
+            className="pv-smooth-state pv-tap shrink-0 rounded-full border border-navy px-6 text-sm font-semibold text-navy hover:bg-navy hover:text-background"
           >
             Save Search
           </button>
@@ -99,7 +172,7 @@ export function ListingPage({
                 id="sort"
                 value={sort}
                 onChange={(e) => setSort(e.target.value as SortKey)}
-                className="min-h-11 rounded-full border border-border bg-background px-4 text-xs font-medium text-navy outline-none"
+                className="pv-smooth-state min-h-11 rounded-full border border-border bg-background px-4 text-xs font-medium text-navy outline-none focus:border-gold"
               >
                 <option value="recommended">Recommended</option>
                 <option value="price-asc">Price: low to high</option>
@@ -112,7 +185,7 @@ export function ListingPage({
                   aria-label="List view"
                   onClick={() => setView("list")}
                   className={cn(
-                    "grid h-9 w-9 place-items-center rounded-full",
+                    "pv-smooth-state grid h-9 w-9 place-items-center rounded-full",
                     view === "list" ? "bg-navy text-background" : "text-navy",
                   )}
                 >
@@ -123,7 +196,7 @@ export function ListingPage({
                   aria-label="Grid view"
                   onClick={() => setView("grid")}
                   className={cn(
-                    "grid h-9 w-9 place-items-center rounded-full",
+                    "pv-smooth-state grid h-9 w-9 place-items-center rounded-full",
                     view === "grid" ? "bg-navy text-background" : "text-navy",
                   )}
                 >
@@ -133,7 +206,11 @@ export function ListingPage({
             </div>
           </div>
 
-          {results.length === 0 ? (
+          {!hydrated ? (
+            <div className="mt-6">
+              <PropertyGridSkeleton count={view === "grid" ? 4 : 3} compact={view === "list"} />
+            </div>
+          ) : results.length === 0 ? (
             <EmptyState
               className="mt-6"
               action={
@@ -149,12 +226,27 @@ export function ListingPage({
           ) : (
             <div
               className={cn(
-                "mt-6",
+                "relative mt-6",
                 view === "grid"
                   ? "grid gap-6 sm:grid-cols-2 xl:grid-cols-2"
                   : "flex flex-col gap-4",
               )}
             >
+              {isFiltering && (
+                <div className="absolute inset-0 z-10 rounded-2xl bg-smoke/75 backdrop-blur-[1px]">
+                  <div
+                    className={cn(
+                      "grid gap-6",
+                      view === "grid" ? "sm:grid-cols-2 xl:grid-cols-2" : "grid-cols-1",
+                    )}
+                    aria-hidden="true"
+                  >
+                    {Array.from({ length: Math.min(results.length || 4, 4) }).map((_, i) => (
+                      <PropertyCardSkeleton key={i} compact={view === "list"} />
+                    ))}
+                  </div>
+                </div>
+              )}
               {results.map((property) =>
                 view === "grid" ? (
                   <PropertyCard key={property.id} property={property} />
@@ -193,7 +285,7 @@ export function ListingPage({
         <button
           type="button"
           onClick={() => setMobilePanel("filters")}
-          className="pv-tap flex items-center gap-2 rounded-full bg-navy px-6 text-sm font-semibold text-background shadow-[var(--shadow-float)] lg:hidden"
+          className="pv-smooth-state pv-tap flex items-center gap-2 rounded-full bg-navy px-6 text-sm font-semibold text-background shadow-[var(--shadow-float)] hover:scale-[1.02] lg:hidden"
         >
           <SlidersHorizontal className="h-4 w-4" />
           Filters
@@ -201,7 +293,7 @@ export function ListingPage({
         <button
           type="button"
           onClick={() => setMobilePanel("map")}
-          className="pv-tap flex items-center gap-2 rounded-full bg-gold px-6 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-float)]"
+          className="pv-smooth-state pv-tap flex items-center gap-2 rounded-full bg-gold px-6 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-float)] hover:scale-[1.02]"
         >
           <MapIcon className="h-4 w-4" />
           Map
@@ -209,7 +301,7 @@ export function ListingPage({
       </div>
 
       {mobilePanel && (
-        <div className="fixed inset-0 z-50 flex flex-col justify-end bg-navy/40 backdrop-blur-sm xl:hidden">
+        <div className="pv-page-transition fixed inset-0 z-50 flex flex-col justify-end bg-navy/40 backdrop-blur-sm xl:hidden">
           <button
             type="button"
             aria-label="Close panel"

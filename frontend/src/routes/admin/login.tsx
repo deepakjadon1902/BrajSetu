@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Lock, ShieldCheck } from "lucide-react";
+import { Eye, EyeOff, Lock } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 
@@ -8,16 +8,16 @@ import { useStore } from "@/lib/mock-store";
 export const Route = createFileRoute("/admin/login")({
   head: () => ({
     meta: [
-      { title: "Admin sign in | PropVista Console" },
+      { title: "Admin sign in | Braj Setu Console" },
       {
         name: "description",
-        content: "Restricted sign in for the PropVista administration console.",
+        content: "Restricted sign in for the Braj Setu Properties administration console.",
       },
       { name: "robots", content: "noindex" },
-      { property: "og:title", content: "Admin sign in | PropVista Console" },
+      { property: "og:title", content: "Admin sign in | Braj Setu Console" },
       {
         property: "og:description",
-        content: "Restricted sign in for PropVista staff.",
+        content: "Restricted sign in for Braj Setu Properties staff.",
       },
     ],
   }),
@@ -29,6 +29,7 @@ function AdminLoginPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | undefined>();
 
   useEffect(() => {
@@ -58,10 +59,10 @@ function AdminLoginPage() {
       <div className="w-full max-w-md">
         <div className="flex items-center gap-2">
           <span className="grid h-10 w-10 place-items-center rounded-xl bg-gold text-sm font-extrabold text-navy">
-            PV
+            BS
           </span>
           <span className="text-lg font-extrabold tracking-tight text-background">
-            PropVista Admin
+            Braj Setu Admin
           </span>
         </div>
 
@@ -84,7 +85,7 @@ function AdminLoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 autoComplete="email"
-                placeholder="admin@propvista.in"
+                placeholder="admin@brajsetuproperties.in"
                 className={`mt-2 ${inputClass}`}
               />
             </label>
@@ -92,14 +93,24 @@ function AdminLoginPage() {
               <span className="text-xs font-semibold uppercase tracking-wide text-background/60">
                 Password
               </span>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoComplete="current-password"
-                placeholder="••••••••"
-                className={`mt-2 ${inputClass}`}
-              />
+              <div className="relative mt-2">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="current-password"
+                  placeholder="••••••••"
+                  className={`${inputClass} pr-12`}
+                />
+                <button
+                  type="button"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  onClick={() => setShowPassword((value) => !value)}
+                  className="absolute inset-y-0 right-3 grid w-8 place-items-center text-background/55 transition-colors hover:text-background"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
               {error ? <span className="mt-2 block text-xs text-gold">{error}</span> : null}
             </label>
 
@@ -110,11 +121,6 @@ function AdminLoginPage() {
               Sign in to console
             </button>
           </form>
-
-          <p className="mt-6 flex items-start gap-2 text-xs leading-relaxed text-background/50">
-            <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-gold" />
-            Demo credentials: admin@propvista.in / Admin@123
-          </p>
         </div>
       </div>
     </div>

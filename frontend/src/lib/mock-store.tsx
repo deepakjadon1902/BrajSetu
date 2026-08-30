@@ -95,25 +95,25 @@ export interface SiteSettings {
 }
 
 export const defaultSettings: SiteSettings = {
-  siteName: "PropVista",
-  logoInitials: "PV",
+  siteName: "Braj Setu Properties",
+  logoInitials: "BS",
   tagline:
-    "A boutique property consultancy helping owners and buyers move with clarity across shops, flats, plots, houses and farm houses.",
-  metaTitle: "PropVista | Premium Property Marketplace",
+    "A heritage-led property consultancy bridging owners and buyers to verified shops, flats, plots, houses and farm houses.",
+  metaTitle: "Braj Setu Properties | Premium Property Marketplace",
   metaDescription:
-    "PropVista is a boutique property marketplace for buying, renting and selling flats, houses, plots, shops and farm houses.",
-  contactEmail: "hello@propvista.in",
+    "Braj Setu Properties bridges buyers, tenants and owners to verified flats, houses, plots, shops and farm houses.",
+  contactEmail: "hello@brajsetuproperties.in",
   contactPhone: "+91 90000 00000",
   address: "4th Floor, Meridian House, Baner Road, Pune 411045",
-  ogTitle: "PropVista | Premium Property Marketplace",
+  ogTitle: "Braj Setu Properties | Premium Property Marketplace",
   ogDescription: "Buy, rent and sell verified property with a boutique advisory team.",
-  ogImage: "",
+  ogImage: "/braj-setu-logo.jpeg",
   twitterCard: "summary_large_image",
-  twitterHandle: "@propvista",
-  socialFacebook: "https://facebook.com/propvista",
-  socialInstagram: "https://instagram.com/propvista",
-  socialLinkedin: "https://linkedin.com/company/propvista",
-  socialX: "https://x.com/propvista",
+  twitterHandle: "@brajsetuproperties",
+  socialFacebook: "",
+  socialInstagram: "",
+  socialLinkedin: "",
+  socialX: "",
   announcementEnabled: true,
   announcementMessage: "New this week: 24 verified listings added across Pune, Mumbai and Goa.",
   announcementTone: "navy",
@@ -167,11 +167,13 @@ interface StoreContextValue extends StoreShape {
     password: string;
   }) => Promise<AuthResult>;
   login: (email: string, password: string) => Promise<AuthResult>;
+  googleLogin: (credential: string) => Promise<AuthResult>;
   logout: () => void;
   requestPasswordReset: (email: string) => Promise<AuthResult>;
   resetPassword: (token: string, password: string) => Promise<AuthResult>;
   adminLogin: (email: string, password: string) => Promise<AuthResult>;
   adminLogout: () => void;
+  uploadPropertyImages: (files: File[]) => Promise<string[]>;
   saveProperty: (property: Property) => Promise<void>;
   deleteProperty: (id: string) => Promise<void>;
   saveNews: (article: NewsArticle) => Promise<void>;
@@ -187,12 +189,12 @@ interface StoreContextValue extends StoreShape {
   clearActivity: () => Promise<void>;
 }
 
-const API_BASE = (import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api").replace(
-  /\/$/,
-  "",
-);
-const USER_TOKEN_KEY = "propvista-user-token";
-const ADMIN_TOKEN_KEY = "propvista-admin-token";
+export const API_BASE = (
+  import.meta.env.VITE_API_BASE_URL ||
+  (import.meta.env.PROD ? "https://brajsetu.onrender.com/api" : "http://localhost:5000/api")
+).replace(/\/$/, "");
+const USER_TOKEN_KEY = "braj-setu-user-token";
+const ADMIN_TOKEN_KEY = "braj-setu-admin-token";
 
 export function uid(prefix: string): string {
   return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
@@ -216,10 +218,83 @@ async function api<T>(path: string, options: RequestInit = {}, token?: string | 
   const headers = new Headers(options.headers);
   headers.set("Content-Type", "application/json");
   if (token) headers.set("Authorization", `Bearer ${token}`);
-  const response = await fetch(`${API_BASE}${path}`, { ...options, headers });
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE}${path}`, { ...options, headers });
+  } catch {
+    throw new Error(
+      `Cannot reach the API at ${API_BASE}. Please make sure the backend is running.`,
+    );
+  }
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(data.error || "Request failed.");
   return data as T;
+}
+
+function blobToDataUrl(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(new Error("Could not read optimized image."));
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function fileToWebp(file: File): Promise<File> {
+  if (!file.type.startsWith("image/")) throw new Error(`${file.name} is not an image.`);
+
+  const bitmap = await createImageBitmap(file);
+  const maxSide = 1600;
+  const ratio = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
+  const width = Math.max(1, Math.round(bitmap.width * ratio));
+  const height = Math.max(1, Math.round(bitmap.height * ratio));
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error(`Could not optimize ${file.name}.`);
+  ctx.drawImage(bitmap, 0, 0, width, height);
+  bitmap.close();
+
+  const blob = await new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob(
+      (result) => (result ? resolve(result) : reject(new Error(`Could not convert ${file.name}.`))),
+      "image/webp",
+      0.82,
+    );
+  });
+  const name = file.name.replace(/\.[^.]+$/, "") || "property-image";
+  return new File([blob], `${name}.webp`, { type: "image/webp" });
+}
+
+async function uploadToImageKit(file: File, token: string | null): Promise<string> {
+  const auth = await api<{
+    token: string;
+    expire: number;
+    signature: string;
+    publicKey: string;
+    urlEndpoint: string;
+  }>("/admin/imagekit-auth", {}, token);
+
+  const form = new FormData();
+  form.set("file", file);
+  form.set("fileName", file.name);
+  form.set("folder", "/braj-setu/properties");
+  form.set("useUniqueFileName", "true");
+  form.set("token", auth.token);
+  form.set("expire", String(auth.expire));
+  form.set("signature", auth.signature);
+  form.set("publicKey", auth.publicKey);
+
+  const response = await fetch("https://upload.imagekit.io/api/v1/files/upload", {
+    method: "POST",
+    body: form,
+  });
+  const data = (await response.json().catch(() => ({}))) as { url?: string; filePath?: string };
+  if (!response.ok) throw new Error("ImageKit upload failed.");
+  if (data.url) return data.url;
+  if (data.filePath) return `${auth.urlEndpoint}${data.filePath}`;
+  throw new Error("ImageKit did not return an image URL.");
 }
 
 function saveToken(key: string, token?: string) {
@@ -263,8 +338,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         if (!mounted) return;
         setState((prev) => ({
           ...prev,
-          properties: boot.properties?.length ? boot.properties : prev.properties,
-          news: boot.news?.length ? boot.news : prev.news,
+          properties: Array.isArray(boot.properties) ? boot.properties : prev.properties,
+          news: Array.isArray(boot.news) ? boot.news : prev.news,
           settings: { ...defaultSettings, ...(boot.settings ?? {}) },
         }));
         if (storedUser) {
@@ -318,6 +393,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       can: (permission) => permissions.includes(permission),
       register: (input) => authCall("/auth/register", input, USER_TOKEN_KEY),
       login: (email, password) => authCall("/auth/login", { email, password }, USER_TOKEN_KEY),
+      googleLogin: (credential) => authCall("/auth/google", { credential }, USER_TOKEN_KEY),
       logout: () => {
         removeToken(USER_TOKEN_KEY);
         setUserToken(null);
@@ -351,6 +427,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         removeToken(ADMIN_TOKEN_KEY);
         setAdminToken(null);
         setState((prev) => ({ ...prev, adminUser: null }));
+      },
+      uploadPropertyImages: async (files) => {
+        const optimized = await Promise.all(files.map(fileToWebp));
+        return Promise.all(
+          optimized.map(async (file) => {
+            try {
+              return await uploadToImageKit(file, adminToken);
+            } catch {
+              return blobToDataUrl(file);
+            }
+          }),
+        );
       },
       saveProperty: async (property) => {
         const result = await api<{ property: Property }>(
@@ -410,11 +498,26 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         await refreshAdmin();
       },
       addEnquiry: async (input) => {
-        const result = await api<{ enquiry: Enquiry }>("/enquiries", {
-          method: "POST",
-          body: JSON.stringify(input),
-        });
-        setState((prev) => ({ ...prev, enquiries: [result.enquiry, ...prev.enquiries] }));
+        try {
+          const result = await api<{ enquiry: Enquiry }>("/enquiries", {
+            method: "POST",
+            body: JSON.stringify(input),
+          });
+          setState((prev) => ({ ...prev, enquiries: [result.enquiry, ...prev.enquiries] }));
+        } catch {
+          setState((prev) => ({
+            ...prev,
+            enquiries: [
+              {
+                ...input,
+                id: uid("enq"),
+                status: "New",
+                createdAt: new Date().toISOString(),
+              },
+              ...prev.enquiries,
+            ],
+          }));
+        }
       },
       setEnquiryStatus: async (id, status) => {
         const result = await api<{ enquiry: Enquiry }>(

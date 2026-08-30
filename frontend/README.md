@@ -1,12 +1,12 @@
-# PropVista Showcase
+# Braj Setu Properties Showcase
 
-PropVista — Lovable Build Prompt (Frontend Only)
+Braj Setu Properties — Lovable Build Prompt (Frontend Only)
 
 Copy everything below into Lovable as your project prompt.
 
 PROJECT
 
-Build PropVista, a premium real estate marketplace frontend (property Buy / Rent / Sale platform). This is the public-facing website only — no admin panel in this build. Use React + TypeScript + Tailwind CSS. Structure the code cleanly inside a frontend/ folder mindset (component-based, typed props, no backend calls yet — use realistic mock/placeholder data and typed interfaces so a real API can be wired in later).
+Build Braj Setu Properties, a premium real estate marketplace frontend (property Buy / Rent / Sale platform). This is the public-facing website only — no admin panel in this build. Use React + TypeScript + Tailwind CSS. Structure the code cleanly inside a frontend/ folder mindset (component-based, typed props, no backend calls yet — use realistic mock/placeholder data and typed interfaces so a real API can be wired in later).
 
 DESIGN THEME (strict — follow exactly)
 
@@ -221,7 +221,7 @@ Forms (Contact, Login) remain single-column and comfortably tappable on mobile, 
 
 GENERAL UI/UX NOTE
 
-The overall interaction pattern, spacing rhythm, section structure (hero → filter-pill discovery grid → featured listings → split sell-pitch → discovery/category tiles → news carousel → footer), and search/filter/map experience should follow the structure described above closely. Do not copy any specific brand name, logo, or exact marketing copy from reference material — generate original PropVista-branded text, using the SOP's actual categories (Shop, Flat, Plot, House, Farm House) and Buy/Rent/Sale intents throughout instead of generic placeholders.
+The overall interaction pattern, spacing rhythm, section structure (hero → filter-pill discovery grid → featured listings → split sell-pitch → discovery/category tiles → news carousel → footer), and search/filter/map experience should follow the structure described above closely. Do not copy any specific brand name, logo, or exact marketing copy from reference material — generate original Braj Setu Properties-branded text, using the SOP's actual categories (Shop, Flat, Plot, House, Farm House) and Buy/Rent/Sale intents throughout instead of generic placeholders.
 
 OUTCOME
 
@@ -229,7 +229,7 @@ The result should feel like a polished, investor-ready real estate brand website
 
 This project was built with [Lovable](https://lovable.dev).
 
-**Live app**: https://propvistaa.lovable.app
+**Live app**: https://braj-setu-properties.lovable.app
 
 ## Build with Lovable
 

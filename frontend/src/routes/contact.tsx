@@ -1,6 +1,17 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Clock, Facebook, Instagram, Linkedin, Mail, MapPin, Phone, X } from "lucide-react";
+import {
+  Clock,
+  Facebook,
+  Instagram,
+  Linkedin,
+  Loader2,
+  Mail,
+  MapPin,
+  Phone,
+  X,
+} from "lucide-react";
+import { toast } from "sonner";
 import { useStore } from "@/lib/mock-store";
 import { ContactActions } from "@/components/ContactActions";
 import { MapPlaceholder } from "@/components/MapPlaceholder";
@@ -9,16 +20,19 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/contact")({
   head: () => ({
     meta: [
-      { title: "Contact PropVista | Talk to a Property Advisor" },
+      { title: "Contact Braj Setu Properties | Talk to a Property Advisor" },
       {
         name: "description",
         content:
-          "Reach the PropVista team by form, WhatsApp or phone. Office hours, address and a direct line to a property advisor.",
+          "Reach the Braj Setu Properties team by form, WhatsApp or phone. Office hours, address and a direct line to a property advisor.",
       },
-      { property: "og:title", content: "Contact PropVista | Talk to a Property Advisor" },
+      {
+        property: "og:title",
+        content: "Contact Braj Setu Properties | Talk to a Property Advisor",
+      },
       {
         property: "og:description",
-        content: "Send an enquiry or reach a PropVista advisor on WhatsApp or by phone.",
+        content: "Send an enquiry or reach a Braj Setu Properties advisor on WhatsApp or by phone.",
       },
     ],
   }),
@@ -92,26 +106,36 @@ function ContactPage() {
   });
   const [errors, setErrors] = useState<Errors>({});
   const [submitted, setSubmitted] = useState(false);
+  const [sending, setSending] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const nextErrors = validate(values);
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
-    // Lands in the admin Enquiries inbox; swap for an API call later.
-    await addEnquiry({
-      name: values.name.trim(),
-      email: values.email.trim().toLowerCase(),
-      phone: values.phone.trim(),
-      message: values.message.trim(),
-    });
-    setSubmitted(true);
-    setValues({ name: "", email: "", phone: "", message: "" });
+    setSending(true);
+    try {
+      await addEnquiry({
+        name: values.name.trim(),
+        email: values.email.trim().toLowerCase(),
+        phone: values.phone.trim(),
+        message: values.message.trim(),
+      });
+      setSubmitted(true);
+      toast.success("Your enquiry has been sent.");
+      setValues({ name: "", email: "", phone: "", message: "" });
+    } finally {
+      setSending(false);
+    }
   }
 
   function update(key: keyof FormState, value: string) {
     setValues((v) => ({ ...v, [key]: value }));
-    setErrors((e) => ({ ...e, [key]: undefined }));
+    setErrors((e) => ({ ...e, [key]: validate({ ...values, [key]: value })[key] }));
+  }
+
+  function validateField(key: keyof FormState) {
+    setErrors((e) => ({ ...e, [key]: validate(values)[key] }));
   }
 
   return (
@@ -152,6 +176,7 @@ function ContactPage() {
                 id="name"
                 value={values.name}
                 onChange={(e) => update("name", e.target.value)}
+                onBlur={() => validateField("name")}
                 aria-invalid={Boolean(errors.name)}
                 placeholder="Ananya Rao"
                 className={cn(
@@ -173,6 +198,7 @@ function ContactPage() {
                   type="email"
                   value={values.email}
                   onChange={(e) => update("email", e.target.value)}
+                  onBlur={() => validateField("email")}
                   aria-invalid={Boolean(errors.email)}
                   placeholder="you@example.com"
                   className={cn(
@@ -192,6 +218,7 @@ function ContactPage() {
                   type="tel"
                   value={values.phone}
                   onChange={(e) => update("phone", e.target.value)}
+                  onBlur={() => validateField("phone")}
                   aria-invalid={Boolean(errors.phone)}
                   placeholder="+91 90000 00000"
                   className={cn(
@@ -213,6 +240,7 @@ function ContactPage() {
                 rows={5}
                 value={values.message}
                 onChange={(e) => update("message", e.target.value)}
+                onBlur={() => validateField("message")}
                 aria-invalid={Boolean(errors.message)}
                 placeholder="A 3 BHK in Baner under ₹1.4 Cr, ready to move…"
                 className={cn(
@@ -228,9 +256,11 @@ function ContactPage() {
 
             <button
               type="submit"
-              className="pv-tap w-full rounded-full bg-gold px-6 text-sm font-semibold text-primary-foreground transition-transform duration-200 hover:scale-[1.01]"
+              disabled={sending}
+              className="pv-smooth-state pv-tap flex w-full items-center justify-center gap-2 rounded-full bg-gold px-6 text-sm font-semibold text-primary-foreground hover:scale-[1.01] disabled:opacity-70"
             >
-              Send enquiry
+              {sending && <Loader2 className="h-4 w-4 animate-spin" />}
+              {sending ? "Sending..." : "Send enquiry"}
             </button>
           </div>
         </form>
@@ -244,7 +274,7 @@ function ContactPage() {
             <ContactActions
               layout="row"
               className="mt-5"
-              message="Hi PropVista, I'd like to speak to an advisor about a property."
+              message="Hi Braj Setu Properties, I'd like to speak to an advisor about a property."
             />
             <ul className="mt-6 space-y-4 text-sm">
               <li className="flex gap-3">
@@ -261,8 +291,11 @@ function ContactPage() {
               </li>
               <li className="flex gap-3">
                 <Mail className="h-4 w-4 shrink-0 text-gold-deep" />
-                <a href="mailto:hello@propvista.in" className="text-navy hover:text-gold-deep">
-                  hello@propvista.in
+                <a
+                  href="mailto:hello@brajsetuproperties.in"
+                  className="text-navy hover:text-gold-deep"
+                >
+                  hello@brajsetuproperties.in
                 </a>
               </li>
               <li className="flex gap-3">
@@ -276,7 +309,7 @@ function ContactPage() {
 
           <MapPlaceholder
             compact
-            pins={[{ id: "office", label: "PropVista, Baner", x: 50, y: 55 }]}
+            pins={[{ id: "office", label: "Braj Setu Properties, Baner", x: 50, y: 55 }]}
           />
 
           <SocialLinks />

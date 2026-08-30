@@ -3,21 +3,22 @@ import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
 
 import { AuthLayout, Field, inputClass, primaryButtonClass } from "@/components/auth/AuthLayout";
+import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import { useStore } from "@/lib/mock-store";
 
 export const Route = createFileRoute("/register")({
   head: () => ({
     meta: [
-      { title: "Create your PropVista account" },
+      { title: "Create your Braj Setu Properties account" },
       {
         name: "description",
         content:
-          "Register with PropVista to shortlist homes, save searches and get matched with verified listings.",
+          "Register with Braj Setu Properties to shortlist homes, save searches and get matched with verified listings.",
       },
-      { property: "og:title", content: "Create your PropVista account" },
+      { property: "og:title", content: "Create your Braj Setu Properties account" },
       {
         property: "og:description",
-        content: "Register to shortlist homes and track enquiries on PropVista.",
+        content: "Register to shortlist homes and track enquiries on Braj Setu Properties.",
       },
     ],
   }),
@@ -171,6 +172,12 @@ function RegisterPage() {
           Create account
         </button>
       </form>
+
+      <div className="my-6 flex items-center gap-3 text-xs uppercase tracking-wide text-muted-foreground">
+        <span className="h-px flex-1 bg-border" /> or <span className="h-px flex-1 bg-border" />
+      </div>
+
+      <GoogleSignInButton onSuccess={() => navigate({ to: "/" })} />
     </AuthLayout>
   );
 }

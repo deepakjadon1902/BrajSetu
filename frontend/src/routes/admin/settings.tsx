@@ -11,14 +11,15 @@ import { defaultSettings, useStore, type SiteSettings } from "@/lib/mock-store";
 export const Route = createFileRoute("/admin/settings")({
   head: () => ({
     meta: [
-      { title: "Settings | PropVista Admin" },
+      { title: "Settings | Braj Setu Admin" },
       {
         name: "description",
-        content: "Manage PropVista branding, metadata and site-wide announcements from one place.",
+        content:
+          "Manage Braj Setu Properties branding, metadata and site-wide announcements from one place.",
       },
       { name: "robots", content: "noindex" },
-      { property: "og:title", content: "Settings | PropVista Admin" },
-      { property: "og:description", content: "Manage PropVista site settings." },
+      { property: "og:title", content: "Settings | Braj Setu Admin" },
+      { property: "og:description", content: "Manage Braj Setu Properties site settings." },
     ],
   }),
   component: AdminSettings,
@@ -218,7 +219,7 @@ function AdminSettings() {
               <Field label="Twitter / X handle">
                 <input
                   className={inputClass}
-                  placeholder="@propvista"
+                  placeholder="@brajsetuproperties"
                   value={form.twitterHandle}
                   onChange={(e) => set("twitterHandle", e.target.value)}
                 />

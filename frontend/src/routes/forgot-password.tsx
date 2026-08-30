@@ -9,15 +9,16 @@ import { useStore } from "@/lib/mock-store";
 export const Route = createFileRoute("/forgot-password")({
   head: () => ({
     meta: [
-      { title: "Reset your PropVista password" },
+      { title: "Reset your Braj Setu Properties password" },
       {
         name: "description",
-        content: "Request a reset code and set a new password for your PropVista account.",
+        content:
+          "Request a reset code and set a new password for your Braj Setu Properties account.",
       },
-      { property: "og:title", content: "Reset your PropVista password" },
+      { property: "og:title", content: "Reset your Braj Setu Properties password" },
       {
         property: "og:description",
-        content: "Request a reset code for your PropVista account.",
+        content: "Request a reset code for your Braj Setu Properties account.",
       },
     ],
   }),
