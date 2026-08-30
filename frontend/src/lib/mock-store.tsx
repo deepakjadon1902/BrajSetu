@@ -196,7 +196,16 @@ const productionApiBase = import.meta.env.PROD
   ? import.meta.env.VITE_PRODUCTION_API_BASE_URL?.trim() || "https://brajsetu.onrender.com/api"
   : "";
 
-export const API_BASE = (productionApiBase || localApiBase).replace(/\/$/, "");
+const API_BASE_ALIASES: Record<string, string> = {
+  "https://braj-setu-api.onrender.com/api": "https://brajsetu.onrender.com/api",
+};
+
+function normalizeApiBase(apiBase: string) {
+  const trimmed = apiBase.replace(/\/$/, "");
+  return API_BASE_ALIASES[trimmed] ?? trimmed;
+}
+
+export const API_BASE = normalizeApiBase(productionApiBase || localApiBase);
 const USER_TOKEN_KEY = "braj-setu-user-token";
 const ADMIN_TOKEN_KEY = "braj-setu-admin-token";
 
