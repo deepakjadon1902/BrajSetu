@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { Bath, BedDouble, Maximize } from "lucide-react";
 import { SmartImage } from "@/components/SmartImage";
 import { formatArea, formatPrice } from "@/lib/api";
+import { getMainImage } from "@/lib/property-images";
 import { cn } from "@/lib/utils";
 import type { Property } from "@/types/property";
 
@@ -56,7 +57,7 @@ export function PropertyCard({
         )}
       >
         <SmartImage
-          src={property.images[0] ?? ""}
+          src={getMainImage(property)}
           alt={property.title}
           aspect="aspect-square"
           wrapperClassName="w-28 shrink-0 rounded-xl sm:w-36"
@@ -94,7 +95,7 @@ export function PropertyCard({
     >
       <Link to="/property/$propertyId" params={{ propertyId: property.id }} className="block">
         <div className="relative">
-          <SmartImage src={property.images[0] ?? ""} alt={property.title} />
+          <SmartImage src={getMainImage(property)} alt={property.title} />
           {badge}
           {property.status && (
             <span className="absolute top-3 right-3 rounded-full bg-background/90 px-3 py-1 text-[11px] font-semibold text-navy">

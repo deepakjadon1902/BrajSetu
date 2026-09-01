@@ -32,7 +32,7 @@ const values = [
   {
     icon: ShieldCheck,
     title: "Verified before published",
-    body: "Every listing is visited, photographed and title-checked by our own team — no syndicated feeds.",
+    body: "Every listing is visited, photographed and title-checked by our own team, with no syndicated feeds.",
   },
   {
     icon: HandshakeIcon,
@@ -66,9 +66,10 @@ function AboutPage() {
               built on evidence.
             </h1>
             <p className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground">
-              Braj Setu Properties started in 2016 with a simple frustration: listings that looked
-              nothing like the property, and advisors who disappeared after the deposit. We rebuilt
-              the process around verification, one advisor per client, and pricing you can audit.
+              Braj Setu Properties operates as a dedicated property unit of Vrindavan Sarthi
+              Enterprises, built for buyers, tenants and owners across Vrindavan, Mathura,
+              Goverdhan, Barsana and the wider Braj Mandal. We rebuilt the process around
+              verification, one advisor per client, and pricing you can audit.
             </p>
           </div>
           <SmartImage
@@ -104,24 +105,25 @@ function AboutPage() {
         <div className="pv-container grid gap-10 py-14 lg:grid-cols-2 lg:items-center lg:py-20">
           <SmartImage
             src={agents}
-            alt="A Braj Setu Properties advisor at the Pune office"
+            alt="A Braj Setu Properties advisor at the Braj Mandal office"
             aspect="aspect-[4/3]"
             wrapperClassName="rounded-3xl shadow-[var(--shadow-lift)] order-last lg:order-first"
           />
           <div>
             <h2 className="text-2xl font-extrabold tracking-tight text-navy sm:text-3xl">
-              Twenty-two advisors.{" "}
-              <span className="text-muted-foreground">Six cities. One standard.</span>
+              Braj-focused advisors.{" "}
+              <span className="text-muted-foreground">One trusted local standard.</span>
             </h2>
             <p className="mt-4 text-base leading-relaxed text-muted-foreground">
-              Our team covers Pune, Mumbai, Bengaluru, Hyderabad, Goa and Chandigarh. Each advisor
-              specialises in a handful of micro-markets rather than covering a whole city thinly —
-              which is why they can tell you what the flat two floors down actually sold for.
+              Our team focuses on temple towns, village belts, link roads and emerging pockets
+              across Braj Mandal. Each advisor specialises in a handful of micro-markets, which is
+              why they can explain road access, title expectations, demand and resale confidence
+              with practical local context.
             </p>
             <dl className="mt-8 grid grid-cols-3 gap-4">
               {[
                 ["1,400+", "Transactions closed"],
-                ["₹2,900 Cr", "Property advised on"],
+                ["Rs. 2,900 Cr", "Property advised on"],
                 ["4.8/5", "Client rating"],
               ].map(([stat, label]) => (
                 <div key={label}>
@@ -141,8 +143,8 @@ function AboutPage() {
               Thinking of listing this season?
             </h2>
             <p className="mt-3 text-sm leading-relaxed text-background/75">
-              Book a valuation visit and we'll bring the last six comparable transactions from your
-              locality with us.
+              Book a valuation visit and we&apos;ll bring the last six comparable transactions from
+              your locality with us.
             </p>
             <Link
               to="/contact"

@@ -6,6 +6,7 @@ import { PropertyCard } from "@/components/PropertyCard";
 import { SearchPill } from "@/components/SearchPill";
 import { SmartImage } from "@/components/SmartImage";
 import { filterProperties, pickFeatured } from "@/lib/api";
+import { getMainImage } from "@/lib/property-images";
 import { useStore } from "@/lib/mock-store";
 import { cn } from "@/lib/utils";
 import heroHouse from "@/assets/hero-house.jpg";
@@ -145,7 +146,7 @@ function HomePage() {
             {exploreCards.map((property) => (
               <OverlayCard
                 key={property.id}
-                image={property.images[0] ?? ""}
+                image={getMainImage(property)}
                 title={property.title}
                 subtitle={`${property.location.locality}, ${property.location.city}`}
                 to={property.intent === "Rent" ? "/rent" : "/buy"}

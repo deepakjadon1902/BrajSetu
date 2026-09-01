@@ -4,6 +4,7 @@ import { X } from "lucide-react";
 import { MapPlaceholder } from "@/components/MapPlaceholder";
 import { SmartImage } from "@/components/SmartImage";
 import { formatArea, formatPrice } from "@/lib/api";
+import { getMainImage } from "@/lib/property-images";
 import { cn } from "@/lib/utils";
 import type { Property } from "@/types/property";
 
@@ -23,7 +24,7 @@ export function PropertyPreview({ property, onClose, className }: PropertyPrevie
       className={cn("overflow-hidden rounded-2xl bg-card shadow-[var(--shadow-lift)]", className)}
     >
       <div className="relative">
-        <SmartImage src={property.images[0] ?? ""} alt={property.title} aspect="aspect-[16/9]" />
+        <SmartImage src={getMainImage(property)} alt={property.title} aspect="aspect-[16/9]" />
         <span className="absolute top-3 left-3 rounded-full bg-gold px-3 py-1 text-[11px] font-semibold text-primary-foreground">
           {property.status ?? "Active"}
         </span>

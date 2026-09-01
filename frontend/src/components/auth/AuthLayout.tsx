@@ -14,17 +14,32 @@ export function AuthLayout({
   footer?: ReactNode;
 }) {
   return (
-    <div className="flex min-h-[calc(100vh-5rem)] items-center bg-ice py-14">
-      <div className="pv-container">
-        <div className="mx-auto w-full max-w-md rounded-3xl bg-card p-7 shadow-[var(--shadow-lift)] sm:p-10">
-          <Link to="/" className="flex items-center">
+    <div className="relative flex min-h-[calc(100vh-5rem)] items-center overflow-hidden bg-[linear-gradient(135deg,#fffaf0_0%,#efe8d8_48%,#fff7de_100%)] py-14">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_20%,rgba(201,161,53,0.22),transparent_28%),radial-gradient(circle_at_82%_80%,rgba(18,35,63,0.16),transparent_30%)]" />
+      <div className="pointer-events-none absolute left-1/2 top-1/2 h-[34rem] w-[34rem] -translate-x-1/2 -translate-y-1/2 rounded-full border border-gold/20 bg-background/35 blur-sm" />
+      <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 opacity-[0.045]">
+        <BrandLogo className="[&_img]:h-80 [&_img]:max-w-none" />
+      </div>
+
+      <div className="pv-container relative">
+        <div className="mx-auto w-full max-w-md overflow-hidden rounded-[1.75rem] border border-gold/25 bg-card/92 p-7 shadow-[0_34px_90px_-36px_rgba(18,35,63,0.55),inset_0_1px_0_rgba(255,255,255,0.85)] backdrop-blur-xl sm:p-10">
+          <Link
+            to="/"
+            className="mx-auto flex h-20 w-44 items-center justify-center rounded-full border border-gold/25 bg-background px-5 shadow-[var(--shadow-soft)]"
+          >
             <BrandLogo compact />
           </Link>
 
-          <h1 className="mt-8 text-2xl font-extrabold tracking-tight text-navy sm:text-3xl">
+          <p className="mt-7 text-center text-xs font-black tracking-[0.18em] text-gold-deep uppercase">
+            Braj Setu Properties
+          </p>
+
+          <h1 className="mt-3 text-center text-2xl font-extrabold tracking-tight text-navy sm:text-3xl">
             {title}
           </h1>
-          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{subtitle}</p>
+          <p className="mt-3 text-center text-sm leading-relaxed text-muted-foreground">
+            {subtitle}
+          </p>
 
           <div className="mt-8">{children}</div>
 
@@ -58,7 +73,7 @@ export function Field({
 }
 
 export const inputClass =
-  "w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm text-navy outline-none transition-colors placeholder:text-muted-foreground focus:border-navy";
+  "w-full rounded-full border border-border bg-background px-4 py-3 text-sm text-navy outline-none transition-colors placeholder:text-muted-foreground focus:border-gold focus:ring-4 focus:ring-gold/10";
 
 export const primaryButtonClass =
-  "flex w-full items-center justify-center gap-2 rounded-full bg-navy px-6 py-3.5 text-sm font-semibold text-background transition-transform duration-200 hover:scale-[1.01] disabled:opacity-60";
+  "flex w-full items-center justify-center gap-2 rounded-full bg-[linear-gradient(135deg,#12233f,#273d70)] px-6 py-3.5 text-sm font-bold text-background shadow-[0_18px_34px_-24px_rgba(18,35,63,0.8)] transition-transform duration-200 hover:scale-[1.01] disabled:opacity-60";

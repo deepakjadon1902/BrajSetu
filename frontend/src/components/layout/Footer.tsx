@@ -1,7 +1,8 @@
 import { Link } from "@tanstack/react-router";
-import { Facebook, Instagram, Linkedin, Mail, MapPin, Phone, X } from "lucide-react";
+import { ExternalLink, Facebook, Instagram, Linkedin, Mail, MapPin, Phone, X } from "lucide-react";
 import { BrandLogo } from "@/components/BrandLogo";
 import { useStore } from "@/lib/mock-store";
+import { OFFICE_MAP_URL } from "@/lib/location";
 
 export function Footer() {
   const { settings } = useStore();
@@ -93,7 +94,15 @@ export function Footer() {
           <ul className="mt-4 space-y-3 text-sm">
             <li className="flex gap-3">
               <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-gold" />
-              <span>{settings.address}</span>
+              <a
+                href={OFFICE_MAP_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-start gap-1 hover:text-gold"
+              >
+                <span>{settings.address}</span>
+                <ExternalLink className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+              </a>
             </li>
             <li className="flex gap-3">
               <Phone className="h-4 w-4 shrink-0 text-gold" />

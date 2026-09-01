@@ -2,20 +2,22 @@ import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   Clock,
+  ExternalLink,
   Facebook,
   Instagram,
   Linkedin,
   Loader2,
   Mail,
   MapPin,
+  Navigation,
   Phone,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useStore } from "@/lib/mock-store";
 import { ContactActions } from "@/components/ContactActions";
-import { MapPlaceholder } from "@/components/MapPlaceholder";
 import { cn } from "@/lib/utils";
+import { OFFICE_DIRECTIONS_URL, OFFICE_MAP_EMBED_URL, OFFICE_MAP_URL } from "@/lib/location";
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
@@ -97,7 +99,7 @@ function SocialLinks() {
 }
 
 function ContactPage() {
-  const { addEnquiry } = useStore();
+  const { addEnquiry, settings } = useStore();
   const [values, setValues] = useState<FormState>({
     name: "",
     email: "",
@@ -279,23 +281,31 @@ function ContactPage() {
             <ul className="mt-6 space-y-4 text-sm">
               <li className="flex gap-3">
                 <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-gold-deep" />
-                <span className="text-muted-foreground">
-                  4th Floor, Meridian House, Baner Road, Pune 411045
-                </span>
+                <a
+                  href={OFFICE_MAP_URL}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-muted-foreground hover:text-gold-deep"
+                >
+                  {settings.address}
+                </a>
               </li>
               <li className="flex gap-3">
                 <Phone className="h-4 w-4 shrink-0 text-gold-deep" />
-                <a href="tel:+919000000000" className="text-navy hover:text-gold-deep">
-                  +91 90000 00000
+                <a
+                  href={`tel:${settings.contactPhone.replace(/\s/g, "")}`}
+                  className="text-navy hover:text-gold-deep"
+                >
+                  {settings.contactPhone}
                 </a>
               </li>
               <li className="flex gap-3">
                 <Mail className="h-4 w-4 shrink-0 text-gold-deep" />
                 <a
-                  href="mailto:hello@brajsetuproperties.in"
+                  href={`mailto:${settings.contactEmail}`}
                   className="text-navy hover:text-gold-deep"
                 >
-                  hello@brajsetuproperties.in
+                  {settings.contactEmail}
                 </a>
               </li>
               <li className="flex gap-3">
@@ -307,10 +317,39 @@ function ContactPage() {
             </ul>
           </div>
 
-          <MapPlaceholder
-            compact
-            pins={[{ id: "office", label: "Braj Setu Properties, Baner", x: 50, y: 55 }]}
-          />
+          <div className="overflow-hidden rounded-3xl bg-card shadow-[var(--shadow-soft)]">
+            <div className="flex items-center justify-between gap-4 border-b border-border p-4">
+              <div className="min-w-0">
+                <h2 className="text-sm font-bold text-navy">Office location</h2>
+                <p className="mt-1 truncate text-xs text-muted-foreground">{settings.address}</p>
+              </div>
+              <a
+                href={OFFICE_DIRECTIONS_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="pv-smooth-state inline-flex h-10 shrink-0 items-center gap-2 rounded-full bg-navy px-4 text-xs font-semibold text-background hover:scale-[1.02]"
+              >
+                <Navigation className="h-4 w-4" />
+                Directions
+              </a>
+            </div>
+            <iframe
+              title="Braj Setu Properties office on Google Maps"
+              src={OFFICE_MAP_EMBED_URL}
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              className="h-72 w-full border-0"
+            />
+            <a
+              href={OFFICE_MAP_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center justify-center gap-2 border-t border-border px-4 py-3 text-sm font-semibold text-navy hover:text-gold-deep"
+            >
+              Open in Google Maps
+              <ExternalLink className="h-4 w-4" />
+            </a>
+          </div>
 
           <SocialLinks />
         </div>

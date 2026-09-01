@@ -100,7 +100,7 @@ function RegisterPage() {
             value={form.name}
             onChange={(e) => set("name", e.target.value)}
             autoComplete="name"
-            placeholder="Riya Menon"
+            placeholder="Your full name"
             className={inputClass}
           />
         </Field>
@@ -110,7 +110,7 @@ function RegisterPage() {
             value={form.email}
             onChange={(e) => set("email", e.target.value)}
             autoComplete="email"
-            placeholder="you@example.com"
+            placeholder="name@email.com"
             className={inputClass}
           />
         </Field>

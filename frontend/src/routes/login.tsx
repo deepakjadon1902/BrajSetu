@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Eye, EyeOff, ShieldCheck } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
 
@@ -80,7 +80,7 @@ function LoginPage() {
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
+            placeholder="name@email.com"
             className={inputClass}
           />
         </Field>
@@ -124,11 +124,6 @@ function LoginPage() {
       </div>
 
       <GoogleSignInButton onSuccess={() => navigate({ to: "/" })} />
-
-      <p className="mt-6 flex items-start gap-2 text-xs leading-relaxed text-muted-foreground">
-        <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-gold-deep" />
-        Demo account: riya@example.com / Riya@1234
-      </p>
     </AuthLayout>
   );
 }

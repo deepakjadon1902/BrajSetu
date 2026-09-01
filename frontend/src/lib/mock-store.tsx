@@ -94,6 +94,10 @@ export interface SiteSettings {
   announcementTone: "navy" | "gold";
 }
 
+const LEGACY_DEFAULT_ADDRESS = "4th Floor, Meridian House, Baner Road, Pune 411045";
+export const VRINDAVAN_SARTHI_ADDRESS =
+  "Raja wala mandir, Infront of Giriraj ji Maharaj, Goverdhan, Mathura, Uttar Pradesh 281502";
+
 export const defaultSettings: SiteSettings = {
   siteName: "Braj Setu Properties",
   logoInitials: "BS",
@@ -102,9 +106,9 @@ export const defaultSettings: SiteSettings = {
   metaTitle: "Braj Setu Properties | Premium Property Marketplace",
   metaDescription:
     "Braj Setu Properties bridges buyers, tenants and owners to verified flats, houses, plots, shops and farm houses.",
-  contactEmail: "hello@brajsetuproperties.in",
+  contactEmail: "brajsetuproperties@gmail.com",
   contactPhone: "+91 90000 00000",
-  address: "4th Floor, Meridian House, Baner Road, Pune 411045",
+  address: VRINDAVAN_SARTHI_ADDRESS,
   ogTitle: "Braj Setu Properties | Premium Property Marketplace",
   ogDescription: "Buy, rent and sell verified property with a boutique advisory team.",
   ogImage: "/braj-setu-logo.jpeg",
@@ -115,9 +119,21 @@ export const defaultSettings: SiteSettings = {
   socialLinkedin: "",
   socialX: "",
   announcementEnabled: true,
-  announcementMessage: "New this week: 24 verified listings added across Pune, Mumbai and Goa.",
+  announcementMessage:
+    "New this week: verified Braj Mandal listings added across Vrindavan, Mathura and Goverdhan.",
   announcementTone: "navy",
 };
+
+function normalizeSettings(settings: Partial<SiteSettings> | undefined): SiteSettings {
+  const merged = { ...defaultSettings, ...(settings ?? {}) };
+  return {
+    ...merged,
+    address:
+      !merged.address || merged.address === LEGACY_DEFAULT_ADDRESS
+        ? VRINDAVAN_SARTHI_ADDRESS
+        : merged.address,
+  };
+}
 
 export type ActivityArea = "Settings" | "Properties" | "Users" | "Enquiries" | "News" | "Auth";
 
@@ -215,7 +231,7 @@ export function uid(prefix: string): string {
 
 function initialState(): StoreShape {
   return {
-    settings: defaultSettings,
+    settings: normalizeSettings(defaultSettings),
     activity: [],
     settingsHistory: [],
     users: [],
@@ -333,7 +349,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setState((prev) => ({
         ...prev,
         ...snapshot,
-        settings: { ...defaultSettings, ...(snapshot.settings ?? {}) },
+        settings: normalizeSettings(snapshot.settings),
       }));
     },
     [adminToken],
@@ -353,7 +369,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           ...prev,
           properties: Array.isArray(boot.properties) ? boot.properties : prev.properties,
           news: Array.isArray(boot.news) ? boot.news : prev.news,
-          settings: { ...defaultSettings, ...(boot.settings ?? {}) },
+          settings: normalizeSettings(boot.settings),
         }));
         if (storedUser) {
           const me = await api<{ user: AppUser }>("/auth/me", {}, storedUser);
@@ -555,7 +571,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           { method: "PUT", body: JSON.stringify(settings) },
           adminToken,
         );
-        setState((prev) => ({ ...prev, settings: { ...defaultSettings, ...result.settings } }));
+        setState((prev) => ({ ...prev, settings: normalizeSettings(result.settings) }));
         await refreshAdmin();
       },
       resetSettings: async () => {
@@ -564,7 +580,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           { method: "POST" },
           adminToken,
         );
-        setState((prev) => ({ ...prev, settings: { ...defaultSettings, ...result.settings } }));
+        setState((prev) => ({ ...prev, settings: normalizeSettings(result.settings) }));
         await refreshAdmin();
       },
       restoreSettingsVersion: async (id) => {
@@ -573,7 +589,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           { method: "POST" },
           adminToken,
         );
-        setState((prev) => ({ ...prev, settings: { ...defaultSettings, ...result.settings } }));
+        setState((prev) => ({ ...prev, settings: normalizeSettings(result.settings) }));
         await refreshAdmin();
       },
       clearActivity: async () => {

@@ -1,5 +1,11 @@
 export type PropertyCategory = "Shop" | "Flat" | "Plot" | "House" | "Farm House";
 export type PropertyIntent = "Sale" | "Rent";
+export type PropertyImageLabel = "Main" | "Bedroom" | "Kitchen" | "Bathroom" | "Balcony";
+
+export interface PropertyImage {
+  src: string;
+  label: PropertyImageLabel;
+}
 
 export interface Property {
   id: string;
@@ -14,7 +20,7 @@ export interface Property {
     bathrooms?: number;
     furnishing?: string;
   };
-  images: string[];
+  images: (string | PropertyImage)[];
   amenities: string[];
   featured?: boolean;
   status?: "New" | "Active" | "Price Drop";

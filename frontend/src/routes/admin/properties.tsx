@@ -25,8 +25,14 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { SmartImage } from "@/components/SmartImage";
 import { formatPrice } from "@/lib/api";
 import { uid, useStore } from "@/lib/mock-store";
+import { getMainImage, normalizePropertyImage, PROPERTY_IMAGE_LABELS } from "@/lib/property-images";
 import { cn } from "@/lib/utils";
-import type { Property, PropertyCategory, PropertyIntent } from "@/types/property";
+import type {
+  Property,
+  PropertyCategory,
+  PropertyImageLabel,
+  PropertyIntent,
+} from "@/types/property";
 
 export const Route = createFileRoute("/admin/properties")({
   head: () => ({
@@ -183,7 +189,18 @@ function AdminProperties() {
     try {
       const optimized = await uploadPropertyImages(files);
       setDraft((current) =>
-        current ? { ...current, images: [...current.images, ...optimized] } : current,
+        current
+          ? {
+              ...current,
+              images: [
+                ...current.images,
+                ...optimized.map((src, index) => ({
+                  src,
+                  label: current.images.length === 0 && index === 0 ? "Main" : "Bedroom",
+                })),
+              ],
+            }
+          : current,
       );
       toast.success(`${optimized.length} image${optimized.length > 1 ? "s" : ""} optimized.`);
     } catch (error) {
@@ -514,67 +531,105 @@ function AdminProperties() {
 
                 {draft.images.length ? (
                   <div className="grid gap-3">
-                    {draft.images.map((image, index) => (
-                      <div
-                        key={`${image}-${index}`}
-                        className="group overflow-hidden rounded-2xl border border-border bg-background shadow-[var(--shadow-soft)]"
-                      >
-                        <SmartImage
-                          src={image}
-                          alt={`Listing image ${index + 1}`}
-                          aspect="aspect-[16/10]"
-                          className="pv-smooth-state group-hover:scale-[1.03]"
-                        />
-                        <div className="flex items-center gap-2 p-2">
-                          <input
-                            value={image.startsWith("data:") ? "Optimized WebP upload" : image}
-                            onChange={(event) =>
-                              setDraft({
-                                ...draft,
-                                images: setArrayItem(draft.images, index, event.target.value),
-                              })
-                            }
-                            className="min-w-0 flex-1 rounded-full border border-border px-3 py-2 text-xs text-navy outline-none focus:border-navy"
-                            readOnly={image.startsWith("data:")}
+                    {draft.images.map((image, index) => {
+                      const normalized = normalizePropertyImage(
+                        image,
+                        index === 0 ? "Main" : "Bedroom",
+                      );
+                      return (
+                        <div
+                          key={`${image}-${index}`}
+                          className="group overflow-hidden rounded-2xl border border-border bg-background shadow-[var(--shadow-soft)]"
+                        >
+                          <SmartImage
+                            src={normalized.src}
+                            alt={`Listing image ${index + 1}`}
+                            aspect="aspect-[16/10]"
+                            className="pv-smooth-state group-hover:scale-[1.03]"
                           />
-                          <button
-                            type="button"
-                            aria-label="Move image up"
-                            onClick={() =>
-                              setDraft({ ...draft, images: moveItem(draft.images, index, -1) })
-                            }
-                            className="grid h-9 w-9 place-items-center rounded-full border border-border text-navy hover:bg-ice"
-                          >
-                            <ArrowUp className="h-3.5 w-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            aria-label="Move image down"
-                            onClick={() =>
-                              setDraft({ ...draft, images: moveItem(draft.images, index, 1) })
-                            }
-                            className="grid h-9 w-9 place-items-center rounded-full border border-border text-navy hover:bg-ice"
-                          >
-                            <ArrowDown className="h-3.5 w-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            aria-label="Remove image"
-                            onClick={() =>
-                              setDraft({
-                                ...draft,
-                                images: draft.images.filter(
-                                  (_, imageIndex) => imageIndex !== index,
-                                ),
-                              })
-                            }
-                            className="grid h-9 w-9 place-items-center rounded-full border border-border text-destructive hover:bg-ice"
-                          >
-                            <X className="h-3.5 w-3.5" />
-                          </button>
+                          <div className="grid gap-2 p-2">
+                            <label>
+                              <span className="sr-only">Image category</span>
+                              <select
+                                value={normalized.label}
+                                onChange={(event) => {
+                                  const label = event.target.value as PropertyImageLabel;
+                                  setDraft({
+                                    ...draft,
+                                    images: setArrayItem(draft.images, index, {
+                                      ...normalized,
+                                      label,
+                                    }),
+                                  });
+                                }}
+                                className="w-full rounded-full border border-border bg-card px-3 py-2 text-xs font-semibold text-navy outline-none focus:border-navy"
+                              >
+                                {PROPERTY_IMAGE_LABELS.map((label) => (
+                                  <option key={label} value={label}>
+                                    {label === "Main" ? "Main showcase image" : label}
+                                  </option>
+                                ))}
+                              </select>
+                            </label>
+                            <div className="flex items-center gap-2">
+                              <input
+                                value={
+                                  normalized.src.startsWith("data:")
+                                    ? "Optimized WebP upload"
+                                    : normalized.src
+                                }
+                                onChange={(event) =>
+                                  setDraft({
+                                    ...draft,
+                                    images: setArrayItem(draft.images, index, {
+                                      ...normalized,
+                                      src: event.target.value,
+                                    }),
+                                  })
+                                }
+                                className="min-w-0 flex-1 rounded-full border border-border px-3 py-2 text-xs text-navy outline-none focus:border-navy"
+                                readOnly={normalized.src.startsWith("data:")}
+                              />
+                              <button
+                                type="button"
+                                aria-label="Move image up"
+                                onClick={() =>
+                                  setDraft({ ...draft, images: moveItem(draft.images, index, -1) })
+                                }
+                                className="grid h-9 w-9 place-items-center rounded-full border border-border text-navy hover:bg-ice"
+                              >
+                                <ArrowUp className="h-3.5 w-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                aria-label="Move image down"
+                                onClick={() =>
+                                  setDraft({ ...draft, images: moveItem(draft.images, index, 1) })
+                                }
+                                className="grid h-9 w-9 place-items-center rounded-full border border-border text-navy hover:bg-ice"
+                              >
+                                <ArrowDown className="h-3.5 w-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                aria-label="Remove image"
+                                onClick={() =>
+                                  setDraft({
+                                    ...draft,
+                                    images: draft.images.filter(
+                                      (_, imageIndex) => imageIndex !== index,
+                                    ),
+                                  })
+                                }
+                                className="grid h-9 w-9 place-items-center rounded-full border border-border text-destructive hover:bg-ice"
+                              >
+                                <X className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className="rounded-2xl border border-border bg-background p-5 text-center text-sm text-muted-foreground">
@@ -585,7 +640,15 @@ function AdminProperties() {
 
                 <button
                   type="button"
-                  onClick={() => setDraft({ ...draft, images: [...draft.images, ""] })}
+                  onClick={() =>
+                    setDraft({
+                      ...draft,
+                      images: [
+                        ...draft.images,
+                        { src: "", label: draft.images.length === 0 ? "Main" : "Bedroom" },
+                      ],
+                    })
+                  }
                   className="pv-smooth-state flex w-full items-center justify-center gap-2 rounded-full border border-border px-4 py-2.5 text-xs font-semibold text-navy hover:border-navy/40"
                 >
                   <Plus className="h-3.5 w-3.5" /> Add image URL
@@ -661,7 +724,7 @@ function AdminProperties() {
               className="pv-smooth-state grid gap-4 p-4 hover:bg-smoke/70 lg:grid-cols-[6.5rem_minmax(0,1fr)_auto]"
             >
               <SmartImage
-                src={property.images[0] ?? ""}
+                src={getMainImage(property)}
                 alt={property.title || "Property"}
                 aspect="aspect-[4/3]"
                 wrapperClassName="rounded-2xl"

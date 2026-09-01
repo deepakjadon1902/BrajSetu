@@ -6,7 +6,11 @@ export const registerSchema = z.object({
   name: z.string().trim().min(2),
   email,
   phone: z.string().trim().min(8),
-  password: z.string().min(8).regex(/[A-Za-z]/).regex(/\d/),
+  password: z
+    .string()
+    .min(8)
+    .regex(/[A-Za-z]/)
+    .regex(/\d/),
 });
 
 export const loginSchema = z.object({
@@ -22,7 +26,11 @@ export const resetRequestSchema = z.object({ email });
 
 export const resetPasswordSchema = z.object({
   token: z.string().trim().min(6),
-  password: z.string().min(8).regex(/[A-Za-z]/).regex(/\d/),
+  password: z
+    .string()
+    .min(8)
+    .regex(/[A-Za-z]/)
+    .regex(/\d/),
 });
 
 export const propertySchema = z.object({
@@ -31,14 +39,29 @@ export const propertySchema = z.object({
   category: z.enum(["Shop", "Flat", "Plot", "House", "Farm House"]),
   intent: z.enum(["Sale", "Rent"]),
   price: z.coerce.number().min(0),
-  location: z.object({ city: z.string().trim().min(2), locality: z.string().trim().default("") }),
+  location: z.object({
+    city: z.string().trim().min(2),
+    locality: z.string().trim().default(""),
+  }),
   specs: z.object({
     area: z.coerce.number().min(0),
     bedrooms: z.coerce.number().optional(),
     bathrooms: z.coerce.number().optional(),
     furnishing: z.string().optional(),
   }),
-  images: z.array(z.string()).default([]),
+  images: z
+    .array(
+      z.union([
+        z.string(),
+        z.object({
+          src: z.string().default(""),
+          label: z
+            .enum(["Main", "Bedroom", "Kitchen", "Bathroom", "Balcony"])
+            .default("Bedroom"),
+        }),
+      ]),
+    )
+    .default([]),
   amenities: z.array(z.string()).default([]),
   featured: z.boolean().optional(),
   status: z.enum(["New", "Active", "Price Drop"]).optional(),
