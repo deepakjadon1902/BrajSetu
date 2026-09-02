@@ -5,14 +5,13 @@ import {
   ChevronDown,
   Compass,
   Home,
-  LogOut,
   Menu,
   Newspaper,
   Plus,
   Smartphone,
-  UserCircle,
   X,
 } from "lucide-react";
+import { AccountDrawer } from "@/components/AccountDrawer";
 import { BrandLogo } from "@/components/BrandLogo";
 import { cn } from "@/lib/utils";
 import { useStore } from "@/lib/mock-store";
@@ -221,7 +220,7 @@ export function Navbar() {
   const [open, setOpen] = useState(false);
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const navRef = useRef<HTMLElement>(null);
-  const { currentUser, logout, settings } = useStore();
+  const { settings } = useStore();
   const desktopMenus = [locationMenu, ...menus];
   const activeDesktopMenu = desktopMenus.find((menu) => menu.key === activeMenu);
 
@@ -298,28 +297,9 @@ export function Navbar() {
               <Smartphone className="h-4 w-4" />
               Call Advisor
             </a>
-            {currentUser ? (
-              <button
-                type="button"
-                onClick={() => {
-                  logout();
-                  closeMenus();
-                }}
-                className="pv-smooth-state hidden h-11 items-center gap-2 rounded-full border border-white/10 bg-white/[0.07] px-3.5 text-sm font-bold text-background/95 hover:bg-white/[0.13] md:inline-flex"
-              >
-                <LogOut className="h-4 w-4" />
-                <span className="max-w-[8rem] truncate">{currentUser.name}</span>
-              </button>
-            ) : (
-              <Link
-                to="/login"
-                onClick={closeMenus}
-                className="pv-smooth-state hidden h-11 items-center gap-2 rounded-full bg-background px-4 text-sm font-black text-navy shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] hover:scale-[1.02] md:inline-flex"
-              >
-                <UserCircle className="h-4 w-4" />
-                Login
-              </Link>
-            )}
+            <div onClick={() => closeMenus()}>
+              <AccountDrawer />
+            </div>
             <button
               type="button"
               aria-label={open ? "Close menu" : "Open menu"}
@@ -357,26 +337,13 @@ export function Navbar() {
             >
               Contact advisor
             </Link>
-            {currentUser ? (
-              <button
-                type="button"
-                onClick={() => {
-                  logout();
-                  closeMenus();
-                }}
-                className="pv-tap flex items-center justify-center rounded-full border border-border text-sm font-semibold text-navy"
-              >
-                Sign out
-              </button>
-            ) : (
-              <Link
-                to="/login"
-                onClick={closeMenus}
-                className="pv-tap flex items-center justify-center rounded-full border border-border text-sm font-semibold text-navy"
-              >
-                Login
-              </Link>
-            )}
+            <Link
+              to="/profile"
+              onClick={closeMenus}
+              className="pv-tap flex items-center justify-center rounded-full border border-border text-sm font-semibold text-navy"
+            >
+              My profile
+            </Link>
           </div>
         </div>
       </div>

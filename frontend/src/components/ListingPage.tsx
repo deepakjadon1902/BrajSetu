@@ -211,18 +211,20 @@ export function ListingPage({
               <PropertyGridSkeleton count={view === "grid" ? 4 : 3} compact={view === "list"} />
             </div>
           ) : results.length === 0 ? (
-            <EmptyState
-              className="mt-6"
-              action={
-                <button
-                  type="button"
-                  onClick={() => setFilters({ intent })}
-                  className="pv-tap rounded-full bg-navy px-6 text-sm font-semibold text-background"
-                >
-                  Reset filters
-                </button>
-              }
-            />
+            properties.length > 0 ? (
+              <EmptyState
+                className="mt-6"
+                action={
+                  <button
+                    type="button"
+                    onClick={() => setFilters({ intent })}
+                    className="pv-tap rounded-full bg-navy px-6 text-sm font-semibold text-background"
+                  >
+                    Reset filters
+                  </button>
+                }
+              />
+            ) : null
           ) : (
             <div
               className={cn(

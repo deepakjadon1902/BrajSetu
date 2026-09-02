@@ -113,81 +113,85 @@ function HomePage() {
       </section>
 
       {/* Explore */}
-      <section className="mt-10 bg-ice pt-14 pb-16 sm:mt-24 sm:pt-20">
-        <div className="pv-container">
-          <div className="text-center">
-            <h2 className="text-2xl font-extrabold tracking-tight text-navy sm:text-4xl">
-              Explore our homes
-            </h2>
-            <p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground sm:text-base">
-              Start with the places families ask us about most across Braj Mandal.
-            </p>
-          </div>
+      {exploreCards.length > 0 ? (
+        <section className="mt-10 bg-ice pt-14 pb-16 sm:mt-24 sm:pt-20">
+          <div className="pv-container">
+            <div className="text-center">
+              <h2 className="text-2xl font-extrabold tracking-tight text-navy sm:text-4xl">
+                Explore our homes
+              </h2>
+              <p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground sm:text-base">
+                Start with the places families ask us about most across Braj Mandal.
+              </p>
+            </div>
 
-          <div className="pv-no-scrollbar mt-8 flex gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:justify-center">
-            {exploreFilters.map((filter) => (
-              <button
-                key={filter}
-                type="button"
-                onClick={() => setActiveFilter(filter)}
-                className={cn(
-                  "pv-smooth-state shrink-0 rounded-full border px-5 py-2.5 text-xs font-semibold sm:text-sm",
-                  activeFilter === filter
-                    ? "border-navy bg-navy text-background"
-                    : "border-border bg-background text-navy-soft hover:border-navy/40",
-                )}
-              >
-                {filter}
-              </button>
-            ))}
-          </div>
+            <div className="pv-no-scrollbar mt-8 flex gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:justify-center">
+              {exploreFilters.map((filter) => (
+                <button
+                  key={filter}
+                  type="button"
+                  onClick={() => setActiveFilter(filter)}
+                  className={cn(
+                    "pv-smooth-state shrink-0 rounded-full border px-5 py-2.5 text-xs font-semibold sm:text-sm",
+                    activeFilter === filter
+                      ? "border-navy bg-navy text-background"
+                      : "border-border bg-background text-navy-soft hover:border-navy/40",
+                  )}
+                >
+                  {filter}
+                </button>
+              ))}
+            </div>
 
-          <div className="pv-no-scrollbar pv-snap-row mt-10 flex gap-6 overflow-x-auto pb-2 sm:grid sm:grid-cols-2 sm:overflow-visible lg:grid-cols-3">
-            {exploreCards.map((property) => (
-              <OverlayCard
-                key={property.id}
-                image={getMainImage(property)}
-                title={property.title}
-                subtitle={`${property.location.locality}, ${property.location.city}`}
-                to={property.intent === "Rent" ? "/rent" : "/buy"}
-                className="w-[82%] shrink-0 snap-start sm:w-auto"
-              />
-            ))}
+            <div className="pv-no-scrollbar pv-snap-row mt-10 flex gap-6 overflow-x-auto pb-2 sm:grid sm:grid-cols-2 sm:overflow-visible lg:grid-cols-3">
+              {exploreCards.map((property) => (
+                <OverlayCard
+                  key={property.id}
+                  image={getMainImage(property)}
+                  title={property.title}
+                  subtitle={`${property.location.locality}, ${property.location.city}`}
+                  to={property.intent === "Rent" ? "/rent" : "/buy"}
+                  className="w-[82%] shrink-0 snap-start sm:w-auto"
+                />
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      ) : null}
 
       {/* Homes for you */}
-      <section className="py-16 sm:py-20">
-        <div className="pv-container">
-          <div className="text-center">
-            <h2 className="text-2xl font-extrabold tracking-tight text-navy sm:text-4xl">
-              Homes for you
-            </h2>
-            <p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground sm:text-base">
-              A curated cross-section of what our advisors are showing this month.
-            </p>
-          </div>
+      {homesForYou.length > 0 ? (
+        <section className="py-16 sm:py-20">
+          <div className="pv-container">
+            <div className="text-center">
+              <h2 className="text-2xl font-extrabold tracking-tight text-navy sm:text-4xl">
+                Homes for you
+              </h2>
+              <p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground sm:text-base">
+                Latest verified properties from Braj Setu.
+              </p>
+            </div>
 
-          <div className="pv-no-scrollbar pv-snap-row mt-10 flex gap-6 overflow-x-auto pb-2 sm:grid sm:grid-cols-2 sm:overflow-visible lg:grid-cols-3 xl:grid-cols-4">
-            {homesForYou.map((property) => (
-              <div key={property.id} className="w-[82%] shrink-0 snap-start sm:w-auto">
-                <PropertyCard property={property} />
-              </div>
-            ))}
-          </div>
+            <div className="pv-no-scrollbar pv-snap-row mt-10 flex gap-6 overflow-x-auto pb-2 sm:grid sm:grid-cols-2 sm:overflow-visible lg:grid-cols-3 xl:grid-cols-4">
+              {homesForYou.map((property) => (
+                <div key={property.id} className="w-[82%] shrink-0 snap-start sm:w-auto">
+                  <PropertyCard property={property} />
+                </div>
+              ))}
+            </div>
 
-          <div className="mt-10 flex justify-center">
-            <Link
-              to="/buy"
-              search={{ q: undefined }}
-              className="pv-smooth-state pv-tap inline-flex items-center rounded-full border border-navy px-7 text-sm font-semibold text-navy hover:bg-navy hover:text-background"
-            >
-              Browse all listings
-            </Link>
+            <div className="mt-10 flex justify-center">
+              <Link
+                to="/buy"
+                search={{ q: undefined }}
+                className="pv-smooth-state pv-tap inline-flex items-center rounded-full border border-navy px-7 text-sm font-semibold text-navy hover:bg-navy hover:text-background"
+              >
+                Browse all listings
+              </Link>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      ) : null}
 
       {/* Sell split section */}
       <section className="bg-ice py-16 sm:py-20">
@@ -259,63 +263,65 @@ function HomePage() {
       </section>
 
       {/* News */}
-      <section className="bg-ice py-16 sm:py-20">
-        <div className="pv-container">
-          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4 sm:flex sm:justify-between">
-            <div className="min-w-0">
-              <h2 className="text-2xl font-extrabold tracking-tight text-navy sm:text-4xl">
-                Real estate news
-              </h2>
-              <p className="mt-3 max-w-xl text-sm text-muted-foreground sm:text-base">
-                Short, practical reads from our advisory desk.
-              </p>
+      {news.length > 0 ? (
+        <section className="bg-ice py-16 sm:py-20">
+          <div className="pv-container">
+            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4 sm:flex sm:justify-between">
+              <div className="min-w-0">
+                <h2 className="text-2xl font-extrabold tracking-tight text-navy sm:text-4xl">
+                  Real estate news
+                </h2>
+                <p className="mt-3 max-w-xl text-sm text-muted-foreground sm:text-base">
+                  Short, practical reads from our advisory desk.
+                </p>
+              </div>
+              <div className="flex shrink-0 gap-2">
+                <button
+                  type="button"
+                  aria-label="Previous articles"
+                  onClick={() => scrollNews(-1)}
+                  className="pv-smooth-state grid h-11 w-11 place-items-center rounded-full border border-navy/20 bg-background text-navy hover:border-navy"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  aria-label="Next articles"
+                  onClick={() => scrollNews(1)}
+                  className="pv-smooth-state grid h-11 w-11 place-items-center rounded-full border border-navy/20 bg-background text-navy hover:border-navy"
+                >
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+              </div>
             </div>
-            <div className="flex shrink-0 gap-2">
-              <button
-                type="button"
-                aria-label="Previous articles"
-                onClick={() => scrollNews(-1)}
-                className="pv-smooth-state grid h-11 w-11 place-items-center rounded-full border border-navy/20 bg-background text-navy hover:border-navy"
-              >
-                <ArrowLeft className="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                aria-label="Next articles"
-                onClick={() => scrollNews(1)}
-                className="pv-smooth-state grid h-11 w-11 place-items-center rounded-full border border-navy/20 bg-background text-navy hover:border-navy"
-              >
-                <ArrowRight className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
 
-          <div
-            ref={newsRef}
-            className="pv-no-scrollbar pv-snap-row mt-8 flex gap-6 overflow-x-auto pb-2"
-          >
-            {news.map((article) => (
-              <article
-                key={article.id}
-                className="pv-lift w-[82%] shrink-0 snap-start overflow-hidden rounded-2xl bg-card shadow-[var(--shadow-soft)] sm:w-[46%] lg:w-[31%]"
-              >
-                <SmartImage src={article.image} alt={article.title} aspect="aspect-[16/10]" />
-                <div className="p-5">
-                  <p className="text-xs font-semibold tracking-wide text-gold-deep uppercase">
-                    {article.date}
-                  </p>
-                  <h3 className="mt-2 text-base leading-snug font-bold text-navy">
-                    {article.title}
-                  </h3>
-                  <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">
-                    {article.excerpt}
-                  </p>
-                </div>
-              </article>
-            ))}
+            <div
+              ref={newsRef}
+              className="pv-no-scrollbar pv-snap-row mt-8 flex gap-6 overflow-x-auto pb-2"
+            >
+              {news.map((article) => (
+                <article
+                  key={article.id}
+                  className="pv-lift w-[82%] shrink-0 snap-start overflow-hidden rounded-2xl bg-card shadow-[var(--shadow-soft)] sm:w-[46%] lg:w-[31%]"
+                >
+                  <SmartImage src={article.image} alt={article.title} aspect="aspect-[16/10]" />
+                  <div className="p-5">
+                    <p className="text-xs font-semibold tracking-wide text-gold-deep uppercase">
+                      {article.date}
+                    </p>
+                    <h3 className="mt-2 text-base leading-snug font-bold text-navy">
+                      {article.title}
+                    </h3>
+                    <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">
+                      {article.excerpt}
+                    </p>
+                  </div>
+                </article>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      ) : null}
     </div>
   );
 }

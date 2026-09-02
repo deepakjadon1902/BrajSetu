@@ -8,7 +8,6 @@ import {
   type ReactNode,
 } from "react";
 
-import { newsArticles as seedNews, properties as seedProperties } from "@/data/properties";
 import type { NewsArticle, Property } from "@/types/property";
 
 export type UserRole = "user" | "editor" | "manager" | "admin";
@@ -185,6 +184,7 @@ interface StoreContextValue extends StoreShape {
   login: (email: string, password: string) => Promise<AuthResult>;
   googleLogin: (credential: string) => Promise<AuthResult>;
   logout: () => void;
+  updateCurrentUser: (user: AppUser) => Promise<void>;
   requestPasswordReset: (email: string) => Promise<AuthResult>;
   resetPassword: (token: string, password: string) => Promise<AuthResult>;
   adminLogin: (email: string, password: string) => Promise<AuthResult>;
@@ -235,8 +235,8 @@ function initialState(): StoreShape {
     activity: [],
     settingsHistory: [],
     users: [],
-    properties: seedProperties,
-    news: seedNews,
+    properties: [],
+    news: [],
     enquiries: [],
     currentUser: null,
     adminUser: null,
@@ -427,6 +427,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         removeToken(USER_TOKEN_KEY);
         setUserToken(null);
         setState((prev) => ({ ...prev, currentUser: null }));
+      },
+      updateCurrentUser: async (user) => {
+        setState((prev) => ({
+          ...prev,
+          currentUser: user,
+          users: prev.users.map((entry) => (entry.id === user.id ? user : entry)),
+        }));
       },
       requestPasswordReset: async (email) => {
         try {
