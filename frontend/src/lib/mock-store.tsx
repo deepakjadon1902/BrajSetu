@@ -110,7 +110,7 @@ export const defaultSettings: SiteSettings = {
   address: VRINDAVAN_SARTHI_ADDRESS,
   ogTitle: "Braj Setu Properties | Premium Property Marketplace",
   ogDescription: "Buy, rent and sell verified property with a boutique advisory team.",
-  ogImage: "/braj-setu-logo.jpeg",
+  ogImage: "https://www.brajsetuproperties.com/braj-setu-logo.jpeg",
   twitterCard: "summary_large_image",
   twitterHandle: "@brajsetuproperties",
   socialFacebook: "",

@@ -12,6 +12,8 @@ export function createApp() {
   const allowedOrigins = [
     process.env.FRONTEND_URL,
     process.env.PUBLIC_SITE_URL,
+    "https://www.brajsetuproperties.com",
+    "https://brajsetuproperties.com",
     "https://braj-setu.vercel.app",
     "http://localhost:8080",
     "http://localhost:8081",

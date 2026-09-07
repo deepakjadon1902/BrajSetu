@@ -17,6 +17,9 @@ import { Toaster } from "@/components/ui/sonner";
 import { StoreProvider, useStore } from "@/lib/mock-store";
 import { NotificationBar } from "@/components/NotificationBar";
 
+const SITE_URL = "https://www.brajsetuproperties.com";
+const SITE_LOGO_URL = `${SITE_URL}/braj-setu-logo.jpeg`;
+
 function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -90,14 +93,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content: "Buy, rent and sell verified property with a boutique advisory team.",
       },
       { property: "og:type", content: "website" },
-      { property: "og:image", content: "/braj-setu-logo.jpeg" },
+      { property: "og:url", content: SITE_URL },
+      { property: "og:site_name", content: "Braj Setu Properties" },
+      { property: "og:image", content: SITE_LOGO_URL },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Braj Setu Properties | Premium Property Marketplace" },
       {
         name: "twitter:description",
         content: "Buy, rent and sell verified property with a boutique advisory team.",
       },
-      { name: "twitter:image", content: "/braj-setu-logo.jpeg" },
+      { name: "twitter:image", content: SITE_LOGO_URL },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
@@ -119,10 +124,45 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function RootShell({ children }: { children: ReactNode }) {
+  const organizationJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "RealEstateAgent",
+    "@id": `${SITE_URL}/#organization`,
+    name: "Braj Setu Properties",
+    url: SITE_URL,
+    logo: SITE_LOGO_URL,
+    image: SITE_LOGO_URL,
+    email: "brajsetuproperties@gmail.com",
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: "Raja wala mandir, Infront of Giriraj ji Maharaj",
+      addressLocality: "Goverdhan",
+      addressRegion: "Uttar Pradesh",
+      postalCode: "281502",
+      addressCountry: "IN",
+    },
+    areaServed: ["Vrindavan", "Mathura", "Govardhan", "Barsana", "Braj Mandal"],
+  };
+
+  const websiteJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "@id": `${SITE_URL}/#website`,
+    name: "Braj Setu Properties",
+    url: SITE_URL,
+    publisher: { "@id": `${SITE_URL}/#organization` },
+  };
+
   return (
     <html lang="en">
       <head>
         <HeadContent />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify([organizationJsonLd, websiteJsonLd]),
+          }}
+        />
       </head>
       <body>
         {children}
@@ -164,6 +204,7 @@ function RootComponent() {
 /** Applies admin-managed metadata to the document head on the client. */
 function SiteMeta() {
   const { settings, hydrated } = useStore();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   useEffect(() => {
     if (!hydrated) return;
@@ -183,12 +224,22 @@ function SiteMeta() {
     upsert("property", "og:title", settings.ogTitle || settings.metaTitle);
     upsert("property", "og:description", settings.ogDescription || settings.metaDescription);
     upsert("property", "og:image", settings.ogImage);
+    upsert("property", "og:url", `${SITE_URL}${pathname === "/" ? "" : pathname}`);
+    upsert("property", "og:site_name", settings.siteName);
     upsert("name", "twitter:card", settings.twitterCard);
     upsert("name", "twitter:title", settings.ogTitle || settings.metaTitle);
     upsert("name", "twitter:description", settings.ogDescription || settings.metaDescription);
     upsert("name", "twitter:image", settings.ogImage);
     upsert("name", "twitter:site", settings.twitterHandle);
-  }, [hydrated, settings]);
+
+    let canonical = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+    if (!canonical) {
+      canonical = document.createElement("link");
+      canonical.rel = "canonical";
+      document.head.appendChild(canonical);
+    }
+    canonical.href = `${SITE_URL}${pathname === "/" ? "" : pathname}`;
+  }, [hydrated, pathname, settings]);
 
   return null;
 }
