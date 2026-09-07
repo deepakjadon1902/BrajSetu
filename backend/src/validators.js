@@ -1,6 +1,15 @@
 import { z } from "zod";
 
 const email = z.string().trim().email().toLowerCase();
+const propertyCategories = ["Shop", "Flat", "Plot", "House", "Farm House"];
+const propertyIntents = ["Sale", "Rent"];
+const furnishingOptions = [
+  "Unfurnished",
+  "Semi-furnished",
+  "Furnished",
+  "Bare shell",
+];
+const reviewStatuses = ["Pending Review", "Approved", "Needs Changes"];
 
 export const registerSchema = z.object({
   name: z.string().trim().min(2),
@@ -35,19 +44,19 @@ export const resetPasswordSchema = z.object({
 
 export const propertySchema = z.object({
   id: z.string().trim().min(2),
-  title: z.string().trim().min(2),
-  category: z.enum(["Shop", "Flat", "Plot", "House", "Farm House"]),
-  intent: z.enum(["Sale", "Rent"]),
-  price: z.coerce.number().min(0),
+  title: z.string().trim().min(2).max(120),
+  category: z.enum(propertyCategories),
+  intent: z.enum(propertyIntents),
+  price: z.coerce.number().min(1).max(10000000000),
   location: z.object({
-    city: z.string().trim().min(2),
-    locality: z.string().trim().default(""),
+    city: z.string().trim().min(2).max(80),
+    locality: z.string().trim().min(2).max(120).default(""),
   }),
   specs: z.object({
-    area: z.coerce.number().min(0),
-    bedrooms: z.coerce.number().optional(),
-    bathrooms: z.coerce.number().optional(),
-    furnishing: z.string().optional(),
+    area: z.coerce.number().min(1).max(10000000),
+    bedrooms: z.coerce.number().int().min(0).max(50).optional(),
+    bathrooms: z.coerce.number().int().min(0).max(50).optional(),
+    furnishing: z.enum(furnishingOptions).optional(),
   }),
   images: z
     .array(
@@ -65,8 +74,38 @@ export const propertySchema = z.object({
   amenities: z.array(z.string()).default([]),
   featured: z.boolean().optional(),
   status: z.enum(["New", "Active", "Price Drop"]).optional(),
-  description: z.string().optional(),
+  description: z.string().trim().min(20).max(2500).optional(),
+  listingSource: z.enum(["Admin", "User"]).optional(),
+  reviewStatus: z.enum(reviewStatuses).optional(),
+  submittedBy: z.string().optional(),
+  ownerName: z.string().trim().max(120).optional(),
+  ownerEmail: email.optional(),
+  ownerPhone: z.string().trim().min(8).max(20).optional(),
+  termsAcceptedAt: z.coerce.date().optional(),
 });
+
+export const propertySubmissionSchema = propertySchema
+  .omit({
+    id: true,
+    featured: true,
+    status: true,
+    listingSource: true,
+    reviewStatus: true,
+    submittedBy: true,
+    ownerName: true,
+    ownerEmail: true,
+    ownerPhone: true,
+    termsAcceptedAt: true,
+  })
+  .extend({
+    title: z.string().trim().min(8).max(120),
+    description: z.string().trim().min(40).max(2500),
+    images: z.array(z.string().trim().url()).max(8).default([]),
+    ownerName: z.string().trim().min(2).max(120),
+    ownerEmail: email,
+    ownerPhone: z.string().trim().min(8).max(20),
+    termsAccepted: z.literal(true),
+  });
 
 export const newsSchema = z.object({
   id: z.string().trim().min(1),

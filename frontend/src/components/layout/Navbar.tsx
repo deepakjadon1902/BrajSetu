@@ -16,7 +16,8 @@ import { BrandLogo } from "@/components/BrandLogo";
 import { cn } from "@/lib/utils";
 import { useStore } from "@/lib/mock-store";
 
-type RoutePath = "/" | "/buy" | "/rent" | "/sale" | "/about" | "/contact" | "/login";
+type RoutePath =
+  "/" | "/buy" | "/rent" | "/sale" | "/list-property" | "/about" | "/contact" | "/login";
 
 type MenuColumn = {
   title: string;
@@ -127,6 +128,7 @@ const menus: NavMenu[] = [
         title: "Sell with Braj Setu",
         links: [
           { label: "Request valuation", to: "/contact" },
+          { label: "List your property", to: "/list-property" },
           { label: "Seller advisory", to: "/sale" },
           { label: "Photography support", to: "/sale" },
           { label: "Verified buyer visits", to: "/contact" },
@@ -331,11 +333,11 @@ export function Navbar() {
           ))}
           <div className="mt-4 grid gap-2 sm:grid-cols-2">
             <Link
-              to="/contact"
+              to="/list-property"
               onClick={closeMenus}
               className="pv-tap flex items-center justify-center rounded-full bg-navy text-sm font-semibold text-background"
             >
-              Contact advisor
+              List property
             </Link>
             <Link
               to="/profile"

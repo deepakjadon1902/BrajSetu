@@ -4,7 +4,8 @@ import { Enquiry } from "../models/Enquiry.js";
 import { NewsArticle } from "../models/NewsArticle.js";
 import { Property } from "../models/Property.js";
 import { SiteSettings, defaultSettings } from "../models/SiteSettings.js";
-import { enquirySchema } from "../validators.js";
+import { enquirySchema, propertySubmissionSchema } from "../validators.js";
+import { requireAuth } from "../middleware/auth.js";
 import { asyncHandler } from "../utils/errors.js";
 
 export const publicRouter = Router();
@@ -12,14 +13,21 @@ export const publicRouter = Router();
 function cleanDoc(doc) {
   if (!doc) return doc;
   const object = doc.toObject ? doc.toObject() : doc;
-  return { ...object, id: object.id || String(object._id), _id: undefined, __v: undefined };
+  return {
+    ...object,
+    id: object.id || String(object._id),
+    _id: undefined,
+    __v: undefined,
+  };
 }
 
 publicRouter.get(
   "/bootstrap",
   asyncHandler(async (_req, res) => {
     const [properties, news, settings] = await Promise.all([
-      Property.find().sort({ featured: -1, createdAt: -1 }).lean(),
+      Property.find({ reviewStatus: { $in: ["Approved", null] } })
+        .sort({ featured: -1, createdAt: -1 })
+        .lean(),
       NewsArticle.find().sort({ createdAt: -1 }).lean(),
       SiteSettings.findOne({ singleton: "site" }).lean(),
     ]);
@@ -35,10 +43,14 @@ publicRouter.get(
   "/properties",
   asyncHandler(async (req, res) => {
     const query = {};
+    query.reviewStatus = { $in: ["Approved", null] };
     if (req.query.intent) query.intent = req.query.intent;
     if (req.query.category) query.category = req.query.category;
-    if (req.query.city) query["location.city"] = new RegExp(String(req.query.city), "i");
-    const properties = await Property.find(query).sort({ featured: -1, createdAt: -1 }).lean();
+    if (req.query.city)
+      query["location.city"] = new RegExp(String(req.query.city), "i");
+    const properties = await Property.find(query)
+      .sort({ featured: -1, createdAt: -1 })
+      .lean();
     res.json({ properties });
   }),
 );
@@ -46,8 +58,34 @@ publicRouter.get(
 publicRouter.get(
   "/properties/:id",
   asyncHandler(async (req, res) => {
-    const property = await Property.findOne({ id: req.params.id }).lean();
+    const property = await Property.findOne({
+      id: req.params.id,
+      reviewStatus: { $in: ["Approved", null] },
+    }).lean();
     res.json({ property });
+  }),
+);
+
+publicRouter.post(
+  "/properties",
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const input = propertySubmissionSchema.parse(req.body);
+    const property = await Property.create({
+      ...input,
+      id: `user-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
+      images: input.images.map((src, index) => ({
+        src,
+        label: index === 0 ? "Main" : "Bedroom",
+      })),
+      featured: false,
+      status: "New",
+      listingSource: "User",
+      reviewStatus: "Pending Review",
+      submittedBy: req.user.id,
+      termsAcceptedAt: new Date(),
+    });
+    res.status(201).json({ property: cleanDoc(property) });
   }),
 );
 

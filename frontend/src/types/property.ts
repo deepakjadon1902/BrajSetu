@@ -24,6 +24,13 @@ export interface Property {
   amenities: string[];
   featured?: boolean;
   status?: "New" | "Active" | "Price Drop";
+  listingSource?: "Admin" | "User";
+  reviewStatus?: "Pending Review" | "Approved" | "Needs Changes";
+  submittedBy?: string;
+  ownerName?: string;
+  ownerEmail?: string;
+  ownerPhone?: string;
+  termsAcceptedAt?: string;
   description?: string;
 }
 

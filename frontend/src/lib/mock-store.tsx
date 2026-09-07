@@ -197,6 +197,14 @@ interface StoreContextValue extends StoreShape {
   saveUser: (user: AppUser) => Promise<void>;
   deleteUser: (id: string) => Promise<void>;
   addEnquiry: (input: Omit<Enquiry, "id" | "createdAt" | "status">) => Promise<void>;
+  submitProperty: (
+    property: Omit<Property, "id" | "featured" | "status" | "listingSource" | "reviewStatus"> & {
+      ownerName: string;
+      ownerEmail: string;
+      ownerPhone: string;
+      termsAccepted: boolean;
+    },
+  ) => Promise<Property>;
   setEnquiryStatus: (id: string, status: Enquiry["status"]) => Promise<void>;
   deleteEnquiry: (id: string) => Promise<void>;
   saveSettings: (settings: SiteSettings) => Promise<void>;
@@ -555,6 +563,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           }));
         }
       },
+      submitProperty: async (property) => {
+        const result = await api<{ property: Property }>(
+          "/properties",
+          {
+            method: "POST",
+            body: JSON.stringify(property),
+          },
+          userToken,
+        );
+        return result.property;
+      },
       setEnquiryStatus: async (id, status) => {
         const result = await api<{ enquiry: Enquiry }>(
           `/admin/enquiries/${id}/status`,
@@ -604,7 +623,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         setState((prev) => ({ ...prev, activity: [] }));
       },
     };
-  }, [adminToken, hydrated, refreshAdmin, state]);
+  }, [adminToken, hydrated, refreshAdmin, state, userToken]);
 
   void userToken;
 

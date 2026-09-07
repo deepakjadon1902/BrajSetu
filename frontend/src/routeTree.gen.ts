@@ -14,6 +14,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as BuyRouteImport } from './routes/buy'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as ListPropertyRouteImport } from './routes/list-property'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ProfileRouteImport } from './routes/profile'
@@ -55,6 +56,11 @@ const ContactRoute = ContactRouteImport.update({
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
   id: '/forgot-password',
   path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ListPropertyRoute = ListPropertyRouteImport.update({
+  id: '/list-property',
+  path: '/list-property',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -149,6 +155,7 @@ export interface FileRoutesByFullPath {
   '/buy': typeof BuyRoute
   '/contact': typeof ContactRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/list-property': typeof ListPropertyRoute
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
@@ -173,6 +180,7 @@ export interface FileRoutesByTo {
   '/buy': typeof BuyRoute
   '/contact': typeof ContactRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/list-property': typeof ListPropertyRoute
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
@@ -198,6 +206,7 @@ export interface FileRoutesById {
   '/buy': typeof BuyRoute
   '/contact': typeof ContactRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/list-property': typeof ListPropertyRoute
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
@@ -224,6 +233,7 @@ export interface FileRouteTypes {
     | '/buy'
     | '/contact'
     | '/forgot-password'
+    | '/list-property'
     | '/login'
     | '/privacy'
     | '/profile'
@@ -248,6 +258,7 @@ export interface FileRouteTypes {
     | '/buy'
     | '/contact'
     | '/forgot-password'
+    | '/list-property'
     | '/login'
     | '/privacy'
     | '/profile'
@@ -272,6 +283,7 @@ export interface FileRouteTypes {
     | '/buy'
     | '/contact'
     | '/forgot-password'
+    | '/list-property'
     | '/login'
     | '/privacy'
     | '/profile'
@@ -297,6 +309,7 @@ export interface RootRouteChildren {
   BuyRoute: typeof BuyRoute
   ContactRoute: typeof ContactRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
+  ListPropertyRoute: typeof ListPropertyRoute
   LoginRoute: typeof LoginRoute
   PrivacyRoute: typeof PrivacyRoute
   ProfileRoute: typeof ProfileRoute
@@ -351,6 +364,13 @@ declare module '@tanstack/react-router' {
       path: '/forgot-password'
       fullPath: '/forgot-password'
       preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/list-property': {
+      id: '/list-property'
+      path: '/list-property'
+      fullPath: '/list-property'
+      preLoaderRoute: typeof ListPropertyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -481,6 +501,7 @@ const rootRouteChildren: RootRouteChildren = {
   BuyRoute: BuyRoute,
   ContactRoute: ContactRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
+  ListPropertyRoute: ListPropertyRoute,
   LoginRoute: LoginRoute,
   PrivacyRoute: PrivacyRoute,
   ProfileRoute: ProfileRoute,

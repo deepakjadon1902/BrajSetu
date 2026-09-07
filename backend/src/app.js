@@ -9,12 +9,15 @@ import { publicRouter } from "./routes/public.js";
 
 export function createApp() {
   const app = express();
+  const isDevelopment = process.env.NODE_ENV !== "production";
   const allowedOrigins = [
     process.env.FRONTEND_URL,
     process.env.PUBLIC_SITE_URL,
     "https://www.brajsetuproperties.com",
     "https://brajsetuproperties.com",
     "https://braj-setu.vercel.app",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
     "http://localhost:8080",
     "http://localhost:8081",
     "http://127.0.0.1:8080",
@@ -24,6 +27,7 @@ export function createApp() {
     "http://127.0.0.1:5173",
     "http://127.0.0.1:4173",
   ].filter(Boolean);
+  const localDevOrigin = /^http:\/\/(localhost|127\.0\.0\.1):\d+$/;
 
   app.set("trust proxy", 1);
   app.use(helmet());
@@ -31,6 +35,7 @@ export function createApp() {
     cors({
       origin(origin, cb) {
         if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+        if (isDevelopment && localDevOrigin.test(origin)) return cb(null, true);
         return cb(new Error(`CORS blocked origin: ${origin}`));
       },
       credentials: true,

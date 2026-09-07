@@ -189,7 +189,7 @@ export function AccountDrawer() {
               </div>
             </div>
             <Link
-              to="/sale"
+              to="/list-property"
               onClick={() => setOpen(false)}
               className="mt-4 inline-flex h-10 w-full items-center justify-center rounded-full border border-gold/35 bg-card text-sm font-black text-navy"
             >

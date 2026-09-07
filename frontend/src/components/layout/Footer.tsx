@@ -54,6 +54,11 @@ export function Footer() {
               </Link>
             </li>
             <li>
+              <Link to="/list-property" className="hover:text-gold">
+                List your property
+              </Link>
+            </li>
+            <li>
               <Link to="/about" className="hover:text-gold">
                 About Braj Setu
               </Link>

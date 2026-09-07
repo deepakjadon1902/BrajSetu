@@ -52,6 +52,11 @@ export const Route = createFileRoute("/admin/properties")({
 
 const categories: PropertyCategory[] = ["Shop", "Flat", "Plot", "House", "Farm House"];
 const statuses: NonNullable<Property["status"]>[] = ["New", "Active", "Price Drop"];
+const reviewStatuses: NonNullable<Property["reviewStatus"]>[] = [
+  "Pending Review",
+  "Approved",
+  "Needs Changes",
+];
 const furnishingOptions = ["Unfurnished", "Semi-furnished", "Furnished", "Bare shell"];
 const brajCities = [
   "Vrindavan",
@@ -118,6 +123,8 @@ function emptyProperty(): Property {
     amenities: ["Temple nearby", "Parking"],
     featured: false,
     status: "New",
+    listingSource: "Admin",
+    reviewStatus: "Approved",
     description: "",
   };
 }
@@ -147,6 +154,7 @@ function AdminProperties() {
       sale: properties.filter((property) => property.intent === "Sale").length,
       rent: properties.filter((property) => property.intent === "Rent").length,
       featured: properties.filter((property) => property.featured).length,
+      pending: properties.filter((property) => property.reviewStatus === "Pending Review").length,
     }),
     [properties],
   );
@@ -230,7 +238,7 @@ function AdminProperties() {
           { label: "All listings", value: metrics.all, icon: Building2 },
           { label: "For buyers", value: metrics.sale, icon: Home },
           { label: "For rent", value: metrics.rent, icon: Store },
-          { label: "Featured", value: metrics.featured, icon: Sparkles },
+          { label: "Pending review", value: metrics.pending, icon: Sparkles },
         ].map((metric) => (
           <div
             key={metric.label}
@@ -328,6 +336,24 @@ function AdminProperties() {
                     }
                   >
                     {statuses.map((status) => (
+                      <option key={status}>{status}</option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="block">
+                  <span className={labelClass}>Review status</span>
+                  <select
+                    className={`mt-2 ${inputClass}`}
+                    value={draft.reviewStatus ?? "Approved"}
+                    onChange={(event) =>
+                      setDraft({
+                        ...draft,
+                        reviewStatus: event.target.value as NonNullable<Property["reviewStatus"]>,
+                      })
+                    }
+                  >
+                    {reviewStatuses.map((status) => (
                       <option key={status}>{status}</option>
                     ))}
                   </select>
@@ -664,6 +690,22 @@ function AdminProperties() {
                   className="h-5 w-5 accent-[var(--navy)]"
                 />
               </label>
+
+              {draft.listingSource === "User" ? (
+                <div className="rounded-2xl border border-gold/25 bg-gold/10 p-4 text-sm text-navy">
+                  <p className="font-bold">Submitted by user</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {draft.ownerName || "Owner"} | {draft.ownerEmail || "No email"} |{" "}
+                    {draft.ownerPhone || "No phone"}
+                  </p>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Terms accepted:{" "}
+                    {draft.termsAcceptedAt
+                      ? new Date(draft.termsAcceptedAt).toLocaleString("en-IN")
+                      : "Not recorded"}
+                  </p>
+                </div>
+              ) : null}
             </aside>
           </div>
 
@@ -752,6 +794,23 @@ function AdminProperties() {
                       Featured
                     </span>
                   ) : null}
+                  <span
+                    className={cn(
+                      "rounded-full px-2.5 py-1 text-[11px] font-bold",
+                      property.reviewStatus === "Pending Review"
+                        ? "bg-gold/20 text-gold-deep"
+                        : property.reviewStatus === "Needs Changes"
+                          ? "bg-destructive/10 text-destructive"
+                          : "bg-peacock/10 text-peacock",
+                    )}
+                  >
+                    {property.reviewStatus ?? "Approved"}
+                  </span>
+                  {property.listingSource === "User" ? (
+                    <span className="rounded-full bg-ice px-2.5 py-1 text-[11px] font-bold text-navy-soft">
+                      User submitted
+                    </span>
+                  ) : null}
                 </div>
 
                 <p className="mt-2 flex items-center gap-1.5 text-sm text-muted-foreground">
@@ -761,6 +820,12 @@ function AdminProperties() {
                 <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">
                   {property.description || "No description added yet."}
                 </p>
+                {property.listingSource === "User" ? (
+                  <p className="mt-2 text-xs font-semibold text-navy-soft">
+                    Owner: {property.ownerName || "Not provided"} |{" "}
+                    {property.ownerPhone || "No phone"}
+                  </p>
+                ) : null}
               </div>
 
               <div className="flex items-center justify-between gap-4 lg:flex-col lg:items-end">

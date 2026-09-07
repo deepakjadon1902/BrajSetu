@@ -30,6 +30,21 @@ const propertySchema = new mongoose.Schema(
       default: "Active",
     },
     description: { type: String, default: "" },
+    listingSource: {
+      type: String,
+      enum: ["Admin", "User"],
+      default: "Admin",
+    },
+    reviewStatus: {
+      type: String,
+      enum: ["Pending Review", "Approved", "Needs Changes"],
+      default: "Approved",
+    },
+    submittedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    ownerName: { type: String, default: "", trim: true },
+    ownerEmail: { type: String, default: "", trim: true },
+    ownerPhone: { type: String, default: "", trim: true },
+    termsAcceptedAt: Date,
   },
   { timestamps: true },
 );
