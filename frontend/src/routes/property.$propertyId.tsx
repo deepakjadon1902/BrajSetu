@@ -30,6 +30,7 @@ import { toast } from "sonner";
 import { MapPlaceholder } from "@/components/MapPlaceholder";
 import { PropertyCard } from "@/components/PropertyCard";
 import { SmartImage } from "@/components/SmartImage";
+import { VerificationBadge } from "@/components/VerificationBadge";
 import type { Property } from "@/types/property";
 import {
   findProperty,
@@ -40,11 +41,15 @@ import {
 } from "@/lib/api";
 import { getMainImage, normalizePropertyImage } from "@/lib/property-images";
 import { cn } from "@/lib/utils";
-import { useStore } from "@/lib/mock-store";
+import { API_BASE, useStore } from "@/lib/mock-store";
+import { verifiedListingDisclaimer } from "@/lib/verification";
 import type { PropertyImageLabel } from "@/types/property";
 
 export const Route = createFileRoute("/property/$propertyId")({
-  loader: ({ params }) => ({ property: getPropertyById(params.propertyId) ?? null }),
+  loader: async ({ params }) => ({
+    property:
+      (await getLivePropertyById(params.propertyId)) ?? getPropertyById(params.propertyId) ?? null,
+  }),
   head: ({ loaderData }) => {
     if (!loaderData?.property) {
       return {
@@ -79,6 +84,14 @@ type GalleryPhoto = {
   src: string;
   label: GalleryCategory;
 };
+
+type ReportCategory =
+  | "fake_property"
+  | "wrong_owner"
+  | "misleading_price"
+  | "duplicate_listing"
+  | "document_concern"
+  | "other";
 
 const sectionTabs: { id: SectionId; label: string }[] = [
   { id: "overview", label: "Overview" },
@@ -115,8 +128,20 @@ const furnishingItems: {
 const sectionCardClass =
   "scroll-mt-36 rounded-lg border border-border bg-card shadow-[var(--shadow-soft)]";
 
+async function getLivePropertyById(propertyId: string): Promise<Property | null> {
+  try {
+    const response = await fetch(`${API_BASE}/properties/${encodeURIComponent(propertyId)}`);
+    if (!response.ok) return null;
+    const data = (await response.json()) as { property?: Property | null };
+    return data.property ?? null;
+  } catch {
+    return null;
+  }
+}
+
 function PropertyDetailPage() {
   const { propertyId } = Route.useParams();
+  const { property: loaderProperty } = Route.useLoaderData();
   const { properties, hydrated, addEnquiry, settings } = useStore();
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [activePhoto, setActivePhoto] = useState(0);
@@ -126,7 +151,7 @@ function PropertyDetailPage() {
   const stripRef = useRef<HTMLDivElement>(null);
   const touchStart = useRef<number | null>(null);
 
-  const property = findProperty(properties, propertyId);
+  const property = findProperty(properties, propertyId) ?? loaderProperty;
   const similar = property ? similarProperties(properties, property.id, 3) : [];
   const galleryPhotos = useMemo(() => (property ? buildGalleryPhotos(property) : []), [property]);
   const activeGallery = galleryPhotos[activePhoto] ?? galleryPhotos[0];
@@ -167,7 +192,7 @@ function PropertyDetailPage() {
 
   useEffect(() => {
     function onScroll() {
-      const current = sectionTabs.findLast((tab) => {
+      const current = [...sectionTabs].reverse().find((tab) => {
         const el = document.getElementById(tab.id);
         return el ? el.getBoundingClientRect().top <= 170 : false;
       });
@@ -204,22 +229,7 @@ function PropertyDetailPage() {
     );
   }
 
-  const overviewRows = [
-    ["Security", property.intent === "Rent" ? displayPrice : "Included"],
-    ["Area Unit", "square_feet"],
-    ["Built up area", formatArea(property.specs.area)],
-    ["Furnishing", property.specs.furnishing ?? "Unfurnished"],
-    ["Bathrooms", String(property.specs.bathrooms ?? 0)],
-    ["Balcony", property.category === "Plot" ? "No" : "1"],
-    ["Available from", "Available now"],
-    ["Floor number", property.category === "Flat" ? "2 of 5 floors" : "Ground plus one"],
-    ["Lease type", property.intent === "Rent" ? "Family / Company / Bachelor" : "Freehold"],
-    ["Parking", "1 Covered and 1 Open Parking"],
-    ["Gas Pipeline", property.amenities.includes("Storage") ? "No" : "Yes"],
-    ["Gate Community", property.amenities.length > 0 ? "Yes" : "No"],
-    ["Carpet area", formatArea(Math.round(property.specs.area * 0.86))],
-    ["Price Negotiable", property.status === "Price Drop" ? "Yes" : "No"],
-  ];
+  const overviewRows = buildOverviewRows(property, displayPrice);
 
   const quickSpecs = [
     {
@@ -268,6 +278,9 @@ function PropertyDetailPage() {
                 <MapPin className="h-4 w-4 text-gold-deep" />
                 {property.location.locality}, {property.location.city}
               </p>
+              <div className="mt-3">
+                <VerificationBadge property={property} />
+              </div>
             </div>
 
             <div className="lg:text-right">
@@ -314,9 +327,7 @@ function PropertyDetailPage() {
             <div className="mt-8 border-t border-border pt-6">
               <h3 className="font-extrabold">About this property</h3>
               <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">
-                {property.description} This listing is curated by Braj Setu Properties with verified
-                photos, practical neighbourhood guidance and visit support from enquiry to final
-                decision.
+                {property.description}
               </p>
               <div className="mt-6 flex flex-wrap justify-center gap-3">
                 <button className="pv-tap inline-flex min-w-40 items-center justify-center gap-2 rounded-md bg-[#ede7ff] px-6 text-sm font-bold text-[#5a25e6]">
@@ -333,6 +344,8 @@ function PropertyDetailPage() {
               </div>
             </div>
           </section>
+
+          <VerificationScopeCard property={property} />
 
           <HighlightsCard property={property} />
 
@@ -427,6 +440,8 @@ function PropertyDetailPage() {
               setGalleryOpen(true);
             }}
           />
+
+          <ReportPropertyCard property={property} />
 
           <section id="neighbourhood" className={cn(sectionCardClass, "p-5 sm:p-6")}>
             <h2 className="text-xl font-extrabold">
@@ -790,6 +805,15 @@ function ContactPanel({
   setContactOpen: (open: boolean) => void;
 }) {
   const { addEnquiry } = useStore();
+  const contactName =
+    property.ownerDetails?.publicContactName ||
+    property.ownerDetails?.ownerName ||
+    property.ownerName ||
+    "Braj Setu Advisor";
+  const contactRole =
+    property.ownerDetails?.publicContactRole ||
+    property.ownerDetails?.ownerRole ||
+    "Property contact";
 
   return (
     <div className="sticky top-40 space-y-4">
@@ -804,8 +828,8 @@ function ContactPanel({
             <Home className="h-6 w-6 text-gold-deep" />
           </div>
           <div>
-            <p className="text-sm font-extrabold">Braj Setu Advisor</p>
-            <p className="text-sm text-muted-foreground">Housing Prime Agent</p>
+            <p className="text-sm font-extrabold">{contactName}</p>
+            <p className="text-sm text-muted-foreground">{contactRole}</p>
             <a href={`tel:${phoneHref}`} className="text-sm font-black text-navy">
               {phoneHref.slice(0, 8)}...
             </a>
@@ -840,6 +864,163 @@ function ContactPanel({
         </button>
       </div>
     </div>
+  );
+}
+
+function VerificationScopeCard({ property }: { property: Property }) {
+  const rera = property.rera;
+  const checkedRera = rera?.status === "CHECKED";
+
+  return (
+    <section className={cn(sectionCardClass, "p-5 sm:p-6")}>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-xl font-extrabold">Verification status</h2>
+        <VerificationBadge property={property} />
+      </div>
+      <p className="mt-4 text-sm leading-6 text-muted-foreground">
+        {property.verification?.scope || verifiedListingDisclaimer}
+      </p>
+      <div className="mt-5 grid gap-3 sm:grid-cols-3">
+        <FactBox label="Listing ID" value={property.id} />
+        <FactBox
+          label="Verification level"
+          value={property.verification?.level?.replace(/_/g, " ") || "OWNER LISTED"}
+        />
+        <FactBox
+          label="Verification date"
+          value={
+            property.verification?.verifiedAt
+              ? new Date(property.verification.verifiedAt).toLocaleDateString("en-IN")
+              : "Not verified"
+          }
+        />
+      </div>
+      {rera?.providedNumber ? (
+        <div className="mt-4 rounded-md border border-border bg-smoke p-4 text-sm">
+          <p className="font-extrabold text-navy">RERA information</p>
+          <p className="mt-1 text-muted-foreground">
+            Owner-provided number: {rera.providedNumber}. Status:{" "}
+            {checkedRera ? "Checked by Brajsetu Properties" : "Not independently checked yet"}.
+          </p>
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
+function FactBox({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-md border border-border bg-smoke p-4">
+      <p className="text-xs font-bold uppercase text-muted-foreground">{label}</p>
+      <p className="mt-2 text-sm font-extrabold text-navy">{value}</p>
+    </div>
+  );
+}
+
+function ReportPropertyCard({ property }: { property: Property }) {
+  const { reportProperty } = useStore();
+  const [open, setOpen] = useState(false);
+  const [values, setValues] = useState({
+    reporterName: "",
+    reporterEmail: "",
+    reporterPhone: "",
+    category: "fake_property" as ReportCategory,
+    message: "",
+  });
+  const [submitting, setSubmitting] = useState(false);
+
+  async function submit(event: React.FormEvent) {
+    event.preventDefault();
+    if (values.reporterName.trim().length < 2 || values.message.trim().length < 20) {
+      toast.error("Add your name and a clear report message.");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const result = await reportProperty({ propertyId: property.id, ...values });
+      toast.success(`Report received. Ticket ${result.ticketNumber}`);
+      setOpen(false);
+      setValues({
+        reporterName: "",
+        reporterEmail: "",
+        reporterPhone: "",
+        category: "fake_property",
+        message: "",
+      });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Report could not be submitted.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <section className={cn(sectionCardClass, "p-5 sm:p-6")}>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="text-xl font-extrabold">Report property</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Reports create a ticket for internal risk triage.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setOpen((value) => !value)}
+          className="rounded-md border border-border px-4 py-2 text-sm font-bold text-navy hover:bg-smoke"
+        >
+          {open ? "Close" : "Report"}
+        </button>
+      </div>
+      {open ? (
+        <form onSubmit={submit} className="mt-5 grid gap-3 sm:grid-cols-2">
+          <input
+            value={values.reporterName}
+            onChange={(event) => setValues({ ...values, reporterName: event.target.value })}
+            placeholder="Your name"
+            className="rounded-md border border-border px-3 py-2 text-sm outline-none focus:border-navy"
+          />
+          <input
+            value={values.reporterPhone}
+            onChange={(event) => setValues({ ...values, reporterPhone: event.target.value })}
+            placeholder="Phone"
+            className="rounded-md border border-border px-3 py-2 text-sm outline-none focus:border-navy"
+          />
+          <select
+            value={values.category}
+            onChange={(event) =>
+              setValues({ ...values, category: event.target.value as ReportCategory })
+            }
+            className="rounded-md border border-border px-3 py-2 text-sm outline-none focus:border-navy"
+          >
+            <option value="fake_property">Fake property concern</option>
+            <option value="wrong_owner">Wrong owner / authority</option>
+            <option value="misleading_price">Misleading price</option>
+            <option value="duplicate_listing">Duplicate listing</option>
+            <option value="document_concern">Document concern</option>
+            <option value="other">Other</option>
+          </select>
+          <input
+            value={values.reporterEmail}
+            onChange={(event) => setValues({ ...values, reporterEmail: event.target.value })}
+            placeholder="Email"
+            className="rounded-md border border-border px-3 py-2 text-sm outline-none focus:border-navy"
+          />
+          <textarea
+            value={values.message}
+            onChange={(event) => setValues({ ...values, message: event.target.value })}
+            placeholder="Describe the concern with enough detail for review."
+            className="min-h-24 rounded-md border border-border px-3 py-2 text-sm outline-none focus:border-navy sm:col-span-2"
+          />
+          <button
+            type="submit"
+            disabled={submitting}
+            className="rounded-md bg-navy px-5 py-2.5 text-sm font-bold text-background disabled:opacity-60 sm:w-fit"
+          >
+            {submitting ? "Submitting..." : "Submit report"}
+          </button>
+        </form>
+      ) : null}
+    </section>
   );
 }
 
@@ -956,11 +1137,12 @@ function LeadForm({
 }
 
 function HighlightsCard({ property }: { property: Property }) {
+  const amenities = property.amenities ?? [];
   const highlights = [
     `Close to ${property.location.locality} market`,
     "Close to main road connectivity",
     property.specs.bathrooms ? "Well-maintained bathrooms" : "Clear boundary and access",
-    property.amenities.includes("Storage") ? "Smart storage available" : "Advisor verified listing",
+    amenities.includes("Storage") ? "Smart storage available" : "Advisor assisted listing",
   ];
 
   return (
@@ -1164,8 +1346,9 @@ function buildGalleryPhotos(property: Property): GalleryPhoto[] {
     "Kitchen",
   ];
 
-  if (property.images.length) {
-    return property.images.map((image, index) =>
+  const images = property.images ?? [];
+  if (images.length) {
+    return images.map((image, index) =>
       normalizePropertyImage(image, fallbackLabels[index % fallbackLabels.length]),
     );
   }
@@ -1183,7 +1366,7 @@ function buildAmenities(property: Property): { label: string; icon: LucideIcon }
     { label: "Attached Balcony", icon: Trees },
   ];
 
-  const fromProperty = property.amenities.map((label) => ({
+  const fromProperty = (property.amenities ?? []).map((label) => ({
     label,
     icon:
       label.includes("Garden") || label.includes("Backyard")
@@ -1196,6 +1379,66 @@ function buildAmenities(property: Property): { label: string; icon: LucideIcon }
   return [...base, ...fromProperty].filter(
     (item, index, all) => all.findIndex((candidate) => candidate.label === item.label) === index,
   );
+}
+
+function buildOverviewRows(property: Property, displayPrice: string): [string, string][] {
+  const details = property.propertyDetails || {};
+  const areaUnit = details.areaUnit || "sq.ft";
+  const rows: [string, string | number | boolean | undefined][] = [
+    ["Listing ID", property.id],
+    ["Property type", property.category],
+    ["Transaction", property.intent],
+    ["Full address", details.fullAddress],
+    ["Landmark", details.landmark],
+    ["Area unit", areaUnit],
+    ["Plot area", formatOptionalArea(details.plotArea, areaUnit)],
+    ["Carpet area", formatOptionalArea(details.carpetArea, areaUnit)],
+    ["Built-up area", formatOptionalArea(details.builtUpArea || property.specs.area, areaUnit)],
+    ["Furnishing", property.specs.furnishing || "Unfurnished"],
+    ["Bedrooms", property.specs.bedrooms],
+    ["Bathrooms", property.specs.bathrooms],
+    ["Balconies", details.balconies],
+    ["Floor", joinParts([details.floor, details.totalFloors ? `of ${details.totalFloors}` : ""])],
+    ["Parking", details.parking],
+    ["Availability", details.availability],
+    ["Facing", details.facing],
+    ["Road width", details.roadWidth],
+    ["Lease / ownership type", details.leaseType || property.ownershipType],
+    ["Price", displayPrice],
+    ["Price negotiable", yesNo(details.priceNegotiable)],
+    ["Gated community", yesNo(details.gatedCommunity)],
+    ["Gas pipeline", yesNo(details.gasPipeline)],
+    ["Water supply", details.waterSupply],
+    ["Power backup", details.powerBackup],
+    ["Owner / landlord", property.ownerDetails?.ownerName || property.ownerName],
+    ["Owner role", property.ownerDetails?.ownerRole],
+    ["Authority to list", property.ownerDetails?.authorityType],
+    ["Organization", property.ownerDetails?.organizationName],
+  ];
+
+  return rows
+    .map(([label, value]) => [label, normalizeOverviewValue(value)] as [string, string])
+    .filter(([, value]) => value.length > 0);
+}
+
+function formatOptionalArea(value: number | undefined, unit: string) {
+  if (!value) return "";
+  return `${value.toLocaleString("en-IN")} ${unit}`;
+}
+
+function joinParts(parts: Array<string | number | boolean | undefined>) {
+  return parts.map(normalizeOverviewValue).filter(Boolean).join(" ");
+}
+
+function yesNo(value: boolean | undefined) {
+  if (typeof value !== "boolean") return "";
+  return value ? "Yes" : "No";
+}
+
+function normalizeOverviewValue(value: string | number | boolean | undefined) {
+  if (typeof value === "number") return value > 0 ? String(value) : "";
+  if (typeof value === "boolean") return value ? "Yes" : "No";
+  return String(value || "").trim();
 }
 
 function formatDisplayPrice(value: number, intent?: Property["intent"]): string {

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { LayoutGrid, List, Map as MapIcon, SlidersHorizontal, X } from "lucide-react";
 import { toast } from "sonner";
 import { FilterPanel } from "@/components/FilterPanel";
@@ -22,6 +23,12 @@ interface ListingPageProps {
 
 type SortKey = "recommended" | "price-asc" | "price-desc" | "area-desc";
 
+const searchIntentRoute: Record<SearchIntent, "/buy" | "/sale" | "/rent"> = {
+  Buy: "/buy",
+  Sell: "/sale",
+  Rent: "/rent",
+};
+
 export function ListingPage({
   intent,
   searchIntent,
@@ -42,6 +49,7 @@ export function ListingPage({
   const didRestore = useRef(false);
 
   const { properties, hydrated } = useStore();
+  const navigate = useNavigate();
 
   const results = useMemo(() => {
     const list = filterProperties(properties, filters);
@@ -74,7 +82,7 @@ export function ListingPage({
         view?: "list" | "grid";
       };
       setFilters({
-        ...(parsed.filters ?? {}),
+        ...(initialQuery ? {} : (parsed.filters ?? {})),
         query: initialQuery || parsed.filters?.query,
         intent,
       });
@@ -87,9 +95,9 @@ export function ListingPage({
 
   useEffect(() => {
     setFilters((current) => ({
-      ...current,
+      ...(initialQuery ? { intent } : current),
       intent,
-      query: initialQuery || current.query,
+      query: initialQuery || undefined,
     }));
   }, [initialQuery, intent]);
 
@@ -123,9 +131,18 @@ export function ListingPage({
     );
   }, [filters, sort, view]);
 
-  const handleSearch = useCallback((query: string) => {
-    setFilters((f) => ({ ...f, query: query || undefined }));
-  }, []);
+  const handleSearch = useCallback(
+    (query: string) => {
+      const nextQuery = query.trim();
+      setFilters((f) => ({ ...f, query: nextQuery || undefined }));
+      void navigate({
+        to: searchIntentRoute[searchIntent],
+        search: { q: nextQuery || undefined },
+        replace: true,
+      });
+    },
+    [navigate, searchIntent],
+  );
 
   return (
     <div className="bg-smoke pb-20">

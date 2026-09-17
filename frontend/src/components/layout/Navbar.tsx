@@ -21,7 +21,7 @@ type RoutePath =
 
 type MenuColumn = {
   title: string;
-  links: { label: string; to: RoutePath }[];
+  links: MenuLink[];
 };
 
 type NavMenu = {
@@ -31,6 +31,12 @@ type NavMenu = {
   icon: typeof Home;
   columns: MenuColumn[];
   compact?: boolean;
+};
+
+type MenuLink = {
+  label: string;
+  to: RoutePath;
+  search?: { q?: string };
 };
 
 const cityLinks = [
@@ -53,6 +59,15 @@ const emergingLinks = [
   "Braj Mandal Villages",
 ];
 
+const searchLink = (label: string, to: RoutePath, query: string): MenuLink => ({
+  label,
+  to,
+  search: { q: query },
+});
+
+const locationSearchLink = (location: string, to: RoutePath, prefix = "Properties in"): MenuLink =>
+  searchLink(`${prefix} ${location}`, to, location);
+
 const menus: NavMenu[] = [
   {
     key: "buyers",
@@ -62,21 +77,21 @@ const menus: NavMenu[] = [
     columns: [
       {
         title: "Top locations in Braj",
-        links: cityLinks.map((city) => ({ label: `Properties for sale in ${city}`, to: "/buy" })),
+        links: cityLinks.map((city) => locationSearchLink(city, "/buy", "Properties for sale in")),
       },
       {
         title: "Emerging pockets",
-        links: emergingLinks.map((city) => ({ label: `Homes for sale in ${city}`, to: "/buy" })),
+        links: emergingLinks.map((city) => locationSearchLink(city, "/buy", "Homes for sale in")),
       },
       {
         title: "Popular searches",
         links: [
-          { label: "Ready-to-move flats", to: "/buy" },
-          { label: "Independent houses", to: "/buy" },
-          { label: "Residential plots", to: "/buy" },
-          { label: "Farm houses near Vrindavan", to: "/buy" },
-          { label: "Commercial shops", to: "/buy" },
-          { label: "Luxury villas", to: "/buy" },
+          searchLink("Ready-to-move flats", "/buy", "flat"),
+          searchLink("Independent houses", "/buy", "house"),
+          searchLink("Residential plots", "/buy", "plot"),
+          searchLink("Farm houses near Vrindavan", "/buy", "farm house Vrindavan"),
+          searchLink("Commercial shops", "/buy", "shop"),
+          searchLink("Luxury villas", "/buy", "villa"),
         ],
       },
       {
@@ -99,21 +114,21 @@ const menus: NavMenu[] = [
     columns: [
       {
         title: "Top rental locations",
-        links: cityLinks.map((city) => ({ label: `Flats for rent in ${city}`, to: "/rent" })),
+        links: cityLinks.map((city) => locationSearchLink(city, "/rent", "Flats for rent in")),
       },
       {
         title: "Emerging rental pockets",
-        links: emergingLinks.map((city) => ({ label: `Rentals in ${city}`, to: "/rent" })),
+        links: emergingLinks.map((city) => locationSearchLink(city, "/rent", "Rentals in")),
       },
       {
         title: "Rental categories",
         links: [
-          { label: "1 RK apartments", to: "/rent" },
-          { label: "1 BHK apartments", to: "/rent" },
-          { label: "Family houses", to: "/rent" },
-          { label: "Furnished rentals", to: "/rent" },
-          { label: "Student friendly homes", to: "/rent" },
-          { label: "Shop rentals", to: "/rent" },
+          searchLink("1 RK apartments", "/rent", "1 RK"),
+          searchLink("1 BHK apartments", "/rent", "1 BHK"),
+          searchLink("Family houses", "/rent", "house"),
+          searchLink("Furnished rentals", "/rent", "furnished"),
+          searchLink("Student friendly homes", "/rent", "student"),
+          searchLink("Shop rentals", "/rent", "shop"),
         ],
       },
     ],
@@ -208,11 +223,11 @@ const locationMenu: NavMenu = {
     {
       title: "Browse by location",
       links: [
-        { label: "Vrindavan", to: "/buy" },
-        { label: "Mathura", to: "/buy" },
-        { label: "Govardhan", to: "/buy" },
-        { label: "Barsana", to: "/buy" },
-        { label: "Gokul", to: "/buy" },
+        searchLink("Vrindavan", "/buy", "Vrindavan"),
+        searchLink("Mathura", "/buy", "Mathura"),
+        searchLink("Govardhan", "/buy", "Govardhan"),
+        searchLink("Barsana", "/buy", "Barsana"),
+        searchLink("Gokul", "/buy", "Gokul"),
       ],
     },
   ],
@@ -240,12 +255,19 @@ export function Navbar() {
       }
     }
 
+    function closeOnScroll() {
+      setActiveMenu(null);
+      setOpen(false);
+    }
+
     document.addEventListener("mousedown", closeOnOutside);
     document.addEventListener("keydown", closeOnEscape);
+    window.addEventListener("scroll", closeOnScroll, { passive: true });
 
     return () => {
       document.removeEventListener("mousedown", closeOnOutside);
       document.removeEventListener("keydown", closeOnEscape);
+      window.removeEventListener("scroll", closeOnScroll);
     };
   }, []);
 
@@ -258,7 +280,6 @@ export function Navbar() {
     <header className="sticky top-0 z-50 px-2 py-2 sm:px-4">
       <nav
         ref={navRef}
-        onMouseLeave={() => setActiveMenu(null)}
         className="relative mx-auto max-w-[88rem] rounded-full border border-gold/25 bg-[linear-gradient(135deg,#091933_0%,#172d54_44%,#3b2b66_100%)] px-2 text-background shadow-[0_22px_48px_-28px_rgba(18,35,63,0.95),inset_0_1px_0_rgba(255,255,255,0.18)] backdrop-blur-xl sm:px-3"
       >
         <div className="grid h-16 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 lg:gap-3">
@@ -416,6 +437,7 @@ function MegaMenu({ menu, onNavigate }: { menu: NavMenu; onNavigate: () => void 
                   <li key={`${column.title}-${item.label}`}>
                     <Link
                       to={item.to}
+                      search={item.search}
                       onClick={onNavigate}
                       className="pv-smooth-state block rounded-xl px-3 py-2.5 text-sm font-semibold text-navy-soft hover:bg-gold/12 hover:text-navy"
                     >
@@ -467,6 +489,7 @@ function MobileMenu({ menu, onNavigate }: { menu: NavMenu; onNavigate: () => voi
                     <Link
                       key={`${column.title}-${item.label}`}
                       to={item.to}
+                      search={item.search}
                       onClick={onNavigate}
                       className="pv-tap flex items-center rounded-md px-2 text-sm font-medium text-navy-soft hover:bg-smoke hover:text-navy"
                     >

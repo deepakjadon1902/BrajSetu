@@ -10,13 +10,26 @@ import {
 
 import type { NewsArticle, Property } from "@/types/property";
 
-export type UserRole = "user" | "editor" | "manager" | "admin";
+export type UserRole =
+  "user" | "owner" | "developer" | "editor" | "manager" | "verifier" | "support" | "admin";
 export type AdminPermission =
-  "dashboard" | "properties" | "enquiries" | "news" | "users" | "settings" | "activity";
+  | "dashboard"
+  | "properties"
+  | "verification"
+  | "fraud"
+  | "documents"
+  | "enquiries"
+  | "news"
+  | "users"
+  | "settings"
+  | "activity";
 
 export const permissionLabels: Record<AdminPermission, string> = {
   dashboard: "Dashboard",
   properties: "Properties",
+  verification: "Verification",
+  fraud: "Fraud",
+  documents: "Documents",
   enquiries: "Enquiries",
   news: "News",
   users: "Users",
@@ -28,22 +41,30 @@ export const allPermissions = Object.keys(permissionLabels) as AdminPermission[]
 
 export const roleLabels: Record<UserRole, string> = {
   user: "User",
+  owner: "Owner",
+  developer: "Developer",
   editor: "Editor",
   manager: "Manager",
+  verifier: "Verifier",
+  support: "Support",
   admin: "Admin",
 };
 
 export const rolePermissions: Record<UserRole, AdminPermission[]> = {
   user: [],
+  owner: [],
+  developer: [],
   editor: ["dashboard", "properties", "news"],
   manager: ["dashboard", "properties", "news", "enquiries", "users"],
+  verifier: ["dashboard", "properties", "verification", "documents", "activity"],
+  support: ["dashboard", "enquiries", "fraud", "activity"],
   admin: allPermissions,
 };
 
 export function permissionsFor(user: AppUser | null | undefined): AdminPermission[] {
   if (!user) return [];
   if (user.role === "admin") return allPermissions;
-  return user.permissions ?? rolePermissions[user.role];
+  return user.permissions ?? rolePermissions[user.role] ?? [];
 }
 
 export interface AppUser {
@@ -134,7 +155,17 @@ function normalizeSettings(settings: Partial<SiteSettings> | undefined): SiteSet
   };
 }
 
-export type ActivityArea = "Settings" | "Properties" | "Users" | "Enquiries" | "News" | "Auth";
+export type ActivityArea =
+  | "Settings"
+  | "Properties"
+  | "Verification"
+  | "Fraud"
+  | "Documents"
+  | "Users"
+  | "Enquiries"
+  | "News"
+  | "Auth"
+  | "Policy";
 
 export interface ActivityEntry {
   id: string;
@@ -197,12 +228,34 @@ interface StoreContextValue extends StoreShape {
   saveUser: (user: AppUser) => Promise<void>;
   deleteUser: (id: string) => Promise<void>;
   addEnquiry: (input: Omit<Enquiry, "id" | "createdAt" | "status">) => Promise<void>;
+  reportProperty: (input: {
+    propertyId: string;
+    reporterName: string;
+    reporterEmail?: string;
+    reporterPhone?: string;
+    category:
+      | "fake_property"
+      | "wrong_owner"
+      | "misleading_price"
+      | "duplicate_listing"
+      | "document_concern"
+      | "other";
+    message: string;
+  }) => Promise<{ ticketNumber: string }>;
   submitProperty: (
     property: Omit<Property, "id" | "featured" | "status" | "listingSource" | "reviewStatus"> & {
       ownerName: string;
       ownerEmail: string;
       ownerPhone: string;
+      ownerRole?: "Owner" | "Landlord" | "Developer" | "Authorized Partner" | "Broker" | "";
+      organizationName?: string;
+      ownerAddress?: string;
+      authorityType?: string;
+      propertyDetails?: Property["propertyDetails"];
       termsAccepted: boolean;
+      loanOrEncumbrance?: string;
+      litigationOrDispute?: string;
+      reraNumber?: string;
     },
   ) => Promise<Property>;
   setEnquiryStatus: (id: string, status: Enquiry["status"]) => Promise<void>;
@@ -221,6 +274,7 @@ const productionApiBase = import.meta.env.PROD
   : "";
 
 const API_BASE_ALIASES: Record<string, string> = {
+  "http://127.0.0.1:5000/api": "http://localhost:5000/api",
   "https://braj-setu-api.onrender.com/api": "https://brajsetu.onrender.com/api",
 };
 
@@ -562,6 +616,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             ],
           }));
         }
+      },
+      reportProperty: async ({ propertyId, ...input }) => {
+        const result = await api<{ ticketNumber: string }>(`/properties/${propertyId}/report`, {
+          method: "POST",
+          body: JSON.stringify(input),
+        });
+        return { ticketNumber: result.ticketNumber };
       },
       submitProperty: async (property) => {
         const result = await api<{ property: Property }>(

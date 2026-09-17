@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import { Router } from "express";
+import { verifiedListingDisclaimer } from "../constants.js";
 import { imagekitConfigured } from "../config/services.js";
 import {
   requireAnyPermission,
@@ -9,6 +10,7 @@ import {
 } from "../middleware/auth.js";
 import { Activity } from "../models/Activity.js";
 import { Enquiry } from "../models/Enquiry.js";
+import { FraudReport } from "../models/FraudReport.js";
 import { NewsArticle } from "../models/NewsArticle.js";
 import { Property } from "../models/Property.js";
 import { SettingsVersion } from "../models/SettingsVersion.js";
@@ -16,7 +18,12 @@ import { SiteSettings, defaultSettings } from "../models/SiteSettings.js";
 import { User } from "../models/User.js";
 import { logActivity } from "../utils/activity.js";
 import { ApiError, asyncHandler } from "../utils/errors.js";
-import { newsSchema, propertySchema, userUpdateSchema } from "../validators.js";
+import {
+  newsSchema,
+  propertySchema,
+  userUpdateSchema,
+  verificationDecisionSchema,
+} from "../validators.js";
 
 export const adminRouter = Router();
 adminRouter.use(requireAuth);
@@ -52,6 +59,7 @@ adminRouter.get(
       settings,
       activity,
       settingsHistory,
+      fraudReports,
     ] = await Promise.all([
       User.find().sort({ createdAt: -1 }).lean(),
       Property.find().sort({ featured: -1, createdAt: -1 }).lean(),
@@ -60,6 +68,7 @@ adminRouter.get(
       SiteSettings.findOne({ singleton: "site" }).lean(),
       Activity.find().sort({ createdAt: -1 }).limit(200).lean(),
       SettingsVersion.find().sort({ createdAt: -1 }).limit(25).lean(),
+      FraudReport.find().sort({ createdAt: -1 }).limit(100).lean(),
     ]);
     res.json({
       users: users.map(normalizeUser),
@@ -69,6 +78,7 @@ adminRouter.get(
       settings: { ...defaultSettings, ...(settings || {}) },
       activity: activity.map(publicId),
       settingsHistory: settingsHistory.map(publicId),
+      fraudReports: fraudReports.map(publicId),
     });
   }),
 );
@@ -79,7 +89,8 @@ adminRouter.post(
   asyncHandler(async (req, res) => {
     const input = propertySchema.parse(req.body);
     const existing = await Property.findOne({ id: input.id });
-    const property = await Property.findOneAndUpdate({ id: input.id }, input, {
+    const next = normalizePropertyForSave(input, req.user.id);
+    const property = await Property.findOneAndUpdate({ id: input.id }, next, {
       new: true,
       upsert: true,
     });
@@ -87,9 +98,103 @@ adminRouter.post(
       req.user.email,
       "Properties",
       existing ? "Updated property" : "Created property",
-      input.title,
+      `${input.id} - ${input.title}`,
     );
     res.json({ property });
+  }),
+);
+
+adminRouter.patch(
+  "/properties/:id/verification",
+  requireAnyPermission(["verification", "properties"]),
+  asyncHandler(async (req, res) => {
+    const input = verificationDecisionSchema.parse(req.body);
+    const property = await Property.findOne({ id: req.params.id });
+    if (!property) throw new ApiError(404, "Property listing not found.");
+
+    const now = new Date();
+    const update = {
+      "verification.status": input.status,
+      "verification.level": input.level,
+      "verification.scope": property.verification?.scope || verifiedListingDisclaimer,
+      "verification.reviewNotes": input.notes,
+      "verification.verifiedBy": req.user.id,
+      "verification.verifiedAt": ["Approved"].includes(input.status) ? now : property.verification?.verifiedAt,
+      "verification.expiresAt": input.expiresAt,
+      reviewStatus: mapReviewStatus(input.status),
+    };
+
+    if (input.status === "Approved") {
+      update.lifecycleStatus = "Active";
+      update.publishedAt = property.publishedAt || now;
+      update["verification.rejectionReason"] = "";
+      update["verification.suspensionReason"] = "";
+    }
+    if (input.status === "Rejected" || input.status === "Needs Correction") {
+      update.lifecycleStatus = "Draft";
+      update["verification.rejectionReason"] = input.reason || "";
+    }
+    if (input.status === "Suspended") {
+      update.lifecycleStatus = "Archived";
+      update["verification.suspensionReason"] = input.reason || "";
+    }
+    if (input.status === "Expired") {
+      update.lifecycleStatus = "Expired";
+      update.archivedAt = now;
+    }
+    if (input.rera) {
+      update.rera = {
+        ...(property.rera?.toObject ? property.rera.toObject() : property.rera || {}),
+        ...input.rera,
+        reviewer: req.user.id,
+        verifiedAt: input.rera.status === "CHECKED" ? now : input.rera.verifiedAt,
+      };
+    }
+
+    const updated = await Property.findOneAndUpdate({ id: req.params.id }, update, { new: true });
+    await logActivity(
+      req.user.email,
+      "Verification",
+      `Verification ${input.status}`,
+      `${property.id} at ${input.level}: ${input.reason || input.notes}`,
+    );
+    res.json({ property: updated });
+  }),
+);
+
+adminRouter.get(
+  "/fraud-reports",
+  requireAnyPermission(["fraud", "properties"]),
+  asyncHandler(async (_req, res) => {
+    const reports = await FraudReport.find().sort({ createdAt: -1 }).limit(200).lean();
+    res.json({ reports: reports.map(publicId) });
+  }),
+);
+
+adminRouter.patch(
+  "/fraud-reports/:id",
+  requirePermission("fraud"),
+  asyncHandler(async (req, res) => {
+    const report = await FraudReport.findByIdAndUpdate(
+      req.params.id,
+      {
+        status: req.body.status,
+        severity: req.body.severity,
+        adminNotes: req.body.adminNotes,
+        assignedTo: req.user.id,
+        resolvedAt: ["RESOLVED", "DISMISSED"].includes(req.body.status) ? new Date() : undefined,
+        resolvedBy: ["RESOLVED", "DISMISSED"].includes(req.body.status) ? req.user.id : undefined,
+      },
+      { new: true },
+    );
+    if (!report) throw new ApiError(404, "Fraud report not found.");
+    await logActivity(
+      req.user.email,
+      "Fraud",
+      `Fraud report ${report.status}`,
+      report.ticketNumber,
+    );
+    res.json({ report: publicId(report) });
   }),
 );
 
@@ -107,6 +212,47 @@ adminRouter.delete(
     res.json({ ok: true });
   }),
 );
+
+function normalizePropertyForSave(input, actorId) {
+  const status = input.reviewStatus || "Approved";
+  return {
+    ...input,
+    transactionType: input.transactionType || input.intent?.toLowerCase(),
+    legalOwnerName: input.legalOwnerName || input.ownerName || "",
+    publicLocation:
+      input.publicLocation || `${input.location?.locality || ""}, ${input.location?.city || ""}`,
+    ownerDetails: {
+      ...(input.ownerDetails || {}),
+      ownerName: input.ownerDetails?.ownerName || input.ownerName || "",
+      ownerPhone: input.ownerDetails?.ownerPhone || input.ownerPhone || "",
+      ownerEmail: input.ownerDetails?.ownerEmail || input.ownerEmail || "",
+      publicContactName:
+        input.ownerDetails?.publicContactName || input.ownerDetails?.ownerName || input.ownerName || "",
+      publicContactRole:
+        input.ownerDetails?.publicContactRole || input.ownerDetails?.ownerRole || "Owner",
+    },
+    lifecycleStatus: input.lifecycleStatus || (status === "Approved" ? "Active" : "Draft"),
+    publishedAt: status === "Approved" ? input.publishedAt || new Date() : input.publishedAt,
+    verification: {
+      level: input.verification?.level || (status === "Approved" ? "VERIFIED_LISTING" : "OWNER_LISTED"),
+      status: input.verification?.status || status,
+      scope: input.verification?.scope || verifiedListingDisclaimer,
+      verifiedAt:
+        input.verification?.verifiedAt || (status === "Approved" ? new Date() : undefined),
+      verifiedBy: input.verification?.verifiedBy || (status === "Approved" ? actorId : undefined),
+      expiresAt: input.verification?.expiresAt,
+      rejectionReason: input.verification?.rejectionReason || "",
+      suspensionReason: input.verification?.suspensionReason || "",
+      reviewNotes: input.verification?.reviewNotes || "",
+    },
+  };
+}
+
+function mapReviewStatus(status) {
+  if (status === "Approved") return "Approved";
+  if (status === "Needs Correction") return "Needs Changes";
+  return "Pending Review";
+}
 
 adminRouter.post(
   "/news",

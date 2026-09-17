@@ -8,7 +8,11 @@ const userSchema = new mongoose.Schema(
     phone: { type: String, default: "" },
     passwordHash: { type: String, default: "" },
     googleId: { type: String, index: true },
-    role: { type: String, enum: ["user", "editor", "manager", "admin"], default: "user" },
+    role: {
+      type: String,
+      enum: ["user", "owner", "developer", "editor", "manager", "verifier", "support", "admin"],
+      default: "user",
+    },
     permissions: [{ type: String }],
     status: { type: String, enum: ["Active", "Suspended"], default: "Active" },
     resetTokenHash: String,

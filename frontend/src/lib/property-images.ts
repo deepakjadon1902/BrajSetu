@@ -22,6 +22,7 @@ export function getImageSrc(image: string | PropertyImage | undefined): string {
 }
 
 export function getMainImage(property: Property): string {
-  const main = property.images.find((image) => normalizePropertyImage(image).label === "Main");
-  return getImageSrc(main ?? property.images[0]);
+  const images = property.images ?? [];
+  const main = images.find((image) => normalizePropertyImage(image).label === "Main");
+  return getImageSrc(main ?? images[0]);
 }

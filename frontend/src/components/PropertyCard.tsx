@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Bath, BedDouble, Maximize } from "lucide-react";
 import { SmartImage } from "@/components/SmartImage";
+import { VerificationBadge } from "@/components/VerificationBadge";
 import { formatArea, formatPrice } from "@/lib/api";
 import { getMainImage } from "@/lib/property-images";
 import { cn } from "@/lib/utils";
@@ -80,6 +81,9 @@ export function PropertyCard({
           <p className="truncate text-xs text-muted-foreground">
             {property.location.locality}, {property.location.city}
           </p>
+          <div className="mt-2">
+            <VerificationBadge property={property} compact />
+          </div>
           <MetaRow property={property} className="mt-2" />
         </div>
       </article>
@@ -115,6 +119,9 @@ export function PropertyCard({
           <p className="mt-1 truncate text-sm text-muted-foreground">
             {property.location.locality}, {property.location.city}
           </p>
+          <div className="mt-3">
+            <VerificationBadge property={property} />
+          </div>
           <MetaRow property={property} className="mt-4 border-t border-border pt-4" />
         </div>
       </Link>

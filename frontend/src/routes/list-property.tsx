@@ -63,6 +63,20 @@ const localities = [
   "Barsana Road",
 ];
 const furnishingOptions = ["Unfurnished", "Semi-furnished", "Furnished", "Bare shell"];
+const areaUnits: NonNullable<Property["propertyDetails"]>["areaUnit"][] = [
+  "sq.ft",
+  "sq.m",
+  "sq.yd",
+  "acre",
+  "bigha",
+];
+const ownerRoles: NonNullable<Property["ownerDetails"]>["ownerRole"][] = [
+  "Owner",
+  "Landlord",
+  "Developer",
+  "Authorized Partner",
+  "Broker",
+];
 const amenityOptions = [
   "Garden",
   "Parking",
@@ -94,7 +108,15 @@ type Draft = Omit<
   ownerName: string;
   ownerEmail: string;
   ownerPhone: string;
+  ownerRole: NonNullable<Property["ownerDetails"]>["ownerRole"];
+  organizationName: string;
+  ownerAddress: string;
+  authorityType: string;
+  propertyDetails: NonNullable<Property["propertyDetails"]>;
   termsAccepted: boolean;
+  loanOrEncumbrance: string;
+  litigationOrDispute: string;
+  reraNumber: string;
 };
 
 const initialDraft: Draft = {
@@ -110,7 +132,23 @@ const initialDraft: Draft = {
   ownerName: "",
   ownerEmail: "",
   ownerPhone: "",
+  ownerRole: "Owner",
+  organizationName: "",
+  ownerAddress: "",
+  authorityType: "",
+  propertyDetails: {
+    areaUnit: "sq.ft",
+    availability: "Available now",
+    parking: "",
+    leaseType: "",
+    priceNegotiable: false,
+    gatedCommunity: false,
+    gasPipeline: false,
+  },
   termsAccepted: false,
+  loanOrEncumbrance: "",
+  litigationOrDispute: "",
+  reraNumber: "",
 };
 
 function ListPropertyPage() {
@@ -363,6 +401,149 @@ function ListPropertyPage() {
                 ))}
               </select>
             </label>
+
+            <label className="block sm:col-span-2">
+              <span className={labelClass}>RERA number, if applicable</span>
+              <input
+                value={draft.reraNumber}
+                onChange={(event) => set("reraNumber", event.target.value)}
+                placeholder="Owner-provided RERA number"
+                className={fieldClass}
+                maxLength={80}
+              />
+            </label>
+
+            <label className="block sm:col-span-2">
+              <span className={labelClass}>Full property address</span>
+              <textarea
+                value={draft.propertyDetails.fullAddress ?? ""}
+                onChange={(event) =>
+                  set("propertyDetails", {
+                    ...draft.propertyDetails,
+                    fullAddress: event.target.value,
+                  })
+                }
+                placeholder="House/unit number, street, society/colony, locality, city and PIN"
+                className={`${fieldClass} min-h-24`}
+                maxLength={300}
+                required
+              />
+            </label>
+
+            <label className="block">
+              <span className={labelClass}>Landmark</span>
+              <input
+                value={draft.propertyDetails.landmark ?? ""}
+                onChange={(event) =>
+                  set("propertyDetails", { ...draft.propertyDetails, landmark: event.target.value })
+                }
+                className={fieldClass}
+                maxLength={160}
+              />
+            </label>
+
+            <label className="block">
+              <span className={labelClass}>Area unit</span>
+              <select
+                value={draft.propertyDetails.areaUnit ?? "sq.ft"}
+                onChange={(event) =>
+                  set("propertyDetails", {
+                    ...draft.propertyDetails,
+                    areaUnit: event.target.value as NonNullable<
+                      Property["propertyDetails"]
+                    >["areaUnit"],
+                  })
+                }
+                className={fieldClass}
+              >
+                {areaUnits.map((unit) => (
+                  <option key={unit} value={unit}>
+                    {unit}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            {[
+              ["plotArea", "Plot area"],
+              ["carpetArea", "Carpet area"],
+              ["builtUpArea", "Built-up area"],
+              ["balconies", "Balconies"],
+            ].map(([key, label]) => (
+              <label key={key} className="block">
+                <span className={labelClass}>{label}</span>
+                <input
+                  value={
+                    Number(
+                      draft.propertyDetails[
+                        key as keyof NonNullable<Property["propertyDetails"]>
+                      ] ?? "",
+                    ) || ""
+                  }
+                  onChange={(event) =>
+                    set("propertyDetails", {
+                      ...draft.propertyDetails,
+                      [key]: Number(event.target.value),
+                    })
+                  }
+                  type="number"
+                  min={0}
+                  className={fieldClass}
+                />
+              </label>
+            ))}
+
+            {[
+              ["floor", "Floor"],
+              ["totalFloors", "Total floors"],
+              ["parking", "Parking"],
+              ["availability", "Availability"],
+              ["facing", "Facing"],
+              ["roadWidth", "Road width"],
+              ["leaseType", "Lease / ownership type"],
+              ["waterSupply", "Water supply"],
+              ["powerBackup", "Power backup"],
+            ].map(([key, label]) => (
+              <label key={key} className="block">
+                <span className={labelClass}>{label}</span>
+                <input
+                  value={String(
+                    draft.propertyDetails[key as keyof NonNullable<Property["propertyDetails"]>] ??
+                      "",
+                  )}
+                  onChange={(event) =>
+                    set("propertyDetails", {
+                      ...draft.propertyDetails,
+                      [key]: event.target.value,
+                    })
+                  }
+                  className={fieldClass}
+                />
+              </label>
+            ))}
+
+            {[
+              ["priceNegotiable", "Price negotiable"],
+              ["gatedCommunity", "Gated community"],
+              ["gasPipeline", "Gas pipeline"],
+            ].map(([key, label]) => (
+              <label key={key} className="flex items-start gap-3 text-sm font-semibold text-navy">
+                <input
+                  type="checkbox"
+                  checked={Boolean(
+                    draft.propertyDetails[key as keyof NonNullable<Property["propertyDetails"]>],
+                  )}
+                  onChange={(event) =>
+                    set("propertyDetails", {
+                      ...draft.propertyDetails,
+                      [key]: event.target.checked,
+                    })
+                  }
+                  className="mt-1 h-5 w-5 accent-[var(--navy)]"
+                />
+                <span>{label}</span>
+              </label>
+            ))}
           </section>
 
           <section>
@@ -395,6 +576,29 @@ function ListPropertyPage() {
                 );
               })}
             </div>
+          </section>
+
+          <section className="grid gap-4 sm:grid-cols-2">
+            <label className="block">
+              <span className={labelClass}>Loan / encumbrance declaration</span>
+              <textarea
+                value={draft.loanOrEncumbrance}
+                onChange={(event) => set("loanOrEncumbrance", event.target.value)}
+                placeholder="Disclose any loan, mortgage or encumbrance known to you."
+                className={`${fieldClass} min-h-24`}
+                maxLength={500}
+              />
+            </label>
+            <label className="block">
+              <span className={labelClass}>Litigation / dispute declaration</span>
+              <textarea
+                value={draft.litigationOrDispute}
+                onChange={(event) => set("litigationOrDispute", event.target.value)}
+                placeholder="Disclose any dispute, litigation or objection known to you."
+                className={`${fieldClass} min-h-24`}
+                maxLength={500}
+              />
+            </label>
           </section>
 
           <label className="block">
@@ -445,6 +649,54 @@ function ListPropertyPage() {
                   className={fieldClass}
                   minLength={8}
                   required
+                />
+              </label>
+              <label className="block">
+                <span className={labelClass}>Owner / landlord role</span>
+                <select
+                  value={draft.ownerRole}
+                  onChange={(event) =>
+                    set(
+                      "ownerRole",
+                      event.target.value as NonNullable<Property["ownerDetails"]>["ownerRole"],
+                    )
+                  }
+                  className={fieldClass}
+                >
+                  {ownerRoles.map((role) => (
+                    <option key={role} value={role}>
+                      {role}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="block">
+                <span className={labelClass}>Organization / developer</span>
+                <input
+                  value={draft.organizationName}
+                  onChange={(event) => set("organizationName", event.target.value)}
+                  className={fieldClass}
+                  maxLength={160}
+                />
+              </label>
+              <label className="block">
+                <span className={labelClass}>Authority to list</span>
+                <input
+                  value={draft.authorityType}
+                  onChange={(event) => set("authorityType", event.target.value)}
+                  placeholder="Direct owner, landlord, POA, developer mandate..."
+                  className={fieldClass}
+                  maxLength={160}
+                  required
+                />
+              </label>
+              <label className="block">
+                <span className={labelClass}>Owner / landlord address</span>
+                <textarea
+                  value={draft.ownerAddress}
+                  onChange={(event) => set("ownerAddress", event.target.value)}
+                  className={`${fieldClass} min-h-24`}
+                  maxLength={300}
                 />
               </label>
             </div>
@@ -505,7 +757,12 @@ function ListPropertyPage() {
                 required
               />
               <span>
-                I confirm this property information is accurate, I am authorized to list it, and I
+                I/we declare that the information provided to Braj Setu Properties is true to my
+                knowledge, that I have ownership or valid authority to list this property/project
+                for sale/rent/lease/marketing, that I will not knowingly upload content violating
+                third-party rights, and that Braj Setu Properties may suspend/remove the listing if
+                information is false, misleading, unauthorized or disputed. I understand that a
+                listing or verification badge is not an absolute ownership/title legal guarantee. I
                 accept the{" "}
                 <Link
                   to="/terms"
@@ -594,12 +851,16 @@ function validateDraft(draft: Draft) {
   if (!Number.isFinite(draft.price) || draft.price < 1) errors.push("Enter a valid price.");
   if (!Number.isFinite(draft.specs.area) || draft.specs.area < 1)
     errors.push("Enter a valid area.");
+  if ((draft.propertyDetails.fullAddress ?? "").trim().length < 8)
+    errors.push("Enter the full property address.");
   if ((draft.description ?? "").trim().length < 40)
     errors.push("Add at least 40 characters in the property description.");
   if (draft.ownerName.trim().length < 2) errors.push("Enter the owner name.");
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(draft.ownerEmail))
     errors.push("Enter a valid owner email.");
   if (draft.ownerPhone.trim().length < 8) errors.push("Enter a valid owner phone number.");
+  if (draft.authorityType.trim().length < 2)
+    errors.push("Enter your authority to list this property.");
   if (draft.images.some((image) => !isUrl(String(image))))
     errors.push("Every image must be a valid URL.");
   return errors;

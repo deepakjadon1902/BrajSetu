@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Field, inputClass, primaryButtonClass } from "@/components/auth/AuthLayout";
 import { SmartImage } from "@/components/SmartImage";
 import { useStore, type AppUser } from "@/lib/mock-store";
+import { getMainImage } from "@/lib/property-images";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
@@ -383,8 +384,7 @@ function ProfilePage() {
             <div className="mt-4 grid gap-4">
               {recommended.length > 0 ? (
                 recommended.map((property) => {
-                  const image = property.images[0];
-                  const src = typeof image === "string" ? image : image.src;
+                  const src = getMainImage(property);
                   return (
                     <Link
                       key={property.id}

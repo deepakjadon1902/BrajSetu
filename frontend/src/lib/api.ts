@@ -18,7 +18,14 @@ function matches(property: Property, filters: PropertyFilters): boolean {
       property.category,
       property.location.city,
       property.location.locality,
-      ...property.amenities,
+      property.description,
+      property.publicLocation,
+      property.propertyDetails?.fullAddress,
+      property.propertyDetails?.landmark,
+      property.specs.furnishing,
+      property.specs.bedrooms ? `${property.specs.bedrooms} BHK` : "",
+      property.status,
+      ...(property.amenities ?? []),
     ]
       .join(" ")
       .toLowerCase();
@@ -38,7 +45,8 @@ function matches(property: Property, filters: PropertyFilters): boolean {
   if (categories?.length && !categories.includes(property.category)) return false;
   if (bedrooms && (property.specs.bedrooms ?? 0) < bedrooms) return false;
   if (bathrooms && (property.specs.bathrooms ?? 0) < bathrooms) return false;
-  if (amenities?.length && !amenities.every((a) => property.amenities.includes(a))) return false;
+  if (amenities?.length && !amenities.every((a) => (property.amenities ?? []).includes(a)))
+    return false;
 
   return true;
 }
