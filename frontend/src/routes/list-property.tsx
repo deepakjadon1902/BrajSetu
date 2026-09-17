@@ -402,6 +402,38 @@ function ListPropertyPage() {
               </select>
             </label>
 
+            {[
+              ["fans", "Fans"],
+              ["lights", "Lights"],
+              ["wardrobes", "Wardrobes"],
+              ["acs", "AC units"],
+              ["beds", "Beds"],
+              ["geysers", "Geysers"],
+            ].map(([key, label]) => (
+              <label key={key} className="block">
+                <span className={labelClass}>{label}</span>
+                <input
+                  value={
+                    Number(
+                      draft.propertyDetails[
+                        key as keyof NonNullable<Property["propertyDetails"]>
+                      ] ?? "",
+                    ) || ""
+                  }
+                  onChange={(event) =>
+                    set("propertyDetails", {
+                      ...draft.propertyDetails,
+                      [key]: event.target.value === "" ? undefined : Number(event.target.value),
+                    })
+                  }
+                  type="number"
+                  min={0}
+                  max={500}
+                  className={fieldClass}
+                />
+              </label>
+            ))}
+
             <label className="block sm:col-span-2">
               <span className={labelClass}>RERA number, if applicable</span>
               <input
@@ -577,6 +609,25 @@ function ListPropertyPage() {
               })}
             </div>
           </section>
+
+          <label className="block">
+            <span className={labelClass}>Special highlights shown publicly</span>
+            <textarea
+              value={(draft.propertyDetails.highlights ?? []).join("\n")}
+              onChange={(event) =>
+                set("propertyDetails", {
+                  ...draft.propertyDetails,
+                  highlights: event.target.value
+                    .split("\n")
+                    .map((line) => line.trim())
+                    .filter(Boolean),
+                })
+              }
+              placeholder="One real highlight per line, e.g. Corner plot, 30 ft road, Registered society"
+              className={`${fieldClass} min-h-28`}
+              maxLength={1200}
+            />
+          </label>
 
           <section className="grid gap-4 sm:grid-cols-2">
             <label className="block">

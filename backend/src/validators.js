@@ -81,6 +81,13 @@ const propertyDetailsSchema = z
     gasPipeline: z.boolean().optional(),
     waterSupply: z.string().trim().max(120).optional(),
     powerBackup: z.string().trim().max(120).optional(),
+    fans: z.coerce.number().int().min(0).max(500).optional(),
+    lights: z.coerce.number().int().min(0).max(500).optional(),
+    wardrobes: z.coerce.number().int().min(0).max(500).optional(),
+    acs: z.coerce.number().int().min(0).max(500).optional(),
+    beds: z.coerce.number().int().min(0).max(500).optional(),
+    geysers: z.coerce.number().int().min(0).max(500).optional(),
+    highlights: z.array(z.string().trim().min(2).max(160)).max(12).optional(),
   })
   .partial();
 

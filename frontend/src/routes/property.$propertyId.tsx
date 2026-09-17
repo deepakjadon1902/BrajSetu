@@ -104,25 +104,17 @@ const sectionTabs: { id: SectionId; label: string }[] = [
 
 const galleryPills: GalleryCategory[] = ["Bedroom", "Kitchen", "Bathroom", "Balcony", "Contact"];
 
-const furnishingItems: {
+const furnishingItemDefinitions: {
   label: string;
   icon: LucideIcon;
-  value: (property: Property) => string;
+  key: "fans" | "lights" | "wardrobes" | "acs" | "beds" | "geysers";
 }[] = [
-  { label: "Fan", icon: Fan, value: () => "2" },
-  { label: "Light", icon: Lamp, value: () => "6" },
-  {
-    label: "Wardrobe",
-    icon: Warehouse,
-    value: (property) => (property.category === "Plot" ? "0" : "2"),
-  },
-  {
-    label: "AC",
-    icon: AirVent,
-    value: (property) => (property.specs.furnishing === "Furnished" ? "2" : "1"),
-  },
-  { label: "Bed", icon: BedDouble, value: (property) => String(property.specs.bedrooms ?? 1) },
-  { label: "Geyser", icon: Zap, value: (property) => String(property.specs.bathrooms ?? 1) },
+  { label: "Fan", icon: Fan, key: "fans" },
+  { label: "Light", icon: Lamp, key: "lights" },
+  { label: "Wardrobe", icon: Warehouse, key: "wardrobes" },
+  { label: "AC", icon: AirVent, key: "acs" },
+  { label: "Bed", icon: BedDouble, key: "beds" },
+  { label: "Geyser", icon: Zap, key: "geysers" },
 ];
 
 const sectionCardClass =
@@ -154,6 +146,11 @@ function PropertyDetailPage() {
   const property = findProperty(properties, propertyId) ?? loaderProperty;
   const similar = property ? similarProperties(properties, property.id, 3) : [];
   const galleryPhotos = useMemo(() => (property ? buildGalleryPhotos(property) : []), [property]);
+  const furnishingTiles = useMemo(
+    () => (property ? buildFurnishingTiles(property) : []),
+    [property],
+  );
+  const amenityTiles = useMemo(() => (property ? buildAmenities(property) : []), [property]);
   const activeGallery = galleryPhotos[activePhoto] ?? galleryPhotos[0];
   const displayPrice = property ? formatDisplayPrice(property.price, property.intent) : "";
   const phoneHref = settings.contactPhone.replace(/\s/g, "");
@@ -351,25 +348,37 @@ function PropertyDetailPage() {
 
           <section id="furnishings" className={cn(sectionCardClass, "p-5 sm:p-6")}>
             <h2 className="text-xl font-extrabold">Furnishings</h2>
-            <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {furnishingItems.map((item) => (
-                <FeatureTile
-                  key={item.label}
-                  icon={item.icon}
-                  title={item.label}
-                  value={item.value(property)}
-                />
-              ))}
-            </div>
+            {furnishingTiles.length ? (
+              <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {furnishingTiles.map((item) => (
+                  <FeatureTile
+                    key={item.label}
+                    icon={item.icon}
+                    title={item.label}
+                    value={String(item.value)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <p className="mt-4 text-sm text-muted-foreground">
+                Furnishing item counts have not been added for this listing.
+              </p>
+            )}
           </section>
 
           <section id="amenities" className={cn(sectionCardClass, "p-5 sm:p-6")}>
             <h2 className="text-xl font-extrabold">Amenities</h2>
-            <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {buildAmenities(property).map((amenity) => (
-                <FeatureTile key={amenity.label} icon={amenity.icon} title={amenity.label} />
-              ))}
-            </div>
+            {amenityTiles.length ? (
+              <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {amenityTiles.map((amenity) => (
+                  <FeatureTile key={amenity.label} icon={amenity.icon} title={amenity.label} />
+                ))}
+              </div>
+            ) : (
+              <p className="mt-4 text-sm text-muted-foreground">
+                Amenities have not been added for this listing.
+              </p>
+            )}
           </section>
 
           <CommercialStrip locality={property.location.locality} />
@@ -1137,27 +1146,27 @@ function LeadForm({
 }
 
 function HighlightsCard({ property }: { property: Property }) {
-  const amenities = property.amenities ?? [];
-  const highlights = [
-    `Close to ${property.location.locality} market`,
-    "Close to main road connectivity",
-    property.specs.bathrooms ? "Well-maintained bathrooms" : "Clear boundary and access",
-    amenities.includes("Storage") ? "Smart storage available" : "Advisor assisted listing",
-  ];
+  const highlights = property.propertyDetails?.highlights?.filter((highlight) => highlight.trim());
 
   return (
     <section className={cn(sectionCardClass, "p-5 sm:p-6")}>
       <h2 className="text-xl font-extrabold">Special Highlights</h2>
-      <div className="mt-6 grid gap-4 sm:grid-cols-2">
-        {highlights.map((highlight) => (
-          <div key={highlight} className="flex items-center gap-3 text-sm font-medium">
-            <span className="grid h-5 w-5 place-items-center rounded-full bg-[#ff3d7f] text-white">
-              <Check className="h-3 w-3" />
-            </span>
-            {highlight}
-          </div>
-        ))}
-      </div>
+      {highlights?.length ? (
+        <div className="mt-6 grid gap-4 sm:grid-cols-2">
+          {highlights.map((highlight) => (
+            <div key={highlight} className="flex items-center gap-3 text-sm font-medium">
+              <span className="grid h-5 w-5 place-items-center rounded-full bg-[#ff3d7f] text-white">
+                <Check className="h-3 w-3" />
+              </span>
+              {highlight}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="mt-4 text-sm text-muted-foreground">
+          Special highlights have not been added for this listing.
+        </p>
+      )}
     </section>
   );
 }
@@ -1356,16 +1365,19 @@ function buildGalleryPhotos(property: Property): GalleryPhoto[] {
   return [{ src: "", label: "Main" }];
 }
 
-function buildAmenities(property: Property): { label: string; icon: LucideIcon }[] {
-  const base: { label: string; icon: LucideIcon }[] = [
-    { label: "AC", icon: AirVent },
-    { label: "Geyser", icon: Zap },
-    { label: "Lift", icon: Home },
-    { label: "Power Backup", icon: ShieldCheck },
-    { label: "CCTV", icon: Camera },
-    { label: "Attached Balcony", icon: Trees },
-  ];
+function buildFurnishingTiles(
+  property: Property,
+): { label: string; icon: LucideIcon; value: number }[] {
+  const details = property.propertyDetails ?? {};
+  return furnishingItemDefinitions
+    .map((item) => ({
+      ...item,
+      value: Number(details[item.key] ?? 0),
+    }))
+    .filter((item) => item.value > 0);
+}
 
+function buildAmenities(property: Property): { label: string; icon: LucideIcon }[] {
   const fromProperty = (property.amenities ?? []).map((label) => ({
     label,
     icon:
@@ -1376,7 +1388,7 @@ function buildAmenities(property: Property): { label: string; icon: LucideIcon }
           : ShieldCheck,
   }));
 
-  return [...base, ...fromProperty].filter(
+  return fromProperty.filter(
     (item, index, all) => all.findIndex((candidate) => candidate.label === item.label) === index,
   );
 }

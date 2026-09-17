@@ -603,6 +603,42 @@ function AdminProperties() {
                   </select>
                 </label>
 
+                {[
+                  ["fans", "Fans"],
+                  ["lights", "Lights"],
+                  ["wardrobes", "Wardrobes"],
+                  ["acs", "AC units"],
+                  ["beds", "Beds"],
+                  ["geysers", "Geysers"],
+                ].map(([key, label]) => (
+                  <label key={key} className="block">
+                    <span className={labelClass}>{label}</span>
+                    <input
+                      className={`mt-2 ${inputClass}`}
+                      type="number"
+                      min={0}
+                      max={500}
+                      value={
+                        Number(
+                          draft.propertyDetails?.[
+                            key as keyof NonNullable<Property["propertyDetails"]>
+                          ] ?? "",
+                        ) || ""
+                      }
+                      onChange={(event) =>
+                        setDraft({
+                          ...draft,
+                          propertyDetails: {
+                            ...draft.propertyDetails,
+                            [key]:
+                              event.target.value === "" ? undefined : Number(event.target.value),
+                          },
+                        })
+                      }
+                    />
+                  </label>
+                ))}
+
                 <label className="block sm:col-span-2">
                   <span className={labelClass}>Full property address</span>
                   <textarea
@@ -823,6 +859,28 @@ function AdminProperties() {
                   })}
                 </div>
               </section>
+
+              <label className="block">
+                <span className={labelClass}>Special highlights shown publicly</span>
+                <textarea
+                  className={`mt-2 min-h-28 ${inputClass}`}
+                  value={(draft.propertyDetails?.highlights ?? []).join("\n")}
+                  onChange={(event) =>
+                    setDraft({
+                      ...draft,
+                      propertyDetails: {
+                        ...draft.propertyDetails,
+                        highlights: event.target.value
+                          .split("\n")
+                          .map((line) => line.trim())
+                          .filter(Boolean),
+                      },
+                    })
+                  }
+                  placeholder="One real highlight per line, e.g. Corner plot, 30 ft road, Registered society"
+                  maxLength={1200}
+                />
+              </label>
 
               <label className="block">
                 <span className={labelClass}>Description</span>

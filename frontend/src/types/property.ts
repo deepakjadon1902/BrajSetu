@@ -51,6 +51,13 @@ export interface Property {
     gasPipeline?: boolean;
     waterSupply?: string;
     powerBackup?: string;
+    fans?: number;
+    lights?: number;
+    wardrobes?: number;
+    acs?: number;
+    beds?: number;
+    geysers?: number;
+    highlights?: string[];
   };
   images: (string | PropertyImage)[];
   amenities: string[];
