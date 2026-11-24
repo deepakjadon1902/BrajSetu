@@ -1,13 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import {
-  ArrowDown,
-  ArrowUp,
   BadgeIndianRupee,
   BedDouble,
   Building2,
   Check,
   Home,
-  ImagePlus,
   MapPin,
   Pencil,
   Plus,
@@ -15,25 +12,20 @@ import {
   Sparkles,
   Store,
   Trash2,
-  Upload,
-  X,
 } from "lucide-react";
-import { useMemo, useState, type ChangeEvent, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 
 import { AdminShell } from "@/components/admin/AdminShell";
+import { BrajLocationFields } from "@/components/BrajLocationFields";
+import { PropertyPhotoEditor } from "@/components/PropertyPhotoEditor";
 import { SmartImage } from "@/components/SmartImage";
 import { VerificationBadge } from "@/components/VerificationBadge";
 import { formatPrice } from "@/lib/api";
 import { uid, useStore } from "@/lib/mock-store";
-import { getMainImage, normalizePropertyImage, PROPERTY_IMAGE_LABELS } from "@/lib/property-images";
+import { getMainImage } from "@/lib/property-images";
 import { cn } from "@/lib/utils";
-import type {
-  Property,
-  PropertyCategory,
-  PropertyImageLabel,
-  PropertyIntent,
-} from "@/types/property";
+import type { Property, PropertyCategory, PropertyIntent } from "@/types/property";
 
 export const Route = createFileRoute("/admin/properties")({
   head: () => ({
@@ -58,14 +50,14 @@ const reviewStatuses: NonNullable<Property["reviewStatus"]>[] = [
   "Approved",
   "Needs Changes",
 ];
-const verificationLevels: NonNullable<Property["verification"]>["level"][] = [
+const verificationLevels: NonNullable<NonNullable<Property["verification"]>["level"]>[] = [
   "OWNER_LISTED",
   "IDENTITY_CHECKED",
   "DOCUMENT_CHECKED",
   "VERIFIED_LISTING",
   "RERA_VERIFIED",
 ];
-const reraStatuses: NonNullable<Property["rera"]>["status"][] = [
+const reraStatuses: NonNullable<NonNullable<Property["rera"]>["status"]>[] = [
   "NOT_APPLICABLE",
   "OWNER_PROVIDED",
   "CHECK_PENDING",
@@ -74,52 +66,19 @@ const reraStatuses: NonNullable<Property["rera"]>["status"][] = [
   "ISSUE",
 ];
 const furnishingOptions = ["Unfurnished", "Semi-furnished", "Furnished", "Bare shell"];
-const areaUnits: NonNullable<Property["propertyDetails"]>["areaUnit"][] = [
+const areaUnits: NonNullable<NonNullable<Property["propertyDetails"]>["areaUnit"]>[] = [
   "sq.ft",
   "sq.m",
   "sq.yd",
   "acre",
   "bigha",
 ];
-const ownerRoles: NonNullable<Property["ownerDetails"]>["ownerRole"][] = [
+const ownerRoles: NonNullable<NonNullable<Property["ownerDetails"]>["ownerRole"]>[] = [
   "Owner",
   "Landlord",
   "Developer",
   "Authorized Partner",
   "Broker",
-];
-const brajCities = [
-  "Vrindavan",
-  "Mathura",
-  "Govardhan",
-  "Barsana",
-  "Gokul",
-  "Nandgaon",
-  "Baldev",
-  "Raya",
-  "Chaumuha",
-  "Kosi Kalan",
-];
-const brajLocalities = [
-  "Chhatikara",
-  "Ral",
-  "Basonti",
-  "Khamini",
-  "Jachonda",
-  "Aading",
-  "Raman Reti",
-  "Sunrakh Road",
-  "Radha Kund Road",
-  "Holi Gate",
-  "Yamuna Kinara",
-  "Prem Mandir Road",
-  "Parikrama Marg",
-  "NH-19",
-  "Banke Bihari Mandir",
-  "ISKCON Road",
-  "Moti Jheel",
-  "Raya Road",
-  "Barsana Road",
 ];
 const amenityOptions = [
   "Garden",
@@ -137,26 +96,30 @@ const amenityOptions = [
 ];
 
 const inputClass =
-  "w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm text-navy outline-none transition-colors placeholder:text-muted-foreground focus:border-navy";
+  "w-full rounded-lg border border-border bg-background px-4 py-3 text-sm text-navy outline-none transition-colors placeholder:text-muted-foreground focus:border-navy";
+const requiredSelectClass = `${inputClass} invalid:text-muted-foreground [&>option]:text-navy`;
 const labelClass = "text-xs font-semibold uppercase tracking-wide text-navy-soft";
+const requiredLabelClass = `${labelClass} after:ml-1 after:text-destructive after:content-['*']`;
 
-function emptyProperty(): Property {
+type PropertyDraft = Omit<Property, "category" | "specs"> & {
+  category: PropertyCategory | "";
+  specs: Omit<Property["specs"], "area"> & { area: string };
+};
+
+function emptyProperty(): PropertyDraft {
   return {
     id: uid("braj"),
     title: "",
-    category: "Flat",
+    category: "",
     intent: "Sale",
     price: 0,
-    location: { city: "Vrindavan", locality: "Chhatikara" },
-    specs: { area: 0, bedrooms: 0, bathrooms: 0, furnishing: "Semi-furnished" },
+    location: { city: "", locality: "" },
+    specs: { area: "", bedrooms: 0, bathrooms: 0, furnishing: "Semi-furnished" },
     images: [],
     amenities: ["Temple nearby", "Parking"],
     featured: false,
-    status: "New",
     listingSource: "Admin",
-    reviewStatus: "Approved",
     propertyDetails: {
-      areaUnit: "sq.ft",
       availability: "Available now",
       parking: "",
       leaseType: "Freehold",
@@ -166,12 +129,6 @@ function emptyProperty(): Property {
       authorityType: "Direct owner",
       publicContactRole: "Property owner",
     },
-    verification: {
-      level: "VERIFIED_LISTING",
-      status: "Approved",
-      reviewNotes: "Admin-created listing reviewed before publication.",
-    },
-    lifecycleStatus: "Active",
     description: "",
   };
 }
@@ -195,35 +152,36 @@ function normalizeAdminProperty(property: Property): Property {
     },
     images: property.images ?? [],
     amenities: property.amenities ?? [],
+    status: property.status ?? "Active",
     propertyDetails: property.propertyDetails ?? {},
     ownerDetails: property.ownerDetails ?? {},
-    verification: property.verification ?? { level: "OWNER_LISTED", status: "Pending Review" },
+    verification: {
+      ...property.verification,
+      level: property.verification?.level ?? "OWNER_LISTED",
+    },
     rera: property.rera ?? {},
     reviewStatus: property.reviewStatus ?? "Approved",
-    lifecycleStatus: property.lifecycleStatus ?? "Active",
     description: property.description ?? "",
   };
 }
 
-function setArrayItem<T>(items: T[], index: number, value: T) {
-  return items.map((item, i) => (i === index ? value : item));
-}
-
-function moveItem<T>(items: T[], index: number, direction: -1 | 1) {
-  const nextIndex = index + direction;
-  if (nextIndex < 0 || nextIndex >= items.length) return items;
-  const next = [...items];
-  [next[index], next[nextIndex]] = [next[nextIndex], next[index]];
-  return next;
-}
-
 function AdminProperties() {
-  const { properties, saveProperty, deleteProperty, uploadPropertyImages } = useStore();
-  const [draft, setDraft] = useState<Property | null>(null);
+  const {
+    adminProperties: storedProperties,
+    saveProperty,
+    deleteProperty,
+    uploadPropertyImages,
+  } = useStore();
+  const [draft, setDraft] = useState<PropertyDraft | null>(null);
   const [search, setSearch] = useState("");
   const [intentFilter, setIntentFilter] = useState<"All" | PropertyIntent>("All");
   const [uploading, setUploading] = useState(false);
-  const adminProperties = useMemo(() => properties.map(normalizeAdminProperty), [properties]);
+  const [saving, setSaving] = useState(false);
+  const adminProperties = useMemo(
+    () => storedProperties.map(normalizeAdminProperty),
+    [storedProperties],
+  );
+  const areaUnit = draft?.propertyDetails?.areaUnit;
 
   const metrics = useMemo(
     () => ({
@@ -245,54 +203,37 @@ function AdminProperties() {
     return matchesSearch && (intentFilter === "All" || property.intent === intentFilter);
   });
 
-  async function onSubmit(event: FormEvent) {
+  async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!draft) return;
-    if (!draft.title.trim() || !draft.location.city.trim() || !draft.location.locality.trim()) {
-      toast.error("Title, city and locality are required.");
+    if (!draft || saving || uploading) return;
+    const requiredFields = event.currentTarget.querySelectorAll<
+      HTMLInputElement | HTMLSelectElement
+    >("input[required], select[required]");
+    for (const field of requiredFields) {
+      if (!field.reportValidity()) return;
+    }
+    const { category } = draft;
+    if (!category) return;
+    const title = draft.title.trim();
+    if (title.length < 2) {
+      toast.error("Enter a listing title with at least 2 characters.");
       return;
     }
-    if (!draft.price || !draft.specs.area) {
-      toast.error("Price and area are required.");
+    const area = Number(draft.specs.area);
+    if (area <= 0) {
+      toast.error("Enter a positive property area.");
       return;
     }
+
+    setSaving(true);
     try {
-      await saveProperty(draft);
-      toast.success("Listing saved. Public pages now use the updated details.");
+      await saveProperty({ ...draft, title, category, specs: { ...draft.specs, area } });
+      toast.success("Listing saved.");
       setDraft(null);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Listing could not be saved.");
-    }
-  }
-
-  async function onImageUpload(event: ChangeEvent<HTMLInputElement>) {
-    if (!draft) return;
-    const files = Array.from(event.target.files ?? []);
-    event.target.value = "";
-    if (!files.length) return;
-
-    setUploading(true);
-    try {
-      const optimized = await uploadPropertyImages(files);
-      setDraft((current) =>
-        current
-          ? {
-              ...current,
-              images: [
-                ...current.images,
-                ...optimized.map((src, index) => ({
-                  src,
-                  label: current.images.length === 0 && index === 0 ? "Main" : "Bedroom",
-                })),
-              ],
-            }
-          : current,
-      );
-      toast.success(`${optimized.length} image${optimized.length > 1 ? "s" : ""} optimized.`);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Image upload failed.");
     } finally {
-      setUploading(false);
+      setSaving(false);
     }
   }
 
@@ -304,6 +245,7 @@ function AdminProperties() {
       actions={
         <button
           type="button"
+          disabled={saving || uploading}
           onClick={() => setDraft(emptyProperty())}
           className="pv-smooth-state flex items-center gap-2 rounded-full bg-navy px-5 py-2.5 text-sm font-semibold text-background shadow-[var(--shadow-soft)] hover:scale-[1.02]"
         >
@@ -320,7 +262,7 @@ function AdminProperties() {
         ].map((metric) => (
           <div
             key={metric.label}
-            className="pv-lift rounded-2xl border border-border bg-card p-4 shadow-[var(--shadow-soft)]"
+            className="pv-lift rounded-lg border border-border bg-card p-4 shadow-[var(--shadow-soft)]"
           >
             <div className="flex items-center justify-between gap-3">
               <span className="text-xs font-semibold text-muted-foreground">{metric.label}</span>
@@ -328,7 +270,7 @@ function AdminProperties() {
                 <metric.icon className="h-4 w-4" />
               </span>
             </div>
-            <p className="mt-3 text-2xl font-extrabold text-navy">{metric.value}</p>
+            <p className="mt-3 text-2xl font-semibold text-navy">{metric.value}</p>
           </div>
         ))}
       </div>
@@ -336,7 +278,8 @@ function AdminProperties() {
       {draft ? (
         <form
           onSubmit={onSubmit}
-          className="mt-6 overflow-hidden rounded-3xl border border-border bg-card shadow-[var(--shadow-lift)]"
+          noValidate
+          className="mt-6 overflow-hidden rounded-xl border border-border bg-card shadow-[var(--shadow-lift)]"
         >
           <div className="grid gap-6 border-b border-border p-5 lg:grid-cols-[minmax(0,1fr)_18rem]">
             <div>
@@ -345,16 +288,16 @@ function AdminProperties() {
                   ? "Edit listing"
                   : "New listing"}
               </p>
-              <h2 className="mt-2 text-2xl font-extrabold text-navy">
+              <h2 className="mt-2 text-2xl font-semibold text-navy">
                 {draft.title || "Braj Mandal property listing"}
               </h2>
               <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-                Follow the same flow visitors use on the public site: choose the market, set the
-                exact Braj location, then add optimized images.
+                Fields marked with an asterisk are required. Set Review status to Approved to
+                publish a new listing.
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 rounded-2xl bg-ice p-2">
+            <div className="grid grid-cols-2 gap-2 rounded-lg bg-ice p-2">
               {(["Sale", "Rent"] as PropertyIntent[]).map((intent) => (
                 <button
                   key={intent}
@@ -377,24 +320,30 @@ function AdminProperties() {
             <div className="space-y-6">
               <section className="grid gap-4 sm:grid-cols-2">
                 <label className="block sm:col-span-2">
-                  <span className={labelClass}>Listing title</span>
+                  <span className={requiredLabelClass}>Listing title</span>
                   <input
                     className={`mt-2 ${inputClass}`}
-                    placeholder="Premium plot near Prem Mandir"
+                    placeholder="e.g. 2 BHK flat near Prem Mandir"
+                    required
+                    maxLength={120}
                     value={draft.title}
                     onChange={(event) => setDraft({ ...draft, title: event.target.value })}
                   />
                 </label>
 
                 <label className="block">
-                  <span className={labelClass}>Property type</span>
+                  <span className={requiredLabelClass}>Property type</span>
                   <select
-                    className={`mt-2 ${inputClass}`}
+                    className={`mt-2 ${requiredSelectClass}`}
+                    required
                     value={draft.category}
                     onChange={(event) =>
                       setDraft({ ...draft, category: event.target.value as PropertyCategory })
                     }
                   >
+                    <option value="" disabled>
+                      Select a property type
+                    </option>
                     {categories.map((category) => (
                       <option key={category}>{category}</option>
                     ))}
@@ -402,10 +351,11 @@ function AdminProperties() {
                 </label>
 
                 <label className="block">
-                  <span className={labelClass}>Status</span>
+                  <span className={requiredLabelClass}>Status</span>
                   <select
-                    className={`mt-2 ${inputClass}`}
-                    value={draft.status}
+                    className={`mt-2 ${requiredSelectClass}`}
+                    required
+                    value={draft.status ?? ""}
                     onChange={(event) =>
                       setDraft({
                         ...draft,
@@ -413,6 +363,9 @@ function AdminProperties() {
                       })
                     }
                   >
+                    <option value="" disabled>
+                      Select a listing status
+                    </option>
                     {statuses.map((status) => (
                       <option key={status}>{status}</option>
                     ))}
@@ -420,27 +373,21 @@ function AdminProperties() {
                 </label>
 
                 <label className="block">
-                  <span className={labelClass}>Review status</span>
+                  <span className={requiredLabelClass}>Review status</span>
                   <select
-                    className={`mt-2 ${inputClass}`}
-                    value={draft.reviewStatus ?? "Approved"}
+                    className={`mt-2 ${requiredSelectClass}`}
+                    required
+                    value={draft.reviewStatus ?? ""}
                     onChange={(event) =>
                       setDraft({
                         ...draft,
                         reviewStatus: event.target.value as NonNullable<Property["reviewStatus"]>,
-                        verification: {
-                          ...draft.verification,
-                          status:
-                            event.target.value === "Approved"
-                              ? "Approved"
-                              : event.target.value === "Needs Changes"
-                                ? "Needs Correction"
-                                : "Pending Review",
-                        },
-                        lifecycleStatus: event.target.value === "Approved" ? "Active" : "Draft",
                       })
                     }
                   >
+                    <option value="" disabled>
+                      Select a review status
+                    </option>
                     {reviewStatuses.map((status) => (
                       <option key={status}>{status}</option>
                     ))}
@@ -448,26 +395,26 @@ function AdminProperties() {
                 </label>
 
                 <label className="block">
-                  <span className={labelClass}>Verification level</span>
+                  <span className={requiredLabelClass}>Verification level</span>
                   <select
-                    className={`mt-2 ${inputClass}`}
-                    value={draft.verification?.level ?? "OWNER_LISTED"}
+                    className={`mt-2 ${requiredSelectClass}`}
+                    required
+                    value={draft.verification?.level ?? ""}
                     onChange={(event) =>
                       setDraft({
                         ...draft,
                         verification: {
                           ...draft.verification,
                           level: event.target.value as NonNullable<
-                            Property["verification"]
-                          >["level"],
-                          status:
-                            draft.reviewStatus === "Approved"
-                              ? "Approved"
-                              : (draft.verification?.status ?? "Pending Review"),
+                            NonNullable<Property["verification"]>["level"]
+                          >,
                         },
                       })
                     }
                   >
+                    <option value="" disabled>
+                      Select a verification level
+                    </option>
                     {verificationLevels.map((level) => (
                       <option key={level} value={level}>
                         {level.replace(/_/g, " ")}
@@ -476,55 +423,44 @@ function AdminProperties() {
                   </select>
                 </label>
 
+                <BrajLocationFields
+                  location={draft.location}
+                  onChange={(location) => setDraft({ ...draft, location })}
+                  inputClassName={`mt-2 ${inputClass}`}
+                  labelClassName={requiredLabelClass}
+                />
+
                 <label className="block">
-                  <span className={labelClass}>Main city</span>
-                  <select
+                  <span className={requiredLabelClass}>Landmark</span>
+                  <input
                     className={`mt-2 ${inputClass}`}
-                    value={draft.location.city}
+                    placeholder="e.g. Near Prem Mandir"
+                    required
+                    maxLength={160}
+                    value={draft.propertyDetails?.landmark ?? ""}
                     onChange={(event) =>
                       setDraft({
                         ...draft,
-                        location: { ...draft.location, city: event.target.value },
+                        propertyDetails: { ...draft.propertyDetails, landmark: event.target.value },
                       })
                     }
-                  >
-                    {brajCities.map((city) => (
-                      <option key={city} value={city}>
-                        {city}
-                      </option>
-                    ))}
-                  </select>
+                  />
                 </label>
 
                 <label className="block">
-                  <span className={labelClass}>Locality or village</span>
-                  <select
-                    className={`mt-2 ${inputClass}`}
-                    value={draft.location.locality}
-                    onChange={(event) =>
-                      setDraft({
-                        ...draft,
-                        location: { ...draft.location, locality: event.target.value },
-                      })
-                    }
-                  >
-                    {brajLocalities.map((locality) => (
-                      <option key={locality} value={locality}>
-                        {locality}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <label className="block">
-                  <span className={labelClass}>Price</span>
+                  <span className={requiredLabelClass}>
+                    {draft.intent === "Rent" ? "Monthly rent (₹)" : "Price (₹)"}
+                  </span>
                   <div className="relative mt-2">
                     <BadgeIndianRupee className="absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <input
                       className={`${inputClass} pl-11`}
                       type="number"
+                      required
                       min={0}
-                      placeholder="9500000"
+                      max={10000000000}
+                      step="any"
+                      placeholder={draft.intent === "Rent" ? "e.g. 15000" : "e.g. 4500000"}
                       value={draft.price || ""}
                       onChange={(event) =>
                         setDraft({ ...draft, price: Number(event.target.value) })
@@ -534,17 +470,49 @@ function AdminProperties() {
                 </label>
 
                 <label className="block">
-                  <span className={labelClass}>Area in sq.ft</span>
-                  <input
-                    className={`mt-2 ${inputClass}`}
-                    type="number"
-                    min={0}
-                    placeholder="1800"
-                    value={draft.specs.area || ""}
+                  <span className={requiredLabelClass}>Area unit</span>
+                  <select
+                    className={`mt-2 ${requiredSelectClass}`}
+                    value={areaUnit ?? ""}
+                    required
                     onChange={(event) =>
                       setDraft({
                         ...draft,
-                        specs: { ...draft.specs, area: Number(event.target.value) },
+                        propertyDetails: {
+                          ...draft.propertyDetails,
+                          areaUnit: event.target.value as (typeof areaUnits)[number],
+                        },
+                      })
+                    }
+                  >
+                    <option value="" disabled>
+                      Select an area unit
+                    </option>
+                    {areaUnits.map((unit) => (
+                      <option key={unit} value={unit}>
+                        {unit}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="block">
+                  <span className={requiredLabelClass}>
+                    Property area{areaUnit ? ` (${areaUnit})` : ""}
+                  </span>
+                  <input
+                    className={`mt-2 ${inputClass}`}
+                    type="number"
+                    required
+                    min={0}
+                    max={10000000}
+                    step="any"
+                    placeholder={areaUnit === "sq.ft" ? "e.g. 1200" : "Enter the property area"}
+                    value={draft.specs.area}
+                    onChange={(event) =>
+                      setDraft({
+                        ...draft,
+                        specs: { ...draft.specs, area: event.target.value },
                       })
                     }
                   />
@@ -597,20 +565,23 @@ function AdminProperties() {
                       })
                     }
                   >
+                    <option value="">Select furnishing</option>
                     {furnishingOptions.map((option) => (
                       <option key={option}>{option}</option>
                     ))}
                   </select>
                 </label>
 
-                {[
-                  ["fans", "Fans"],
-                  ["lights", "Lights"],
-                  ["wardrobes", "Wardrobes"],
-                  ["acs", "AC units"],
-                  ["beds", "Beds"],
-                  ["geysers", "Geysers"],
-                ].map(([key, label]) => (
+                {(
+                  [
+                    ["fans", "Fans"],
+                    ["lights", "Lights"],
+                    ["wardrobes", "Wardrobes"],
+                    ["acs", "AC units"],
+                    ["beds", "Beds"],
+                    ["geysers", "Geysers"],
+                  ] as const
+                ).map(([key, label]) => (
                   <label key={key} className="block">
                     <span className={labelClass}>{label}</span>
                     <input
@@ -618,13 +589,7 @@ function AdminProperties() {
                       type="number"
                       min={0}
                       max={500}
-                      value={
-                        Number(
-                          draft.propertyDetails?.[
-                            key as keyof NonNullable<Property["propertyDetails"]>
-                          ] ?? "",
-                        ) || ""
-                      }
+                      value={Number(draft.propertyDetails?.[key] ?? "") || ""}
                       onChange={(event) =>
                         setDraft({
                           ...draft,
@@ -657,62 +622,21 @@ function AdminProperties() {
                   />
                 </label>
 
-                <label className="block">
-                  <span className={labelClass}>Landmark</span>
-                  <input
-                    className={`mt-2 ${inputClass}`}
-                    value={draft.propertyDetails?.landmark ?? ""}
-                    onChange={(event) =>
-                      setDraft({
-                        ...draft,
-                        propertyDetails: { ...draft.propertyDetails, landmark: event.target.value },
-                      })
-                    }
-                  />
-                </label>
-
-                <label className="block">
-                  <span className={labelClass}>Area unit</span>
-                  <select
-                    className={`mt-2 ${inputClass}`}
-                    value={draft.propertyDetails?.areaUnit ?? "sq.ft"}
-                    onChange={(event) =>
-                      setDraft({
-                        ...draft,
-                        propertyDetails: {
-                          ...draft.propertyDetails,
-                          areaUnit: event.target.value as NonNullable<
-                            Property["propertyDetails"]
-                          >["areaUnit"],
-                        },
-                      })
-                    }
-                  >
-                    {areaUnits.map((unit) => (
-                      <option key={unit} value={unit}>
-                        {unit}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                {[
-                  ["plotArea", "Plot area"],
-                  ["carpetArea", "Carpet area"],
-                  ["builtUpArea", "Built-up area"],
-                  ["balconies", "Balconies"],
-                ].map(([key, label]) => (
+                {(
+                  [
+                    ["plotArea", "Plot area"],
+                    ["carpetArea", "Carpet area"],
+                    ["builtUpArea", "Built-up area"],
+                    ["balconies", "Balconies"],
+                  ] as const
+                ).map(([key, label]) => (
                   <label key={key} className="block">
                     <span className={labelClass}>{label}</span>
                     <input
                       className={`mt-2 ${inputClass}`}
                       type="number"
                       min={0}
-                      value={
-                        draft.propertyDetails?.[
-                          key as keyof NonNullable<Property["propertyDetails"]>
-                        ] ?? ""
-                      }
+                      value={draft.propertyDetails?.[key] ?? ""}
                       onChange={(event) =>
                         setDraft({
                           ...draft,
@@ -726,26 +650,24 @@ function AdminProperties() {
                   </label>
                 ))}
 
-                {[
-                  ["floor", "Floor"],
-                  ["totalFloors", "Total floors"],
-                  ["parking", "Parking"],
-                  ["availability", "Availability"],
-                  ["facing", "Facing"],
-                  ["roadWidth", "Road width"],
-                  ["leaseType", "Lease / ownership type"],
-                  ["waterSupply", "Water supply"],
-                  ["powerBackup", "Power backup"],
-                ].map(([key, label]) => (
+                {(
+                  [
+                    ["floor", "Floor"],
+                    ["totalFloors", "Total floors"],
+                    ["parking", "Parking"],
+                    ["availability", "Availability"],
+                    ["facing", "Facing"],
+                    ["roadWidth", "Road width"],
+                    ["leaseType", "Lease / ownership type"],
+                    ["waterSupply", "Water supply"],
+                    ["powerBackup", "Power backup"],
+                  ] as const
+                ).map(([key, label]) => (
                   <label key={key} className="block">
                     <span className={labelClass}>{label}</span>
                     <input
                       className={`mt-2 ${inputClass}`}
-                      value={String(
-                        draft.propertyDetails?.[
-                          key as keyof NonNullable<Property["propertyDetails"]>
-                        ] ?? "",
-                      )}
+                      value={String(draft.propertyDetails?.[key] ?? "")}
                       onChange={(event) =>
                         setDraft({
                           ...draft,
@@ -759,23 +681,21 @@ function AdminProperties() {
                   </label>
                 ))}
 
-                {[
-                  ["priceNegotiable", "Price negotiable"],
-                  ["gatedCommunity", "Gated community"],
-                  ["gasPipeline", "Gas pipeline"],
-                ].map(([key, label]) => (
+                {(
+                  [
+                    ["priceNegotiable", "Price negotiable"],
+                    ["gatedCommunity", "Gated community"],
+                    ["gasPipeline", "Gas pipeline"],
+                  ] as const
+                ).map(([key, label]) => (
                   <label
                     key={key}
-                    className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-background p-4 text-sm text-navy"
+                    className="flex items-center justify-between gap-3 rounded-lg border border-border bg-background p-4 text-sm text-navy"
                   >
                     <span className="font-semibold">{label}</span>
                     <input
                       type="checkbox"
-                      checked={Boolean(
-                        draft.propertyDetails?.[
-                          key as keyof NonNullable<Property["propertyDetails"]>
-                        ],
-                      )}
+                      checked={Boolean(draft.propertyDetails?.[key])}
                       onChange={(event) =>
                         setDraft({
                           ...draft,
@@ -814,7 +734,9 @@ function AdminProperties() {
                         ...draft,
                         rera: {
                           ...draft.rera,
-                          status: event.target.value as NonNullable<Property["rera"]>["status"],
+                          status: event.target.value as NonNullable<
+                            NonNullable<Property["rera"]>["status"]
+                          >,
                         },
                       })
                     }
@@ -887,6 +809,7 @@ function AdminProperties() {
                 <textarea
                   className={`mt-2 min-h-28 ${inputClass}`}
                   placeholder="Mention road width, nearest temple or market, ownership clarity, parking and buyer or renter fit."
+                  maxLength={2500}
                   value={draft.description ?? ""}
                   onChange={(event) => setDraft({ ...draft, description: event.target.value })}
                 />
@@ -894,8 +817,21 @@ function AdminProperties() {
             </div>
 
             <aside className="space-y-4">
-              <section className="rounded-3xl border border-border bg-background p-4">
-                <h3 className="text-sm font-extrabold text-navy">Owner / landlord details</h3>
+              <PropertyPhotoEditor
+                key={draft.id}
+                images={draft.images}
+                onChange={(images) =>
+                  setDraft((current) =>
+                    current?.id === draft.id ? { ...current, images } : current,
+                  )
+                }
+                prepareFiles={(files) => uploadPropertyImages(files, "admin")}
+                onPreparingChange={setUploading}
+                disabled={saving}
+              />
+
+              <section className="rounded-xl border border-border bg-background p-4">
+                <h3 className="text-sm font-semibold text-navy">Owner / landlord details</h3>
                 <div className="mt-4 grid gap-3">
                   <label className="block">
                     <span className={labelClass}>Owner / landlord name</span>
@@ -922,8 +858,8 @@ function AdminProperties() {
                           ownerDetails: {
                             ...draft.ownerDetails,
                             ownerRole: event.target.value as NonNullable<
-                              Property["ownerDetails"]
-                            >["ownerRole"],
+                              NonNullable<Property["ownerDetails"]>["ownerRole"]
+                            >,
                           },
                         })
                       }
@@ -1032,157 +968,7 @@ function AdminProperties() {
                 </div>
               </section>
 
-              <label className="pv-smooth-state flex min-h-40 cursor-pointer flex-col items-center justify-center rounded-3xl border border-dashed border-navy/25 bg-ice/70 p-5 text-center hover:border-navy/50 hover:bg-ice">
-                <Upload className="h-8 w-8 text-navy" />
-                <span className="mt-3 text-sm font-bold text-navy">
-                  {uploading ? "Optimizing images..." : "Upload property images"}
-                </span>
-                <span className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                  Select multiple photos. They are resized and converted to WebP before saving.
-                </span>
-                <input
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  onChange={onImageUpload}
-                  disabled={uploading}
-                  className="sr-only"
-                />
-              </label>
-
-              <div className="space-y-3">
-                <div className="flex items-center justify-between gap-3">
-                  <p className={labelClass}>Image list</p>
-                  <span className="text-xs text-muted-foreground">{draft.images.length} saved</span>
-                </div>
-
-                {draft.images.length ? (
-                  <div className="grid gap-3">
-                    {draft.images.map((image, index) => {
-                      const normalized = normalizePropertyImage(
-                        image,
-                        index === 0 ? "Main" : "Bedroom",
-                      );
-                      return (
-                        <div
-                          key={`${image}-${index}`}
-                          className="group overflow-hidden rounded-2xl border border-border bg-background shadow-[var(--shadow-soft)]"
-                        >
-                          <SmartImage
-                            src={normalized.src}
-                            alt={`Listing image ${index + 1}`}
-                            aspect="aspect-[16/10]"
-                            className="pv-smooth-state group-hover:scale-[1.03]"
-                          />
-                          <div className="grid gap-2 p-2">
-                            <label>
-                              <span className="sr-only">Image category</span>
-                              <select
-                                value={normalized.label}
-                                onChange={(event) => {
-                                  const label = event.target.value as PropertyImageLabel;
-                                  setDraft({
-                                    ...draft,
-                                    images: setArrayItem(draft.images, index, {
-                                      ...normalized,
-                                      label,
-                                    }),
-                                  });
-                                }}
-                                className="w-full rounded-full border border-border bg-card px-3 py-2 text-xs font-semibold text-navy outline-none focus:border-navy"
-                              >
-                                {PROPERTY_IMAGE_LABELS.map((label) => (
-                                  <option key={label} value={label}>
-                                    {label === "Main" ? "Main showcase image" : label}
-                                  </option>
-                                ))}
-                              </select>
-                            </label>
-                            <div className="flex items-center gap-2">
-                              <input
-                                value={
-                                  normalized.src.startsWith("data:")
-                                    ? "Optimized WebP upload"
-                                    : normalized.src
-                                }
-                                onChange={(event) =>
-                                  setDraft({
-                                    ...draft,
-                                    images: setArrayItem(draft.images, index, {
-                                      ...normalized,
-                                      src: event.target.value,
-                                    }),
-                                  })
-                                }
-                                className="min-w-0 flex-1 rounded-full border border-border px-3 py-2 text-xs text-navy outline-none focus:border-navy"
-                                readOnly={normalized.src.startsWith("data:")}
-                              />
-                              <button
-                                type="button"
-                                aria-label="Move image up"
-                                onClick={() =>
-                                  setDraft({ ...draft, images: moveItem(draft.images, index, -1) })
-                                }
-                                className="grid h-9 w-9 place-items-center rounded-full border border-border text-navy hover:bg-ice"
-                              >
-                                <ArrowUp className="h-3.5 w-3.5" />
-                              </button>
-                              <button
-                                type="button"
-                                aria-label="Move image down"
-                                onClick={() =>
-                                  setDraft({ ...draft, images: moveItem(draft.images, index, 1) })
-                                }
-                                className="grid h-9 w-9 place-items-center rounded-full border border-border text-navy hover:bg-ice"
-                              >
-                                <ArrowDown className="h-3.5 w-3.5" />
-                              </button>
-                              <button
-                                type="button"
-                                aria-label="Remove image"
-                                onClick={() =>
-                                  setDraft({
-                                    ...draft,
-                                    images: draft.images.filter(
-                                      (_, imageIndex) => imageIndex !== index,
-                                    ),
-                                  })
-                                }
-                                className="grid h-9 w-9 place-items-center rounded-full border border-border text-destructive hover:bg-ice"
-                              >
-                                <X className="h-3.5 w-3.5" />
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="rounded-2xl border border-border bg-background p-5 text-center text-sm text-muted-foreground">
-                    <ImagePlus className="mx-auto h-6 w-6 text-navy-soft" />
-                    <p className="mt-2">Add at least one image for the public listing gallery.</p>
-                  </div>
-                )}
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    setDraft({
-                      ...draft,
-                      images: [
-                        ...draft.images,
-                        { src: "", label: draft.images.length === 0 ? "Main" : "Bedroom" },
-                      ],
-                    })
-                  }
-                  className="pv-smooth-state flex w-full items-center justify-center gap-2 rounded-full border border-border px-4 py-2.5 text-xs font-semibold text-navy hover:border-navy/40"
-                >
-                  <Plus className="h-3.5 w-3.5" /> Add image URL
-                </button>
-              </div>
-
-              <label className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-background p-4 text-sm text-navy">
+              <label className="flex items-center justify-between gap-3 rounded-lg border border-border bg-background p-4 text-sm text-navy">
                 <span className="font-semibold">Feature on homepage</span>
                 <input
                   type="checkbox"
@@ -1193,7 +979,7 @@ function AdminProperties() {
               </label>
 
               {draft.listingSource === "User" ? (
-                <div className="rounded-2xl border border-gold/25 bg-gold/10 p-4 text-sm text-navy">
+                <div className="rounded-lg border border-gold/25 bg-gold/10 p-4 text-sm text-navy">
                   <p className="font-bold">Submitted by user</p>
                   <p className="mt-1 text-xs text-muted-foreground">
                     {draft.ownerName || "Owner"} | {draft.ownerEmail || "No email"} |{" "}
@@ -1213,13 +999,14 @@ function AdminProperties() {
           <div className="flex flex-wrap gap-3 border-t border-border bg-smoke/70 p-5">
             <button
               type="submit"
-              disabled={uploading}
+              disabled={uploading || saving}
               className="pv-smooth-state rounded-full bg-navy px-6 py-2.5 text-sm font-semibold text-background hover:scale-[1.02] disabled:opacity-60"
             >
-              Save listing
+              {saving ? "Saving listing…" : "Save listing"}
             </button>
             <button
               type="button"
+              disabled={saving || uploading}
               onClick={() => setDraft(null)}
               className="rounded-full border border-border px-6 py-2.5 text-sm font-semibold text-navy"
             >
@@ -1229,7 +1016,7 @@ function AdminProperties() {
         </form>
       ) : null}
 
-      <div className="mt-6 overflow-hidden rounded-3xl border border-border bg-card shadow-[var(--shadow-soft)]">
+      <div className="mt-6 overflow-hidden rounded-xl border border-border bg-card shadow-[var(--shadow-soft)]">
         <div className="grid gap-3 border-b border-border p-4 lg:grid-cols-[minmax(0,1fr)_auto]">
           <div className="relative max-w-xl">
             <Search className="absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -1270,11 +1057,11 @@ function AdminProperties() {
                 src={getMainImage(property)}
                 alt={property.title || "Property"}
                 aspect="aspect-[4/3]"
-                wrapperClassName="rounded-2xl"
+                wrapperClassName="rounded-lg"
               />
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="truncate text-base font-extrabold text-navy">
+                  <h3 className="truncate text-base font-semibold text-navy">
                     {property.title || "Untitled"}
                   </h3>
                   <span className="rounded-full bg-ice px-2.5 py-1 text-[11px] font-bold text-navy">
@@ -1345,7 +1132,13 @@ function AdminProperties() {
                   <button
                     type="button"
                     aria-label={`Edit ${property.title}`}
-                    onClick={() => setDraft(normalizeAdminProperty(property))}
+                    disabled={saving || uploading}
+                    onClick={() =>
+                      setDraft({
+                        ...property,
+                        specs: { ...property.specs, area: String(property.specs.area || "") },
+                      })
+                    }
                     className="pv-smooth-state rounded-full border border-border p-2 text-navy hover:bg-ice"
                   >
                     <Pencil className="h-3.5 w-3.5" />

@@ -30,6 +30,8 @@ export const verificationLevels = [
   "RERA_VERIFIED",
 ];
 
+export const propertyAreaUnits = ["sq.ft", "sq.m", "sq.yd", "acre", "bigha"];
+
 export const verificationStatuses = [
   "Draft",
   "Pending Review",

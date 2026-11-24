@@ -42,6 +42,7 @@ function ForgotPasswordPage() {
     setError(undefined);
     setToken(result.token);
     toast.success(result.token ? "Reset code generated." : "Reset code sent by email.");
+    if (!result.token) void navigate({ to: "/reset-password", search: { token: "" } });
   }
 
   return (
@@ -65,7 +66,7 @@ function ForgotPasswordPage() {
             </p>
             <p className="mt-3 text-2xl font-extrabold tracking-[0.3em] text-navy">{token}</p>
             <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
-              In a live deployment this code is emailed to you. For this demo it is shown here.
+              Use this code to set your new password. It expires in 20 minutes.
             </p>
           </div>
           <button

@@ -1,16 +1,10 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import {
-  BadgeIndianRupee,
-  Check,
-  FileCheck2,
-  Home,
-  ImagePlus,
-  MapPin,
-  ShieldCheck,
-} from "lucide-react";
+import { BadgeIndianRupee, Check, FileCheck2, Home, MapPin, ShieldCheck } from "lucide-react";
 import { useMemo, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 
+import { BrajLocationFields } from "@/components/BrajLocationFields";
+import { PropertyPhotoEditor } from "@/components/PropertyPhotoEditor";
 import { useStore } from "@/lib/mock-store";
 import { cn } from "@/lib/utils";
 import type { Property, PropertyCategory, PropertyIntent } from "@/types/property";
@@ -22,7 +16,7 @@ export const Route = createFileRoute("/list-property")({
       {
         name: "description",
         content:
-          "Submit a verified flat, house, plot, shop or farm house listing to Braj Setu Properties for admin review.",
+          "Submit a flat, house, plot, shop or farm house to Braj Setu Properties for review.",
       },
       { property: "og:title", content: "List Your Property | Braj Setu Properties" },
       {
@@ -37,40 +31,15 @@ export const Route = createFileRoute("/list-property")({
 
 const categories: PropertyCategory[] = ["Flat", "House", "Plot", "Shop", "Farm House"];
 const intents: PropertyIntent[] = ["Sale", "Rent"];
-const cities = [
-  "Vrindavan",
-  "Mathura",
-  "Govardhan",
-  "Barsana",
-  "Gokul",
-  "Nandgaon",
-  "Baldev",
-  "Raya",
-  "Kosi Kalan",
-];
-const localities = [
-  "Chhatikara",
-  "Raman Reti",
-  "Sunrakh Road",
-  "Radha Kund Road",
-  "Holi Gate",
-  "Yamuna Kinara",
-  "Prem Mandir Road",
-  "Parikrama Marg",
-  "NH-19",
-  "Banke Bihari Mandir",
-  "ISKCON Road",
-  "Barsana Road",
-];
 const furnishingOptions = ["Unfurnished", "Semi-furnished", "Furnished", "Bare shell"];
-const areaUnits: NonNullable<Property["propertyDetails"]>["areaUnit"][] = [
+const areaUnits: NonNullable<NonNullable<Property["propertyDetails"]>["areaUnit"]>[] = [
   "sq.ft",
   "sq.m",
   "sq.yd",
   "acre",
   "bigha",
 ];
-const ownerRoles: NonNullable<Property["ownerDetails"]>["ownerRole"][] = [
+const ownerRoles: NonNullable<NonNullable<Property["ownerDetails"]>["ownerRole"]>[] = [
   "Owner",
   "Landlord",
   "Developer",
@@ -92,12 +61,16 @@ const amenityOptions = [
 ];
 
 const fieldClass =
-  "mt-2 w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm text-navy outline-none transition-colors placeholder:text-muted-foreground focus:border-navy";
+  "mt-2 w-full rounded-lg border border-border bg-background px-4 py-3 text-sm text-navy outline-none transition-colors placeholder:text-muted-foreground focus:border-navy";
+const requiredSelectClass = `${fieldClass} invalid:text-muted-foreground [&>option]:text-navy`;
 const labelClass = "text-xs font-semibold uppercase tracking-wide text-navy-soft";
+const requiredLabelClass = `${labelClass} after:ml-1 after:text-destructive after:content-['*']`;
 
 type Draft = Omit<
   Property,
   | "id"
+  | "category"
+  | "specs"
   | "featured"
   | "status"
   | "listingSource"
@@ -105,10 +78,12 @@ type Draft = Omit<
   | "submittedBy"
   | "termsAcceptedAt"
 > & {
+  category: PropertyCategory | "";
+  specs: Omit<Property["specs"], "area"> & { area: string };
   ownerName: string;
   ownerEmail: string;
   ownerPhone: string;
-  ownerRole: NonNullable<Property["ownerDetails"]>["ownerRole"];
+  ownerRole: NonNullable<NonNullable<Property["ownerDetails"]>["ownerRole"]>;
   organizationName: string;
   ownerAddress: string;
   authorityType: string;
@@ -121,11 +96,11 @@ type Draft = Omit<
 
 const initialDraft: Draft = {
   title: "",
-  category: "Flat",
+  category: "",
   intent: "Sale",
   price: 0,
-  location: { city: "Vrindavan", locality: "Chhatikara" },
-  specs: { area: 0, bedrooms: 0, bathrooms: 0, furnishing: "Semi-furnished" },
+  location: { city: "", locality: "" },
+  specs: { area: "", bedrooms: 0, bathrooms: 0, furnishing: "Semi-furnished" },
   images: [],
   amenities: ["Parking", "Temple nearby"],
   description: "",
@@ -137,7 +112,6 @@ const initialDraft: Draft = {
   ownerAddress: "",
   authorityType: "",
   propertyDetails: {
-    areaUnit: "sq.ft",
     availability: "Available now",
     parking: "",
     leaseType: "",
@@ -152,7 +126,7 @@ const initialDraft: Draft = {
 };
 
 function ListPropertyPage() {
-  const { currentUser, submitProperty } = useStore();
+  const { currentUser, submitProperty, uploadPropertyImages } = useStore();
   const navigate = useNavigate();
   const [draft, setDraft] = useState<Draft>(() => ({
     ...initialDraft,
@@ -160,35 +134,21 @@ function ListPropertyPage() {
     ownerEmail: currentUser?.email ?? "",
     ownerPhone: currentUser?.phone ?? "",
   }));
-  const [imageUrl, setImageUrl] = useState("");
+  const [preparingPhotos, setPreparingPhotos] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const errors = useMemo(() => validateDraft(draft), [draft]);
-  const canSubmit = currentUser && draft.termsAccepted && errors.length === 0 && !submitting;
+  const canSubmit =
+    currentUser && draft.termsAccepted && errors.length === 0 && !submitting && !preparingPhotos;
+  const areaUnit = draft.propertyDetails.areaUnit;
 
   function set<K extends keyof Draft>(key: K, value: Draft[K]) {
     setDraft((current) => ({ ...current, [key]: value }));
   }
 
-  function addImage() {
-    const trimmed = imageUrl.trim();
-    if (!trimmed) return;
-    try {
-      new URL(trimmed);
-    } catch {
-      toast.error("Enter a valid image URL.");
-      return;
-    }
-    if (draft.images.length >= 8) {
-      toast.error("You can add up to 8 image URLs.");
-      return;
-    }
-    setDraft((current) => ({ ...current, images: [...current.images, trimmed] }));
-    setImageUrl("");
-  }
-
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
+    if (submitting || preparingPhotos) return;
     if (!currentUser) {
       toast.error("Please sign in before listing a property.");
       return;
@@ -197,14 +157,19 @@ function ListPropertyPage() {
       toast.error("Accept the listing terms before submitting.");
       return;
     }
-    if (errors.length) {
-      toast.error(errors[0]);
+    const { category } = draft;
+    if (errors.length || !category) {
+      toast.error(errors[0] ?? "Select a property type.");
       return;
     }
 
     setSubmitting(true);
     try {
-      await submitProperty(draft);
+      await submitProperty({
+        ...draft,
+        category,
+        specs: { ...draft.specs, area: Number(draft.specs.area) },
+      });
       toast.success("Property submitted for admin review.");
       navigate({ to: "/" });
     } catch (error) {
@@ -219,27 +184,27 @@ function ListPropertyPage() {
       <div className="pv-container grid gap-8 pt-8 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <section>
           <p className="text-sm font-bold text-gold-deep">Owner listing desk</p>
-          <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-navy sm:text-4xl">
-            List your property for admin review
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-navy sm:text-4xl">
+            List your property
           </h1>
           <p className="mt-3 max-w-3xl text-sm leading-relaxed text-muted-foreground sm:text-base">
-            Submit accurate property details, owner contact information and optional image URLs.
-            Braj Setu Properties reviews user listings before publishing them in public search.
+            Submit your property details, owner contact information and optional photos. Braj Setu
+            Properties reviews user listings before publishing them in public search.
           </p>
         </section>
 
-        <aside className="rounded-3xl border border-border bg-card p-5 shadow-[var(--shadow-soft)]">
+        <aside className="rounded-xl border border-border bg-card p-5 shadow-[var(--shadow-soft)]">
           <div className="flex items-center gap-3">
             <span className="grid h-11 w-11 place-items-center rounded-full bg-ice text-navy">
               <ShieldCheck className="h-5 w-5" />
             </span>
             <div>
-              <p className="text-sm font-extrabold text-navy">Review workflow</p>
+              <p className="text-sm font-semibold text-navy">Review workflow</p>
               <p className="text-xs text-muted-foreground">Valid listings go to admin first.</p>
             </div>
           </div>
           <div className="mt-5 grid gap-3 text-sm text-muted-foreground">
-            {["Submit verified details", "Accept listing terms", "Admin checks and publishes"].map(
+            {["Share accurate details", "Accept listing terms", "Admin checks and publishes"].map(
               (item) => (
                 <p key={item} className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-gold-deep" />
@@ -255,9 +220,9 @@ function ListPropertyPage() {
         onSubmit={onSubmit}
         className="pv-container mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]"
       >
-        <div className="space-y-6 rounded-3xl border border-border bg-card p-5 shadow-[var(--shadow-soft)]">
+        <div className="space-y-6 rounded-xl border border-border bg-card p-5 shadow-[var(--shadow-soft)]">
           {!currentUser ? (
-            <div className="rounded-2xl border border-gold/40 bg-gold/10 p-4 text-sm text-navy">
+            <div className="rounded-lg border border-gold/40 bg-gold/10 p-4 text-sm text-navy">
               Please{" "}
               <Link to="/login" className="font-bold underline decoration-gold underline-offset-4">
                 sign in
@@ -268,11 +233,11 @@ function ListPropertyPage() {
 
           <section className="grid gap-4 sm:grid-cols-2">
             <label className="block sm:col-span-2">
-              <span className={labelClass}>Listing title</span>
+              <span className={requiredLabelClass}>Listing title</span>
               <input
                 value={draft.title}
                 onChange={(event) => set("title", event.target.value)}
-                placeholder="2 BHK flat near Prem Mandir"
+                placeholder="e.g. 2 BHK flat near Prem Mandir"
                 className={fieldClass}
                 minLength={8}
                 maxLength={120}
@@ -288,50 +253,50 @@ function ListPropertyPage() {
             />
 
             <label className="block">
-              <span className={labelClass}>Property type</span>
+              <span className={requiredLabelClass}>Property type</span>
               <select
                 value={draft.category}
                 onChange={(event) => set("category", event.target.value as PropertyCategory)}
-                className={fieldClass}
+                className={requiredSelectClass}
+                required
               >
+                <option value="" disabled>
+                  Select a property type
+                </option>
                 {categories.map((category) => (
                   <option key={category}>{category}</option>
                 ))}
               </select>
             </label>
 
+            <BrajLocationFields
+              location={draft.location}
+              onChange={(location) => set("location", location)}
+              inputClassName={fieldClass}
+              labelClassName={requiredLabelClass}
+            />
+
             <label className="block">
-              <span className={labelClass}>City</span>
-              <select
-                value={draft.location.city}
+              <span className={requiredLabelClass}>Landmark</span>
+              <input
+                value={draft.propertyDetails.landmark ?? ""}
                 onChange={(event) =>
-                  set("location", { ...draft.location, city: event.target.value })
+                  set("propertyDetails", {
+                    ...draft.propertyDetails,
+                    landmark: event.target.value,
+                  })
                 }
                 className={fieldClass}
-              >
-                {cities.map((city) => (
-                  <option key={city}>{city}</option>
-                ))}
-              </select>
+                placeholder="e.g. Near Prem Mandir"
+                maxLength={160}
+                required
+              />
             </label>
 
             <label className="block">
-              <span className={labelClass}>Locality</span>
-              <select
-                value={draft.location.locality}
-                onChange={(event) =>
-                  set("location", { ...draft.location, locality: event.target.value })
-                }
-                className={fieldClass}
-              >
-                {localities.map((locality) => (
-                  <option key={locality}>{locality}</option>
-                ))}
-              </select>
-            </label>
-
-            <label className="block">
-              <span className={labelClass}>Expected price</span>
+              <span className={requiredLabelClass}>
+                {draft.intent === "Rent" ? "Monthly rent (₹)" : "Expected price (₹)"}
+              </span>
               <div className="relative">
                 <BadgeIndianRupee className="absolute top-[calc(50%+0.25rem)] left-4 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <input
@@ -339,6 +304,7 @@ function ListPropertyPage() {
                   onChange={(event) => set("price", Number(event.target.value))}
                   type="number"
                   min={1}
+                  placeholder={draft.intent === "Rent" ? "e.g. 15000" : "e.g. 4500000"}
                   className={`${fieldClass} pl-11`}
                   required
                 />
@@ -346,14 +312,41 @@ function ListPropertyPage() {
             </label>
 
             <label className="block">
-              <span className={labelClass}>Area in sq.ft</span>
-              <input
-                value={draft.specs.area || ""}
+              <span className={requiredLabelClass}>Area unit</span>
+              <select
+                value={areaUnit ?? ""}
                 onChange={(event) =>
-                  set("specs", { ...draft.specs, area: Number(event.target.value) })
+                  set("propertyDetails", {
+                    ...draft.propertyDetails,
+                    areaUnit: event.target.value as (typeof areaUnits)[number],
+                  })
                 }
+                className={requiredSelectClass}
+                required
+              >
+                <option value="" disabled>
+                  Select an area unit
+                </option>
+                {areaUnits.map((unit) => (
+                  <option key={unit} value={unit}>
+                    {unit}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="block">
+              <span className={requiredLabelClass}>
+                Property area{areaUnit ? ` (${areaUnit})` : ""}
+              </span>
+              <input
+                value={draft.specs.area}
+                onChange={(event) => set("specs", { ...draft.specs, area: event.target.value })}
                 type="number"
-                min={1}
+                min={0}
+                max={10000000}
+                step="any"
+                placeholder={areaUnit === "sq.ft" ? "e.g. 1200" : "Enter the property area"}
                 className={fieldClass}
                 required
               />
@@ -402,51 +395,8 @@ function ListPropertyPage() {
               </select>
             </label>
 
-            {[
-              ["fans", "Fans"],
-              ["lights", "Lights"],
-              ["wardrobes", "Wardrobes"],
-              ["acs", "AC units"],
-              ["beds", "Beds"],
-              ["geysers", "Geysers"],
-            ].map(([key, label]) => (
-              <label key={key} className="block">
-                <span className={labelClass}>{label}</span>
-                <input
-                  value={
-                    Number(
-                      draft.propertyDetails[
-                        key as keyof NonNullable<Property["propertyDetails"]>
-                      ] ?? "",
-                    ) || ""
-                  }
-                  onChange={(event) =>
-                    set("propertyDetails", {
-                      ...draft.propertyDetails,
-                      [key]: event.target.value === "" ? undefined : Number(event.target.value),
-                    })
-                  }
-                  type="number"
-                  min={0}
-                  max={500}
-                  className={fieldClass}
-                />
-              </label>
-            ))}
-
             <label className="block sm:col-span-2">
-              <span className={labelClass}>RERA number, if applicable</span>
-              <input
-                value={draft.reraNumber}
-                onChange={(event) => set("reraNumber", event.target.value)}
-                placeholder="Owner-provided RERA number"
-                className={fieldClass}
-                maxLength={80}
-              />
-            </label>
-
-            <label className="block sm:col-span-2">
-              <span className={labelClass}>Full property address</span>
+              <span className={requiredLabelClass}>Full property address</span>
               <textarea
                 value={draft.propertyDetails.fullAddress ?? ""}
                 onChange={(event) =>
@@ -461,121 +411,130 @@ function ListPropertyPage() {
                 required
               />
             </label>
-
-            <label className="block">
-              <span className={labelClass}>Landmark</span>
-              <input
-                value={draft.propertyDetails.landmark ?? ""}
-                onChange={(event) =>
-                  set("propertyDetails", { ...draft.propertyDetails, landmark: event.target.value })
-                }
-                className={fieldClass}
-                maxLength={160}
-              />
-            </label>
-
-            <label className="block">
-              <span className={labelClass}>Area unit</span>
-              <select
-                value={draft.propertyDetails.areaUnit ?? "sq.ft"}
-                onChange={(event) =>
-                  set("propertyDetails", {
-                    ...draft.propertyDetails,
-                    areaUnit: event.target.value as NonNullable<
-                      Property["propertyDetails"]
-                    >["areaUnit"],
-                  })
-                }
-                className={fieldClass}
-              >
-                {areaUnits.map((unit) => (
-                  <option key={unit} value={unit}>
-                    {unit}
-                  </option>
+            <details className="border-t border-border pt-4 sm:col-span-2">
+              <summary className="pv-tap py-3 text-sm font-semibold text-navy">
+                Additional property details (optional)
+              </summary>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                {(
+                  [
+                    ["fans", "Fans"],
+                    ["lights", "Lights"],
+                    ["wardrobes", "Wardrobes"],
+                    ["acs", "AC units"],
+                    ["beds", "Beds"],
+                    ["geysers", "Geysers"],
+                  ] as const
+                ).map(([key, label]) => (
+                  <label key={key} className="block">
+                    <span className={labelClass}>{label}</span>
+                    <input
+                      value={Number(draft.propertyDetails[key] ?? "") || ""}
+                      onChange={(event) =>
+                        set("propertyDetails", {
+                          ...draft.propertyDetails,
+                          [key]: event.target.value === "" ? undefined : Number(event.target.value),
+                        })
+                      }
+                      type="number"
+                      min={0}
+                      max={500}
+                      className={fieldClass}
+                    />
+                  </label>
                 ))}
-              </select>
-            </label>
 
-            {[
-              ["plotArea", "Plot area"],
-              ["carpetArea", "Carpet area"],
-              ["builtUpArea", "Built-up area"],
-              ["balconies", "Balconies"],
-            ].map(([key, label]) => (
-              <label key={key} className="block">
-                <span className={labelClass}>{label}</span>
-                <input
-                  value={
-                    Number(
-                      draft.propertyDetails[
-                        key as keyof NonNullable<Property["propertyDetails"]>
-                      ] ?? "",
-                    ) || ""
-                  }
-                  onChange={(event) =>
-                    set("propertyDetails", {
-                      ...draft.propertyDetails,
-                      [key]: Number(event.target.value),
-                    })
-                  }
-                  type="number"
-                  min={0}
-                  className={fieldClass}
-                />
-              </label>
-            ))}
+                <label className="block sm:col-span-2">
+                  <span className={labelClass}>RERA number, if applicable</span>
+                  <input
+                    value={draft.reraNumber}
+                    onChange={(event) => set("reraNumber", event.target.value)}
+                    placeholder="Owner-provided RERA number"
+                    className={fieldClass}
+                    maxLength={80}
+                  />
+                </label>
 
-            {[
-              ["floor", "Floor"],
-              ["totalFloors", "Total floors"],
-              ["parking", "Parking"],
-              ["availability", "Availability"],
-              ["facing", "Facing"],
-              ["roadWidth", "Road width"],
-              ["leaseType", "Lease / ownership type"],
-              ["waterSupply", "Water supply"],
-              ["powerBackup", "Power backup"],
-            ].map(([key, label]) => (
-              <label key={key} className="block">
-                <span className={labelClass}>{label}</span>
-                <input
-                  value={String(
-                    draft.propertyDetails[key as keyof NonNullable<Property["propertyDetails"]>] ??
-                      "",
-                  )}
-                  onChange={(event) =>
-                    set("propertyDetails", {
-                      ...draft.propertyDetails,
-                      [key]: event.target.value,
-                    })
-                  }
-                  className={fieldClass}
-                />
-              </label>
-            ))}
+                {(
+                  [
+                    ["plotArea", "Plot area"],
+                    ["carpetArea", "Carpet area"],
+                    ["builtUpArea", "Built-up area"],
+                    ["balconies", "Balconies"],
+                  ] as const
+                ).map(([key, label]) => (
+                  <label key={key} className="block">
+                    <span className={labelClass}>{label}</span>
+                    <input
+                      value={Number(draft.propertyDetails[key] ?? "") || ""}
+                      onChange={(event) =>
+                        set("propertyDetails", {
+                          ...draft.propertyDetails,
+                          [key]: Number(event.target.value),
+                        })
+                      }
+                      type="number"
+                      min={0}
+                      className={fieldClass}
+                    />
+                  </label>
+                ))}
 
-            {[
-              ["priceNegotiable", "Price negotiable"],
-              ["gatedCommunity", "Gated community"],
-              ["gasPipeline", "Gas pipeline"],
-            ].map(([key, label]) => (
-              <label key={key} className="flex items-start gap-3 text-sm font-semibold text-navy">
-                <input
-                  type="checkbox"
-                  checked={Boolean(
-                    draft.propertyDetails[key as keyof NonNullable<Property["propertyDetails"]>],
-                  )}
-                  onChange={(event) =>
-                    set("propertyDetails", {
-                      ...draft.propertyDetails,
-                      [key]: event.target.checked,
-                    })
-                  }
-                  className="mt-1 h-5 w-5 accent-[var(--navy)]"
-                />
-                <span>{label}</span>
-              </label>
-            ))}
+                {(
+                  [
+                    ["floor", "Floor"],
+                    ["totalFloors", "Total floors"],
+                    ["parking", "Parking"],
+                    ["availability", "Availability"],
+                    ["facing", "Facing"],
+                    ["roadWidth", "Road width"],
+                    ["leaseType", "Lease / ownership type"],
+                    ["waterSupply", "Water supply"],
+                    ["powerBackup", "Power backup"],
+                  ] as const
+                ).map(([key, label]) => (
+                  <label key={key} className="block">
+                    <span className={labelClass}>{label}</span>
+                    <input
+                      value={String(draft.propertyDetails[key] ?? "")}
+                      onChange={(event) =>
+                        set("propertyDetails", {
+                          ...draft.propertyDetails,
+                          [key]: event.target.value,
+                        })
+                      }
+                      className={fieldClass}
+                    />
+                  </label>
+                ))}
+
+                {(
+                  [
+                    ["priceNegotiable", "Price negotiable"],
+                    ["gatedCommunity", "Gated community"],
+                    ["gasPipeline", "Gas pipeline"],
+                  ] as const
+                ).map(([key, label]) => (
+                  <label
+                    key={key}
+                    className="flex items-start gap-3 text-sm font-semibold text-navy"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={Boolean(draft.propertyDetails[key])}
+                      onChange={(event) =>
+                        set("propertyDetails", {
+                          ...draft.propertyDetails,
+                          [key]: event.target.checked,
+                        })
+                      }
+                      className="mt-1 h-5 w-5 accent-[var(--navy)]"
+                    />
+                    <span>{label}</span>
+                  </label>
+                ))}
+              </div>
+            </details>
           </section>
 
           <section>
@@ -596,7 +555,7 @@ function ListPropertyPage() {
                       )
                     }
                     className={cn(
-                      "pv-smooth-state inline-flex items-center gap-1.5 rounded-full border px-3 py-2 text-xs font-semibold",
+                      "pv-smooth-state pv-tap inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold",
                       active
                         ? "border-navy bg-navy text-background"
                         : "border-border bg-background text-navy-soft hover:border-navy/40",
@@ -653,7 +612,7 @@ function ListPropertyPage() {
           </section>
 
           <label className="block">
-            <span className={labelClass}>Property description</span>
+            <span className={requiredLabelClass}>Property description</span>
             <textarea
               value={draft.description}
               onChange={(event) => set("description", event.target.value)}
@@ -667,36 +626,49 @@ function ListPropertyPage() {
         </div>
 
         <aside className="space-y-6">
-          <section className="rounded-3xl border border-border bg-card p-5 shadow-[var(--shadow-soft)]">
+          <PropertyPhotoEditor
+            images={draft.images}
+            onChange={(images) => set("images", images)}
+            prepareFiles={(files) => uploadPropertyImages(files, "owner")}
+            onPreparingChange={setPreparingPhotos}
+            disabled={submitting}
+            maxPhotos={8}
+          />
+
+          <section className="rounded-xl border border-border bg-card p-5 shadow-[var(--shadow-soft)]">
             <div className="flex items-center gap-2">
               <Home className="h-4 w-4 text-gold-deep" />
-              <h2 className="text-base font-extrabold text-navy">Owner details</h2>
+              <h2 className="text-base font-semibold text-navy">Owner details</h2>
             </div>
             <div className="mt-4 grid gap-4">
               <label className="block">
-                <span className={labelClass}>Owner name</span>
+                <span className={requiredLabelClass}>Owner name</span>
                 <input
                   value={draft.ownerName}
                   onChange={(event) => set("ownerName", event.target.value)}
+                  placeholder="e.g. Priya Sharma"
                   className={fieldClass}
                   required
                 />
               </label>
               <label className="block">
-                <span className={labelClass}>Owner email</span>
+                <span className={requiredLabelClass}>Owner email</span>
                 <input
                   value={draft.ownerEmail}
                   onChange={(event) => set("ownerEmail", event.target.value)}
                   type="email"
+                  placeholder="e.g. owner@example.com"
                   className={fieldClass}
                   required
                 />
               </label>
               <label className="block">
-                <span className={labelClass}>Owner phone</span>
+                <span className={requiredLabelClass}>Owner phone</span>
                 <input
                   value={draft.ownerPhone}
                   onChange={(event) => set("ownerPhone", event.target.value)}
+                  type="tel"
+                  placeholder="e.g. +91 98765 43210"
                   className={fieldClass}
                   minLength={8}
                   required
@@ -709,7 +681,9 @@ function ListPropertyPage() {
                   onChange={(event) =>
                     set(
                       "ownerRole",
-                      event.target.value as NonNullable<Property["ownerDetails"]>["ownerRole"],
+                      event.target.value as NonNullable<
+                        NonNullable<Property["ownerDetails"]>["ownerRole"]
+                      >,
                     )
                   }
                   className={fieldClass}
@@ -731,7 +705,7 @@ function ListPropertyPage() {
                 />
               </label>
               <label className="block">
-                <span className={labelClass}>Authority to list</span>
+                <span className={requiredLabelClass}>Authority to list</span>
                 <input
                   value={draft.authorityType}
                   onChange={(event) => set("authorityType", event.target.value)}
@@ -753,52 +727,7 @@ function ListPropertyPage() {
             </div>
           </section>
 
-          <section className="rounded-3xl border border-border bg-card p-5 shadow-[var(--shadow-soft)]">
-            <div className="flex items-center gap-2">
-              <ImagePlus className="h-4 w-4 text-gold-deep" />
-              <h2 className="text-base font-extrabold text-navy">Image URLs</h2>
-            </div>
-            <div className="mt-4 flex gap-2">
-              <input
-                value={imageUrl}
-                onChange={(event) => setImageUrl(event.target.value)}
-                placeholder="https://..."
-                className="min-w-0 flex-1 rounded-full border border-border px-4 py-2.5 text-sm outline-none focus:border-navy"
-              />
-              <button
-                type="button"
-                onClick={addImage}
-                className="rounded-full bg-navy px-4 text-sm font-bold text-background"
-              >
-                Add
-              </button>
-            </div>
-            <div className="mt-3 grid gap-2">
-              {draft.images.map((image, index) => (
-                <button
-                  key={`${image}-${index}`}
-                  type="button"
-                  onClick={() =>
-                    set(
-                      "images",
-                      draft.images.filter((_, imageIndex) => imageIndex !== index),
-                    )
-                  }
-                  className="truncate rounded-full border border-border px-3 py-2 text-left text-xs text-muted-foreground hover:border-destructive hover:text-destructive"
-                >
-                  {String(image)}
-                </button>
-              ))}
-              {!draft.images.length ? (
-                <p className="text-xs leading-relaxed text-muted-foreground">
-                  Images are optional at submission. Admin can add verified photos before
-                  publishing.
-                </p>
-              ) : null}
-            </div>
-          </section>
-
-          <section className="rounded-3xl border border-border bg-card p-5 shadow-[var(--shadow-soft)]">
+          <section className="rounded-xl border border-border bg-card p-5 shadow-[var(--shadow-soft)]">
             <label className="flex items-start gap-3 text-sm leading-relaxed text-navy">
               <input
                 type="checkbox"
@@ -833,22 +762,22 @@ function ListPropertyPage() {
             </label>
 
             {errors.length ? (
-              <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-xs font-semibold text-destructive">
+              <div className="mt-4 rounded-lg bg-destructive/10 p-3 text-xs font-semibold text-destructive">
                 {errors[0]}
               </div>
             ) : (
-              <div className="mt-4 flex items-center gap-2 rounded-2xl bg-ice p-3 text-xs font-semibold text-navy">
+              <div className="mt-4 flex items-center gap-2 rounded-lg bg-ice p-3 text-xs font-semibold text-navy">
                 <FileCheck2 className="h-4 w-4" />
                 Ready for review after terms are accepted.
               </div>
             )}
 
-            <button
-              type="submit"
-              disabled={!canSubmit}
-              className="pv-smooth-state mt-4 w-full rounded-full bg-navy px-6 py-3 text-sm font-bold text-background shadow-[var(--shadow-soft)] hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {submitting ? "Submitting..." : "Submit property"}
+            <button type="submit" disabled={!canSubmit} className="pv-button-primary mt-4 w-full">
+              {submitting
+                ? "Submitting…"
+                : preparingPhotos
+                  ? "Preparing photos…"
+                  : "Submit property"}
             </button>
           </section>
         </aside>
@@ -871,14 +800,15 @@ function ChoiceGroup<T extends string>({
   return (
     <div>
       <span className={labelClass}>{label}</span>
-      <div className="mt-2 grid grid-cols-2 gap-2 rounded-2xl bg-ice p-1.5">
+      <div className="mt-2 grid grid-cols-2 gap-2 rounded-lg bg-ice p-1.5">
         {options.map((option) => (
           <button
             key={option}
             type="button"
             onClick={() => onChange(option)}
+            aria-pressed={value === option}
             className={cn(
-              "pv-smooth-state rounded-full px-3 py-2.5 text-sm font-bold",
+              "pv-smooth-state pv-tap rounded-lg px-3 py-2.5 text-sm font-semibold",
               value === option
                 ? "bg-navy text-background shadow-[var(--shadow-soft)]"
                 : "text-navy-soft",
@@ -895,13 +825,17 @@ function ChoiceGroup<T extends string>({
 function validateDraft(draft: Draft) {
   const errors: string[] = [];
   if (draft.title.trim().length < 8) errors.push("Use a clearer listing title.");
-  if (!categories.includes(draft.category)) errors.push("Select a valid property type.");
+  if (!draft.category || !categories.includes(draft.category))
+    errors.push("Select a valid property type.");
   if (!intents.includes(draft.intent)) errors.push("Select sale or rent.");
-  if (!cities.includes(draft.location.city)) errors.push("Select a valid city.");
-  if (!localities.includes(draft.location.locality)) errors.push("Select a valid locality.");
+  if (draft.location.city.trim().length < 2) errors.push("Enter a main city or town.");
+  if (draft.location.locality.trim().length < 2) errors.push("Enter a locality or village.");
+  if (!draft.propertyDetails.landmark?.trim()) errors.push("Enter a nearby landmark.");
   if (!Number.isFinite(draft.price) || draft.price < 1) errors.push("Enter a valid price.");
-  if (!Number.isFinite(draft.specs.area) || draft.specs.area < 1)
-    errors.push("Enter a valid area.");
+  if (!draft.propertyDetails.areaUnit || !areaUnits.includes(draft.propertyDetails.areaUnit))
+    errors.push("Select an area unit.");
+  const area = Number(draft.specs.area);
+  if (!Number.isFinite(area) || area <= 0 || area > 10000000) errors.push("Enter a valid area.");
   if ((draft.propertyDetails.fullAddress ?? "").trim().length < 8)
     errors.push("Enter the full property address.");
   if ((draft.description ?? "").trim().length < 40)
@@ -912,16 +846,5 @@ function validateDraft(draft: Draft) {
   if (draft.ownerPhone.trim().length < 8) errors.push("Enter a valid owner phone number.");
   if (draft.authorityType.trim().length < 2)
     errors.push("Enter your authority to list this property.");
-  if (draft.images.some((image) => !isUrl(String(image))))
-    errors.push("Every image must be a valid URL.");
   return errors;
-}
-
-function isUrl(value: string) {
-  try {
-    new URL(value);
-    return true;
-  } catch {
-    return false;
-  }
 }

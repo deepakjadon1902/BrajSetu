@@ -8,6 +8,7 @@
     "dev": "node --watch server.js",
     "start": "node server.js",
     "lint": "node --check server.js && node --check src/app.js",
+    "test": "node --test tests/*.test.js",
     "seed": "node src/seed.js"
   },
   "dependencies": {

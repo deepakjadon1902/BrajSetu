@@ -1,17 +1,21 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
-import { LayoutGrid, List, Map as MapIcon, SlidersHorizontal, X } from "lucide-react";
-import { toast } from "sonner";
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { LayoutGrid, List, SlidersHorizontal } from "lucide-react";
 import { FilterPanel } from "@/components/FilterPanel";
-import { MapPlaceholder } from "@/components/MapPlaceholder";
 import { PropertyCard } from "@/components/PropertyCard";
-import { PropertyPreview } from "@/components/PropertyPreview";
-import { EmptyState, PropertyCardSkeleton, PropertyGridSkeleton } from "@/components/States";
+import { EmptyState, PropertyGridSkeleton } from "@/components/States";
 import { SearchPill, type SearchIntent } from "@/components/SearchPill";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { filterProperties } from "@/lib/api";
 import { useStore } from "@/lib/mock-store";
 import { cn } from "@/lib/utils";
-import type { Property, PropertyFilters, PropertyIntent } from "@/types/property";
+import type { PropertyFilters, PropertyIntent } from "@/types/property";
 
 interface ListingPageProps {
   intent: PropertyIntent;
@@ -20,14 +24,8 @@ interface ListingPageProps {
   subheading: string;
   initialQuery?: string;
 }
-
-type SortKey = "recommended" | "price-asc" | "price-desc" | "area-desc";
-
-const searchIntentRoute: Record<SearchIntent, "/buy" | "/sale" | "/rent"> = {
-  Buy: "/buy",
-  Sell: "/sale",
-  Rent: "/rent",
-};
+type SortKey = "recommended" | "price-asc" | "price-desc";
+const routes = { Buy: "/buy", Rent: "/rent", Sell: "/sale" } as const;
 
 export function ListingPage({
   intent,
@@ -41,321 +39,246 @@ export function ListingPage({
     query: initialQuery || undefined,
   });
   const [sort, setSort] = useState<SortKey>("recommended");
-  const [view, setView] = useState<"list" | "grid">("list");
-  const [mobilePanel, setMobilePanel] = useState<"filters" | "map" | null>(null);
-  const [selected, setSelected] = useState<Property | null>(null);
-  const [isFiltering, setIsFiltering] = useState(false);
-  const didMount = useRef(false);
-  const didRestore = useRef(false);
-
-  const { properties, hydrated } = useStore();
+  const [view, setView] = useState<"grid" | "list">("grid");
+  const [panelOpen, setPanelOpen] = useState(false);
+  const restored = useRef(false);
+  const { properties, hydrated, publicDataError, refreshPublic } = useStore();
   const navigate = useNavigate();
-
-  const results = useMemo(() => {
-    const list = filterProperties(properties, filters);
-    const sorted = [...list];
-    if (sort === "price-asc") sorted.sort((a, b) => a.price - b.price);
-    if (sort === "price-desc") sorted.sort((a, b) => b.price - a.price);
-    if (sort === "area-desc") sorted.sort((a, b) => b.specs.area - a.specs.area);
-    return sorted;
-  }, [properties, filters, sort]);
-
-  const pins = results.slice(0, 6).map((property, i) => ({
-    id: property.id,
-    label: property.location.locality,
-    x: 18 + ((i * 13) % 64),
-    y: 24 + ((i * 21) % 58),
-  }));
-
-  const scrollKey = `listing-scroll:${intent}`;
-  const stateKey = "listing-state";
+  const storageKey = "listing-state:" + searchIntent;
 
   useEffect(() => {
-    if (didRestore.current) return;
-    didRestore.current = true;
-    const saved = window.sessionStorage.getItem(stateKey);
-    if (!saved) return;
+    if (restored.current) return;
     try {
-      const parsed = JSON.parse(saved) as {
-        filters?: Omit<PropertyFilters, "intent">;
-        sort?: SortKey;
-        view?: "list" | "grid";
-      };
-      setFilters({
-        ...(initialQuery ? {} : (parsed.filters ?? {})),
-        query: initialQuery || parsed.filters?.query,
-        intent,
-      });
-      if (parsed.sort) setSort(parsed.sort);
-      if (parsed.view) setView(parsed.view);
+      const saved = window.sessionStorage.getItem(storageKey);
+      if (saved) {
+        const parsed = JSON.parse(saved) as {
+          filters?: PropertyFilters;
+          sort?: SortKey;
+          view?: "grid" | "list";
+        };
+        if (parsed.filters)
+          setFilters({ ...parsed.filters, intent, query: initialQuery || undefined });
+        if (parsed.sort && ["recommended", "price-asc", "price-desc"].includes(parsed.sort))
+          setSort(parsed.sort);
+        if (parsed.view === "grid" || parsed.view === "list") setView(parsed.view);
+      }
     } catch {
-      window.sessionStorage.removeItem(stateKey);
+      /* Browsing remains available if session storage is unavailable. */
     }
+    restored.current = true;
+  }, [storageKey, intent, initialQuery]);
+
+  useEffect(() => {
+    setFilters((current) => ({ ...current, intent, query: initialQuery || undefined }));
   }, [initialQuery, intent]);
 
   useEffect(() => {
-    setFilters((current) => ({
-      ...(initialQuery ? { intent } : current),
-      intent,
-      query: initialQuery || undefined,
-    }));
-  }, [initialQuery, intent]);
-
-  useEffect(() => {
-    const saved = window.sessionStorage.getItem(scrollKey);
-    if (!saved) return;
-    window.requestAnimationFrame(() => window.scrollTo({ top: Number(saved), behavior: "auto" }));
-  }, [scrollKey]);
-
-  useEffect(() => {
-    return () => {
-      window.sessionStorage.setItem(scrollKey, String(window.scrollY));
-    };
-  }, [scrollKey]);
-
-  useEffect(() => {
-    if (!didMount.current) {
-      didMount.current = true;
-      return;
+    if (!restored.current) return;
+    try {
+      window.sessionStorage.setItem(storageKey, JSON.stringify({ filters, sort, view }));
+    } catch {
+      /* Optional persistence. */
     }
-    setIsFiltering(true);
-    const id = window.setTimeout(() => setIsFiltering(false), 260);
-    return () => window.clearTimeout(id);
-  }, [filters, sort, view]);
+  }, [filters, sort, view, storageKey]);
 
-  useEffect(() => {
-    const { intent: _intent, ...filtersToPersist } = filters;
-    window.sessionStorage.setItem(
-      stateKey,
-      JSON.stringify({ filters: filtersToPersist, sort, view }),
-    );
-  }, [filters, sort, view]);
+  const displayedFilters = useDeferredValue(filters);
+  const results = useMemo(() => {
+    const list = filterProperties(properties, displayedFilters);
+    if (sort === "price-asc") list.sort((a, b) => a.price - b.price);
+    if (sort === "price-desc") list.sort((a, b) => b.price - a.price);
+    return list;
+  }, [properties, displayedFilters, sort]);
 
   const handleSearch = useCallback(
     (query: string) => {
-      const nextQuery = query.trim();
-      setFilters((f) => ({ ...f, query: nextQuery || undefined }));
+      const trimmed = query.trim();
+      setFilters((current) => ({ ...current, query: trimmed || undefined }));
       void navigate({
-        to: searchIntentRoute[searchIntent],
-        search: { q: nextQuery || undefined },
+        to: routes[searchIntent],
+        search: { q: trimmed || undefined },
         replace: true,
       });
     },
     [navigate, searchIntent],
   );
 
-  return (
-    <div className="bg-smoke pb-20">
-      <div className="pv-container pt-8 pb-6">
-        <h1 className="text-3xl font-extrabold tracking-tight text-navy sm:text-4xl">{heading}</h1>
-        <p className="mt-2 max-w-2xl text-sm text-muted-foreground sm:text-base">{subheading}</p>
+  function resetFilters() {
+    setFilters({ intent });
+    handleSearch("");
+  }
 
-        <div className="mt-6 flex flex-col gap-3 lg:flex-row lg:items-center">
+  const activeFilters =
+    [filters.city, filters.minPrice, filters.maxPrice, filters.bedrooms, filters.bathrooms].filter(
+      Boolean,
+    ).length +
+    (filters.categories?.length ?? 0) +
+    (filters.amenities?.length ?? 0);
+
+  return (
+    <div className="bg-smoke pb-12 sm:pb-16">
+      <div className="border-b border-border bg-card">
+        <div className="pv-container py-8 sm:py-10">
+          <p className="pv-eyebrow">
+            {intent === "Sale" ? "Properties for sale" : "Rental properties"}
+          </p>
+          <h1 className="mt-3 text-3xl font-semibold text-navy sm:text-4xl">{heading}</h1>
+          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">
+            {subheading}
+          </p>
           <SearchPill
             variant="bar"
             defaultIntent={searchIntent}
             defaultQuery={initialQuery}
-            className="flex-1"
             onSearch={handleSearch}
-            onToggleFilters={() => setMobilePanel("filters")}
+            className="mt-6 max-w-3xl"
           />
-          <button
-            type="button"
-            onClick={() => toast.success("Search saved for this session.")}
-            className="pv-smooth-state pv-tap shrink-0 rounded-full border border-navy px-6 text-sm font-semibold text-navy hover:bg-navy hover:text-background"
-          >
-            Save Search
-          </button>
         </div>
       </div>
-
-      <div className="pv-container grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[300px_minmax(0,1fr)_360px]">
-        <FilterPanel
-          filters={filters}
-          onChange={setFilters}
-          className="hidden shadow-[var(--shadow-soft)] lg:sticky lg:top-24 lg:flex lg:max-h-[calc(100vh-8rem)]"
-        />
-
-        <section className="min-w-0">
-          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 sm:flex sm:justify-between">
-            <h2 className="truncate text-lg font-bold text-navy">
-              {results.length} {intent === "Sale" ? "homes for sale" : "homes for rent"}
-            </h2>
-            <div className="flex shrink-0 items-center gap-2">
-              <label className="sr-only" htmlFor="sort">
-                Sort results
+      <div className="pv-container mt-6 grid items-start gap-6 lg:grid-cols-[240px_minmax(0,1fr)]">
+        <aside aria-label="Property filters" className="hidden lg:sticky lg:top-24 lg:block">
+          <FilterPanel
+            filters={filters}
+            onChange={setFilters}
+            onReset={resetFilters}
+            className="max-h-[calc(100dvh-7rem)] border border-border"
+          />
+        </aside>
+        <section className="min-w-0" aria-label="Property results">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card p-3 shadow-[var(--shadow-soft)] sm:px-4">
+            <p aria-live="polite" className="text-sm font-medium text-navy">
+              {hydrated
+                ? results.length + (results.length === 1 ? " property" : " properties")
+                : "Loading properties…"}
+            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <Sheet open={panelOpen} onOpenChange={setPanelOpen}>
+                <SheetTrigger asChild>
+                  <button type="button" className="pv-button-secondary gap-2 px-3 lg:hidden">
+                    <SlidersHorizontal className="h-4 w-4" /> Filters
+                    {activeFilters ? " (" + activeFilters + ")" : ""}
+                  </button>
+                </SheetTrigger>
+                <SheetContent side="bottom" className="max-h-[90dvh] rounded-t-2xl bg-card p-0">
+                  <div className="border-b border-border px-5 py-4 pr-14">
+                    <SheetTitle>Filter properties</SheetTitle>
+                    <SheetDescription className="mt-1">
+                      Choose your budget, location and property type.
+                    </SheetDescription>
+                  </div>
+                  <FilterPanel
+                    filters={filters}
+                    onChange={setFilters}
+                    onReset={resetFilters}
+                    onApply={() => setPanelOpen(false)}
+                    className="h-[min(70dvh,40rem)] rounded-none"
+                  />
+                </SheetContent>
+              </Sheet>
+              <label htmlFor="property-sort" className="sr-only">
+                Sort properties
               </label>
               <select
-                id="sort"
+                id="property-sort"
                 value={sort}
-                onChange={(e) => setSort(e.target.value as SortKey)}
-                className="pv-smooth-state min-h-11 rounded-full border border-border bg-background px-4 text-xs font-medium text-navy outline-none focus:border-gold"
+                onChange={(event) => setSort(event.target.value as SortKey)}
+                className="min-h-11 max-w-[190px] rounded-lg border border-border bg-card px-3 text-sm text-navy"
               >
                 <option value="recommended">Recommended</option>
                 <option value="price-asc">Price: low to high</option>
                 <option value="price-desc">Price: high to low</option>
-                <option value="area-desc">Largest area</option>
               </select>
-              <div className="hidden rounded-full border border-border p-1 sm:flex">
-                <button
-                  type="button"
-                  aria-label="List view"
-                  onClick={() => setView("list")}
-                  className={cn(
-                    "pv-smooth-state grid h-9 w-9 place-items-center rounded-full",
-                    view === "list" ? "bg-navy text-background" : "text-navy",
-                  )}
-                >
-                  <List className="h-4 w-4" />
-                </button>
+              <div
+                role="group"
+                aria-label="Result layout"
+                className="hidden items-center rounded-lg border border-border bg-card p-0.5 sm:flex"
+              >
                 <button
                   type="button"
                   aria-label="Grid view"
+                  aria-pressed={view === "grid"}
                   onClick={() => setView("grid")}
-                  className={cn(
-                    "pv-smooth-state grid h-9 w-9 place-items-center rounded-full",
-                    view === "grid" ? "bg-navy text-background" : "text-navy",
-                  )}
+                  className={cn("pv-icon-button", view === "grid" && "bg-smoke")}
                 >
                   <LayoutGrid className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  aria-label="List view"
+                  aria-pressed={view === "list"}
+                  onClick={() => setView("list")}
+                  className={cn("pv-icon-button", view === "list" && "bg-smoke")}
+                >
+                  <List className="h-4 w-4" />
                 </button>
               </div>
             </div>
           </div>
-
-          {!hydrated ? (
-            <div className="mt-6">
-              <PropertyGridSkeleton count={view === "grid" ? 4 : 3} compact={view === "list"} />
-            </div>
-          ) : results.length === 0 ? (
-            properties.length > 0 ? (
-              <EmptyState
-                className="mt-6"
-                action={
-                  <button
-                    type="button"
-                    onClick={() => setFilters({ intent })}
-                    className="pv-tap rounded-full bg-navy px-6 text-sm font-semibold text-background"
-                  >
-                    Reset filters
-                  </button>
-                }
-              />
-            ) : null
-          ) : (
-            <div
-              className={cn(
-                "relative mt-6",
-                view === "grid"
-                  ? "grid gap-6 sm:grid-cols-2 xl:grid-cols-2"
-                  : "flex flex-col gap-4",
-              )}
+          {activeFilters > 0 && (
+            <button
+              type="button"
+              onClick={resetFilters}
+              className="pv-tap mt-2 text-xs font-medium text-muted-foreground underline underline-offset-4"
             >
-              {isFiltering && (
-                <div className="absolute inset-0 z-10 rounded-2xl bg-smoke/75 backdrop-blur-[1px]">
-                  <div
-                    className={cn(
-                      "grid gap-6",
-                      view === "grid" ? "sm:grid-cols-2 xl:grid-cols-2" : "grid-cols-1",
-                    )}
-                    aria-hidden="true"
-                  >
-                    {Array.from({ length: Math.min(results.length || 4, 4) }).map((_, i) => (
-                      <PropertyCardSkeleton key={i} compact={view === "list"} />
-                    ))}
-                  </div>
-                </div>
-              )}
-              {results.map((property) =>
-                view === "grid" ? (
-                  <PropertyCard key={property.id} property={property} />
-                ) : (
+              Clear all filters
+            </button>
+          )}
+          <div className="mt-5" aria-busy={!hydrated || displayedFilters !== filters}>
+            {!hydrated ? (
+              <PropertyGridSkeleton count={4} compact={view === "list"} />
+            ) : results.length > 0 ? (
+              <div className={view === "grid" ? "pv-property-grid" : "grid gap-4"}>
+                {results.map((property) => (
                   <PropertyCard
                     key={property.id}
                     property={property}
-                    variant="compact"
-                    active={selected?.id === property.id}
-                    onSelect={setSelected}
+                    variant={view === "list" ? "compact" : "standard"}
                   />
-                ),
-              )}
-            </div>
-          )}
-
-          {selected && (
-            <PropertyPreview
-              property={selected}
-              onClose={() => setSelected(null)}
-              className="mt-8 xl:hidden"
-            />
-          )}
-        </section>
-
-        <div className="hidden xl:block">
-          <div className="sticky top-24 space-y-6">
-            <MapPlaceholder pins={pins} className="h-[420px] min-h-0" />
-            {selected && <PropertyPreview property={selected} onClose={() => setSelected(null)} />}
-          </div>
-        </div>
-      </div>
-
-      {/* Mobile / tablet floating controls */}
-      <div className="fixed inset-x-0 bottom-5 z-40 flex justify-center gap-3 px-5 xl:hidden">
-        <button
-          type="button"
-          onClick={() => setMobilePanel("filters")}
-          className="pv-smooth-state pv-tap flex items-center gap-2 rounded-full bg-navy px-6 text-sm font-semibold text-background shadow-[var(--shadow-float)] hover:scale-[1.02] lg:hidden"
-        >
-          <SlidersHorizontal className="h-4 w-4" />
-          Filters
-        </button>
-        <button
-          type="button"
-          onClick={() => setMobilePanel("map")}
-          className="pv-smooth-state pv-tap flex items-center gap-2 rounded-full bg-gold px-6 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-float)] hover:scale-[1.02]"
-        >
-          <MapIcon className="h-4 w-4" />
-          Map
-        </button>
-      </div>
-
-      {mobilePanel && (
-        <div className="pv-page-transition fixed inset-0 z-50 flex flex-col justify-end bg-navy/40 backdrop-blur-sm xl:hidden">
-          <button
-            type="button"
-            aria-label="Close panel"
-            onClick={() => setMobilePanel(null)}
-            className="flex-1"
-          />
-          <div className="max-h-[88vh] overflow-hidden rounded-t-3xl bg-background">
-            <div className="flex items-center justify-between border-b border-border px-5 py-4">
-              <h2 className="text-base font-bold text-navy">
-                {mobilePanel === "filters" ? "Filters" : "Map view"}
-              </h2>
-              <button
-                type="button"
-                onClick={() => setMobilePanel(null)}
-                aria-label="Close"
-                className="grid h-11 w-11 place-items-center rounded-full border border-border text-navy"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-            {mobilePanel === "filters" ? (
-              <FilterPanel
-                filters={filters}
-                onChange={setFilters}
-                onApply={() => setMobilePanel(null)}
-                className="max-h-[74vh]"
-              />
-            ) : (
-              <div className="p-5">
-                <MapPlaceholder pins={pins} className="h-[60vh] min-h-0" />
+                ))}
               </div>
+            ) : (
+              <EmptyState
+                title={
+                  publicDataError
+                    ? "Listings are temporarily unavailable"
+                    : properties.length
+                      ? "No properties match your search"
+                      : "No listings available yet"
+                }
+                description={
+                  publicDataError
+                    ? "We could not load the latest listings. Try again or contact our team."
+                    : properties.length
+                      ? "Try another location, a wider budget or fewer filters."
+                      : "Contact our team and tell us what you are looking for."
+                }
+                action={
+                  publicDataError ? (
+                    <button
+                      type="button"
+                      onClick={() => void refreshPublic()}
+                      className="pv-button-primary"
+                    >
+                      Try again
+                    </button>
+                  ) : properties.length ? (
+                    <button type="button" onClick={resetFilters} className="pv-button-primary">
+                      Clear search and filters
+                    </button>
+                  ) : (
+                    <Link to="/contact" className="pv-button-primary">
+                      Contact our team
+                    </Link>
+                  )
+                }
+              />
             )}
           </div>
-        </div>
-      )}
+          <p className="mt-6 text-xs leading-relaxed text-muted-foreground">
+            Prices and availability may change. Check property details and documents before making a
+            decision.
+          </p>
+        </section>
+      </div>
     </div>
   );
 }

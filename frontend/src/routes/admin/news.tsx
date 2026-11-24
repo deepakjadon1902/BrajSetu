@@ -24,7 +24,7 @@ export const Route = createFileRoute("/admin/news")({
 });
 
 const inputClass =
-  "w-full rounded-2xl border border-border bg-background px-4 py-2.5 text-sm text-navy outline-none focus:border-navy";
+  "w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm text-navy outline-none focus:border-navy";
 
 function emptyArticle(): NewsArticle {
   return {
@@ -74,7 +74,7 @@ function AdminNews() {
       {draft ? (
         <form
           onSubmit={onSubmit}
-          className="mb-6 grid gap-4 rounded-3xl border border-border bg-card p-6 sm:grid-cols-2"
+          className="mb-6 grid gap-4 rounded-xl border border-border bg-card p-6 sm:grid-cols-2"
         >
           <input
             className={`${inputClass} sm:col-span-2`}
@@ -123,7 +123,7 @@ function AdminNews() {
         {news.map((article) => (
           <article
             key={article.id}
-            className="flex flex-col overflow-hidden rounded-3xl border border-border bg-card"
+            className="flex flex-col overflow-hidden rounded-xl border border-border bg-card"
           >
             {article.image ? (
               <img

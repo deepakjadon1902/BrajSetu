@@ -25,7 +25,7 @@ export const Route = createFileRoute("/admin/enquiries")({
 const statuses: Enquiry["status"][] = ["New", "Contacted", "Closed"];
 
 function AdminEnquiries() {
-  const { enquiries, setEnquiryStatus, deleteEnquiry, properties } = useStore();
+  const { enquiries, setEnquiryStatus, deleteEnquiry, adminProperties: properties } = useStore();
   const [filter, setFilter] = useState<"All" | Enquiry["status"]>("All");
 
   const visible = filter === "All" ? enquiries : enquiries.filter((e) => e.status === filter);
@@ -57,7 +57,7 @@ function AdminEnquiries() {
         {visible.map((enquiry) => {
           const property = properties.find((p) => p.id === enquiry.propertyId);
           return (
-            <article key={enquiry.id} className="rounded-3xl border border-border bg-card p-6">
+            <article key={enquiry.id} className="rounded-xl border border-border bg-card p-6">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <h2 className="text-sm font-bold text-navy">{enquiry.name}</h2>
@@ -102,7 +102,7 @@ function AdminEnquiries() {
           );
         })}
         {visible.length === 0 ? (
-          <p className="rounded-3xl border border-border bg-card p-10 text-center text-sm text-muted-foreground">
+          <p className="rounded-xl border border-border bg-card p-10 text-center text-sm text-muted-foreground">
             No enquiries in this view.
           </p>
         ) : null}

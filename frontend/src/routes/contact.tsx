@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Clock,
   ExternalLink,
@@ -16,6 +16,7 @@ import {
 import { toast } from "sonner";
 import { useStore } from "@/lib/mock-store";
 import { ContactActions } from "@/components/ContactActions";
+import { PageHeader } from "@/components/PageHeader";
 import { cn } from "@/lib/utils";
 import { OFFICE_DIRECTIONS_URL, OFFICE_MAP_EMBED_URL, OFFICE_MAP_URL } from "@/lib/location";
 
@@ -62,7 +63,7 @@ function validate(values: FormState): Errors {
 }
 
 const fieldClass =
-  "min-h-11 w-full rounded-2xl border bg-background px-4 py-3 text-sm text-navy outline-none transition-colors placeholder:text-muted-foreground focus:border-gold";
+  "min-h-11 w-full rounded-lg border bg-card px-3 py-3 text-sm text-navy transition-colors placeholder:text-muted-foreground focus:border-navy";
 
 function SocialLinks() {
   const { settings } = useStore();
@@ -76,7 +77,7 @@ function SocialLinks() {
   if (socials.length === 0) return null;
 
   return (
-    <div className="mt-8 rounded-3xl border border-border bg-background p-6">
+    <div className="mt-8 rounded-xl border border-border bg-background p-6">
       <h2 className="text-sm font-semibold tracking-wide text-navy uppercase">
         Follow {settings.siteName}
       </h2>
@@ -114,7 +115,10 @@ function ContactPage() {
     e.preventDefault();
     const nextErrors = validate(values);
     setErrors(nextErrors);
-    if (Object.keys(nextErrors).length > 0) return;
+    if (Object.keys(nextErrors).length > 0) {
+      document.getElementById(Object.keys(nextErrors)[0] ?? "")?.focus();
+      return;
+    }
     setSending(true);
     try {
       await addEnquiry({
@@ -126,6 +130,12 @@ function ContactPage() {
       setSubmitted(true);
       toast.success("Your enquiry has been sent.");
       setValues({ name: "", email: "", phone: "", message: "" });
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Your enquiry could not be sent. Please try again.",
+      );
     } finally {
       setSending(false);
     }
@@ -142,29 +152,25 @@ function ContactPage() {
 
   return (
     <div className="bg-smoke pb-16">
-      <div className="bg-ice">
-        <div className="pv-container py-14 sm:py-20">
-          <p className="text-xs font-semibold tracking-widest text-gold-deep uppercase">Contact</p>
-          <h1 className="mt-3 max-w-2xl text-3xl leading-[1.05] font-extrabold tracking-tight text-navy sm:text-5xl">
-            Tell us what you're looking for.
-          </h1>
-          <p className="mt-4 max-w-xl text-base text-muted-foreground">
-            One advisor picks up your enquiry and stays with it. Most messages get a reply the same
-            working day.
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        eyebrow="Contact us"
+        title="Tell us what you have in mind."
+        description="Ask about a property, request a visit or get help with a listing. Our team will follow up on your enquiry."
+      />
 
       <div className="pv-container grid gap-8 py-12 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
         <form
           onSubmit={handleSubmit}
           noValidate
-          className="rounded-3xl bg-card p-6 shadow-[var(--shadow-soft)] sm:p-8"
+          className="rounded-xl bg-card p-6 shadow-[var(--shadow-soft)] sm:p-8"
         >
           <h2 className="text-xl font-bold text-navy">Send an enquiry</h2>
 
           {submitted && (
-            <p className="mt-4 rounded-2xl bg-ice px-4 py-3 text-sm font-medium text-navy">
+            <p
+              role="status"
+              className="mt-4 rounded-lg bg-ice px-4 py-3 text-sm font-medium text-navy"
+            >
               Thanks — your enquiry is with an advisor. We'll be in touch shortly.
             </p>
           )}
@@ -176,6 +182,8 @@ function ContactPage() {
               </label>
               <input
                 id="name"
+                autoComplete="name"
+                aria-describedby={errors.name ? "contact-name-error" : undefined}
                 value={values.name}
                 onChange={(e) => update("name", e.target.value)}
                 onBlur={() => validateField("name")}
@@ -187,7 +195,11 @@ function ContactPage() {
                   errors.name ? "border-destructive" : "border-border",
                 )}
               />
-              {errors.name && <p className="mt-1.5 text-xs text-destructive">{errors.name}</p>}
+              {errors.name && (
+                <p id="contact-name-error" role="alert" className="mt-1.5 text-xs text-destructive">
+                  {errors.name}
+                </p>
+              )}
             </div>
 
             <div className="grid gap-5 sm:grid-cols-2">
@@ -198,6 +210,8 @@ function ContactPage() {
                 <input
                   id="email"
                   type="email"
+                  autoComplete="email"
+                  aria-describedby={errors.email ? "contact-email-error" : undefined}
                   value={values.email}
                   onChange={(e) => update("email", e.target.value)}
                   onBlur={() => validateField("email")}
@@ -209,7 +223,15 @@ function ContactPage() {
                     errors.email ? "border-destructive" : "border-border",
                   )}
                 />
-                {errors.email && <p className="mt-1.5 text-xs text-destructive">{errors.email}</p>}
+                {errors.email && (
+                  <p
+                    id="contact-email-error"
+                    role="alert"
+                    className="mt-1.5 text-xs text-destructive"
+                  >
+                    {errors.email}
+                  </p>
+                )}
               </div>
               <div>
                 <label htmlFor="phone" className="text-sm font-semibold text-navy">
@@ -218,6 +240,8 @@ function ContactPage() {
                 <input
                   id="phone"
                   type="tel"
+                  autoComplete="tel"
+                  aria-describedby={errors.phone ? "contact-phone-error" : undefined}
                   value={values.phone}
                   onChange={(e) => update("phone", e.target.value)}
                   onBlur={() => validateField("phone")}
@@ -229,7 +253,15 @@ function ContactPage() {
                     errors.phone ? "border-destructive" : "border-border",
                   )}
                 />
-                {errors.phone && <p className="mt-1.5 text-xs text-destructive">{errors.phone}</p>}
+                {errors.phone && (
+                  <p
+                    id="contact-phone-error"
+                    role="alert"
+                    className="mt-1.5 text-xs text-destructive"
+                  >
+                    {errors.phone}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -239,12 +271,13 @@ function ContactPage() {
               </label>
               <textarea
                 id="message"
+                aria-describedby={errors.message ? "contact-message-error" : undefined}
                 rows={5}
                 value={values.message}
                 onChange={(e) => update("message", e.target.value)}
                 onBlur={() => validateField("message")}
                 aria-invalid={Boolean(errors.message)}
-                placeholder="A 3 BHK in Baner under ₹1.4 Cr, ready to move…"
+                placeholder="For example, a 2 BHK flat in Vrindavan within ₹50 lakh."
                 className={cn(
                   fieldClass,
                   "mt-2 resize-y",
@@ -252,23 +285,32 @@ function ContactPage() {
                 )}
               />
               {errors.message && (
-                <p className="mt-1.5 text-xs text-destructive">{errors.message}</p>
+                <p
+                  id="contact-message-error"
+                  role="alert"
+                  className="mt-1.5 text-xs text-destructive"
+                >
+                  {errors.message}
+                </p>
               )}
             </div>
 
-            <button
-              type="submit"
-              disabled={sending}
-              className="pv-smooth-state pv-tap flex w-full items-center justify-center gap-2 rounded-full bg-gold px-6 text-sm font-semibold text-primary-foreground hover:scale-[1.01] disabled:opacity-70"
-            >
+            <button type="submit" disabled={sending} className="pv-button-primary w-full gap-2">
               {sending && <Loader2 className="h-4 w-4 animate-spin" />}
               {sending ? "Sending..." : "Send enquiry"}
             </button>
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              Our team will use these details to respond to your enquiry. Read our{" "}
+              <Link to="/privacy" className="text-navy underline underline-offset-4">
+                privacy policy
+              </Link>
+              .
+            </p>
           </div>
         </form>
 
         <div className="space-y-6">
-          <div className="rounded-3xl bg-card p-6 shadow-[var(--shadow-soft)]">
+          <div className="rounded-xl bg-card p-6 shadow-[var(--shadow-soft)]">
             <h2 className="text-lg font-bold text-navy">Prefer to talk?</h2>
             <p className="mt-2 text-sm text-muted-foreground">
               Our advisory desk is staffed through the working week.
@@ -290,20 +332,22 @@ function ContactPage() {
                   {settings.address}
                 </a>
               </li>
-              <li className="flex gap-3">
-                <Phone className="h-4 w-4 shrink-0 text-gold-deep" />
-                <a
-                  href={`tel:${settings.contactPhone.replace(/\s/g, "")}`}
-                  className="text-navy hover:text-gold-deep"
-                >
-                  {settings.contactPhone}
-                </a>
-              </li>
+              {settings.contactPhone && (
+                <li className="flex gap-3">
+                  <Phone className="h-4 w-4 shrink-0 text-gold-deep" />
+                  <a
+                    href={`tel:${settings.contactPhone.replace(/\s/g, "")}`}
+                    className="text-navy hover:text-gold-deep"
+                  >
+                    {settings.contactPhone}
+                  </a>
+                </li>
+              )}
               <li className="flex gap-3">
                 <Mail className="h-4 w-4 shrink-0 text-gold-deep" />
                 <a
                   href={`mailto:${settings.contactEmail}`}
-                  className="text-navy hover:text-gold-deep"
+                  className="min-w-0 break-all text-navy hover:text-gold-deep"
                 >
                   {settings.contactEmail}
                 </a>
@@ -311,13 +355,13 @@ function ContactPage() {
               <li className="flex gap-3">
                 <Clock className="mt-0.5 h-4 w-4 shrink-0 text-gold-deep" />
                 <span className="text-muted-foreground">
-                  Mon–Sat, 9:30am – 7:00pm · Sunday by appointment
+                  Please contact us before visiting the office.
                 </span>
               </li>
             </ul>
           </div>
 
-          <div className="overflow-hidden rounded-3xl bg-card shadow-[var(--shadow-soft)]">
+          <div className="overflow-hidden rounded-xl bg-card shadow-[var(--shadow-soft)]">
             <div className="flex items-center justify-between gap-4 border-b border-border p-4">
               <div className="min-w-0">
                 <h2 className="text-sm font-bold text-navy">Office location</h2>

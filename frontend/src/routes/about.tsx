@@ -1,165 +1,94 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Award, HandshakeIcon, ShieldCheck, Users } from "lucide-react";
+import { ArrowRight, MapPin, MessageCircle, ShieldCheck } from "lucide-react";
+import { PageHeader } from "@/components/PageHeader";
 import { SmartImage } from "@/components/SmartImage";
 import heroHouse from "@/assets/hero-house.jpg";
-import sellHome from "@/assets/sell-home.jpg";
-import agents from "@/assets/tile-agents.jpg";
 
 export const Route = createFileRoute("/about")({
   head: () => ({
     meta: [
-      { title: "About Braj Setu Properties | Boutique Property Consultancy" },
+      { title: "About Us | Braj Setu Properties" },
       {
         name: "description",
         content:
-          "Braj Setu Properties is a boutique property consultancy pairing verified listings with advisors who visit every home before it is published.",
-      },
-      {
-        property: "og:title",
-        content: "About Braj Setu Properties | Boutique Property Consultancy",
-      },
-      {
-        property: "og:description",
-        content:
-          "Meet the advisory team behind Braj Setu Properties and how we verify every listing.",
+          "Braj Setu Properties connects buyers, tenants and owners across Vrindavan, Mathura, Govardhan, Barsana and nearby Braj Mandal towns.",
       },
     ],
   }),
   component: AboutPage,
 });
-
-const values = [
-  {
-    icon: ShieldCheck,
-    title: "Verified before published",
-    body: "Every listing is visited, photographed and title-checked by our own team, with no syndicated feeds.",
-  },
-  {
-    icon: HandshakeIcon,
-    title: "Advice, not pressure",
-    body: "Our advisors are paid on completed relationships, not on how quickly you sign something.",
-  },
-  {
-    icon: Users,
-    title: "One point of contact",
-    body: "The advisor who shows you the first property stays with you through handover.",
-  },
-  {
-    icon: Award,
-    title: "Priced on evidence",
-    body: "We value with recent comparables from the same micro-market, then show you the workings.",
-  },
-];
-
 function AboutPage() {
   return (
     <div>
-      <section className="bg-ice">
-        <div className="pv-container grid gap-10 py-14 lg:grid-cols-2 lg:items-center lg:py-20">
-          <div>
-            <p className="text-xs font-semibold tracking-widest text-gold-deep uppercase">
-              About Braj Setu Properties
-            </p>
-            <h1 className="mt-4 text-3xl leading-[1.05] font-extrabold tracking-tight text-navy sm:text-5xl">
-              A property consultancy
-              <br />
-              built on evidence.
-            </h1>
-            <p className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground">
-              Braj Setu Properties operates as a dedicated property unit of Vrindavan Sarthi
-              Enterprises, built for buyers, tenants and owners across Vrindavan, Mathura,
-              Goverdhan, Barsana and the wider Braj Mandal. We rebuilt the process around
-              verification, one advisor per client, and pricing you can audit.
-            </p>
-          </div>
-          <SmartImage
-            src={heroHouse}
-            alt="Contemporary house represented by Braj Setu Properties"
-            aspect="aspect-[4/3]"
-            wrapperClassName="rounded-3xl shadow-[var(--shadow-lift)]"
-          />
+      <PageHeader
+        eyebrow="About Braj Setu"
+        title="Local knowledge. Clear conversations."
+        description="We connect buyers, tenants and property owners across Braj Mandal, with a simple way to browse listings and reach our team."
+      />
+      <section className="pv-container pv-section grid gap-8 lg:grid-cols-2 lg:items-center lg:gap-14">
+        <div>
+          <h2 className="text-2xl font-semibold text-navy sm:text-3xl">
+            Helping you find a place in Braj.
+          </h2>
+          <p className="mt-4 text-base leading-relaxed text-muted-foreground">
+            Braj Setu Properties is a property unit of Vrindavan Sarthi Enterprises. We serve
+            Vrindavan, Mathura, Govardhan, Barsana and nearby towns and villages.
+          </p>
+          <p className="mt-4 text-base leading-relaxed text-muted-foreground">
+            Whether you are searching for a home, a plot or a commercial space, you can compare
+            listing details and contact us to discuss your requirements.
+          </p>
+          <Link to="/contact" className="pv-button-primary mt-6 gap-2">
+            Meet our team <ArrowRight className="h-4 w-4" />
+          </Link>
         </div>
+        <SmartImage
+          src={heroHouse}
+          alt="A contemporary home with a garden"
+          aspect="aspect-[4/3]"
+          wrapperClassName="rounded-2xl"
+        />
       </section>
-
-      <section className="pv-container py-14 sm:py-20">
-        <h2 className="text-2xl font-extrabold tracking-tight text-navy sm:text-3xl">
-          What we hold ourselves to
-        </h2>
-        <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {values.map(({ icon: Icon, title, body }) => (
-            <div
-              key={title}
-              className="pv-lift rounded-2xl bg-card p-6 shadow-[var(--shadow-soft)]"
-            >
-              <span className="grid h-11 w-11 place-items-center rounded-xl bg-ice text-gold-deep">
-                <Icon className="h-5 w-5" />
-              </span>
-              <h3 className="mt-4 text-base font-bold text-navy">{title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{body}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="bg-ice">
-        <div className="pv-container grid gap-10 py-14 lg:grid-cols-2 lg:items-center lg:py-20">
-          <SmartImage
-            src={agents}
-            alt="A Braj Setu Properties advisor at the Braj Mandal office"
-            aspect="aspect-[4/3]"
-            wrapperClassName="rounded-3xl shadow-[var(--shadow-lift)] order-last lg:order-first"
-          />
-          <div>
-            <h2 className="text-2xl font-extrabold tracking-tight text-navy sm:text-3xl">
-              Braj-focused advisors.{" "}
-              <span className="text-muted-foreground">One trusted local standard.</span>
-            </h2>
-            <p className="mt-4 text-base leading-relaxed text-muted-foreground">
-              Our team focuses on temple towns, village belts, link roads and emerging pockets
-              across Braj Mandal. Each advisor specialises in a handful of micro-markets, which is
-              why they can explain road access, title expectations, demand and resale confidence
-              with practical local context.
-            </p>
-            <dl className="mt-8 grid grid-cols-3 gap-4">
-              {[
-                ["1,400+", "Transactions closed"],
-                ["Rs. 2,900 Cr", "Property advised on"],
-                ["4.8/5", "Client rating"],
-              ].map(([stat, label]) => (
-                <div key={label}>
-                  <dt className="text-xl font-extrabold text-gold-deep sm:text-2xl">{stat}</dt>
-                  <dd className="mt-1 text-xs text-muted-foreground">{label}</dd>
-                </div>
-              ))}
-            </dl>
+      <section className="border-y border-border bg-smoke">
+        <div className="pv-container pv-section">
+          <h2 className="text-2xl font-semibold text-navy sm:text-3xl">What you can expect</h2>
+          <div className="mt-7 grid gap-5 md:grid-cols-3">
+            {[
+              {
+                icon: MapPin,
+                title: "A local focus",
+                text: "Listings and property support across Braj, with attention to your preferred location and budget.",
+              },
+              {
+                icon: MessageCircle,
+                title: "Simple communication",
+                text: "Clear property details and a direct way to ask questions or arrange the next step.",
+              },
+              {
+                icon: ShieldCheck,
+                title: "Visible review status",
+                text: "Verification badges describe the checks recorded for a listing. They do not replace independent document checks.",
+              },
+            ].map(({ icon: Icon, title, text }) => (
+              <article key={title} className="rounded-xl border border-border bg-card p-6">
+                <Icon className="h-6 w-6 text-gold-deep" />
+                <h3 className="mt-5 text-lg font-semibold text-navy">{title}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{text}</p>
+              </article>
+            ))}
           </div>
         </div>
       </section>
-
-      <section className="pv-container py-14 sm:py-20">
-        <div className="grid gap-8 overflow-hidden rounded-3xl bg-navy p-8 sm:p-12 lg:grid-cols-2 lg:items-center">
-          <div>
-            <h2 className="text-2xl font-extrabold tracking-tight text-background sm:text-3xl">
-              Thinking of listing this season?
-            </h2>
-            <p className="mt-3 text-sm leading-relaxed text-background/75">
-              Book a valuation visit and we&apos;ll bring the last six comparable transactions from
-              your locality with us.
-            </p>
-            <Link
-              to="/contact"
-              className="pv-smooth-state pv-tap mt-6 inline-flex items-center rounded-full bg-gold px-7 text-sm font-semibold text-primary-foreground hover:scale-[1.02]"
-            >
-              Talk to an advisor
-            </Link>
-          </div>
-          <SmartImage
-            src={sellHome}
-            alt="Bright kitchen in a Braj Setu Properties listed home"
-            aspect="aspect-[16/10]"
-            wrapperClassName="rounded-2xl"
-          />
+      <section className="pv-container flex flex-col items-start justify-between gap-6 py-10 sm:flex-row sm:items-center">
+        <div>
+          <h2 className="text-xl font-semibold text-navy">Let us know what you are looking for.</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Buying, renting or listing a property starts with a conversation.
+          </p>
         </div>
+        <Link to="/contact" className="pv-button-primary">
+          Contact us
+        </Link>
       </section>
     </div>
   );

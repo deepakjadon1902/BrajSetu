@@ -18,14 +18,15 @@ export function VerificationBadge({
   className?: string;
 }) {
   const showBadge = canShowVerificationBadge(property);
-  const label = showBadge ? getVerificationLabel(property) : "Owner listed";
-  const verifiedAt = property.verification?.verifiedAt
-    ? new Date(property.verification.verifiedAt).toLocaleDateString("en-IN", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      })
-    : "";
+  const label = showBadge ? getVerificationLabel(property) : "Not verified";
+  const verifiedAt =
+    showBadge && property.verification?.verifiedAt
+      ? new Date(property.verification.verifiedAt).toLocaleDateString("en-IN", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        })
+      : "";
   const explanation = property.verification?.scope || verifiedListingDisclaimer;
 
   return (

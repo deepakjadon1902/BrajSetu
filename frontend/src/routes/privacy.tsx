@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { LegalPage } from "@/components/LegalPage";
-
 export const Route = createFileRoute("/privacy")({
   head: () => ({
     meta: [
@@ -8,73 +7,62 @@ export const Route = createFileRoute("/privacy")({
       {
         name: "description",
         content:
-          "How Braj Setu Properties collects, uses and protects data for enquiries, accounts and property listings.",
-      },
-      { property: "og:title", content: "Privacy Policy | Braj Setu Properties" },
-      {
-        property: "og:description",
-        content: "How Braj Setu Properties handles and protects your personal information.",
+          "How Braj Setu Properties uses information from enquiries, accounts and property submissions.",
       },
     ],
   }),
   component: PrivacyPage,
 });
-
 function PrivacyPage() {
   return (
     <LegalPage
-      title="Privacy Policy"
-      updated="1 September 2026"
-      intro="This policy explains how Braj Setu Properties, a property unit connected with Vrindavan Sarthi Enterprises, handles information shared by buyers, tenants, owners, admins and visitors across Vrindavan, Mathura, Goverdhan, Barsana and nearby Braj Mandal locations."
+      title="Privacy policy"
+      updated="17 October 2026"
+      intro="This policy explains how Braj Setu Properties uses information you share when browsing, creating an account, making an enquiry or listing a property."
       sections={[
         {
-          heading: "1. What we collect",
+          heading: "1. Information we collect",
           body: [
-            "We collect details you submit through enquiry, call-back, contact and account forms, including your name, phone number, email address, location preference, budget, message and property interest.",
-            "When users, owners, brokers, partners or admins submit listings, we collect property details, images or image URLs, city, locality, area, price expectation, furnishing, amenities, description, owner contact details, acceptance of listing terms and review status.",
-            "For logged-in submissions, we connect the listing record with the submitting account so admins can review, contact, correct, approve or remove the listing.",
-            "We may collect basic usage information such as pages viewed, search filters, device/browser details and approximate location signals to improve search, navigation and listing quality.",
+            "Account and enquiry forms collect information such as your name, email address, phone number and message. Listing forms also collect property details, photographs, owner or representative details and declarations.",
+            "If you choose Google sign-in, we receive the account information needed to sign you in. You can also use the email and password sign-in option.",
+            "Our systems may record technical request information needed to operate, secure and troubleshoot the service.",
           ],
         },
         {
-          heading: "2. How we use it",
+          heading: "2. How we use information",
           body: [
-            "We use your information to respond to enquiries, arrange property visits, connect you with an advisor, shortlist relevant properties and support communication between interested parties.",
-            "Listing information is used to publish, verify, update and promote properties on this website and through approved Braj Setu Properties communication channels.",
-            "Admin users use listing submission data to verify ownership or authority, check completeness, correct errors, prevent duplicate listings and decide whether a listing should be published.",
-            "We may send service updates, visit confirmations and relevant market information. You can ask us to stop non-essential communication at any time.",
+            "We use your information to manage your account, respond to enquiries, review and publish listings, arrange requested contact or visits, and protect the service from misuse.",
+            "Property preferences saved in your profile help you keep track of your requirements. Service messages relate to requests you have made; you can ask us to stop non-essential contact.",
           ],
         },
         {
-          heading: "3. Sharing",
+          heading: "3. What we share",
           body: [
-            "We share your contact details with an owner, developer, advisor or service partner only when it is necessary to respond to an enquiry, schedule a visit, verify a listing or progress a request started by you.",
-            "We do not sell personal data. We also do not share enquiry data for unrelated third-party advertising.",
-            "A published listing may display property information and selected contact or enquiry paths, but sensitive account, admin and internal review details are kept out of public listing pages.",
-            "Information may be shared if required by law, legal process, fraud prevention or protection of our users, advisors and business operations.",
+            "Published listings display property information and selected public contact details. Internal review records, account credentials and private owner contact fields are not intended for public display.",
+            "We may share the details needed with an owner, representative, adviser or service provider to handle your enquiry, review a listing or provide a service you requested. Providers that support sign-in, email delivery and image hosting may process information needed for those functions.",
+            "We do not sell personal data or share enquiry details for unrelated third-party advertising. We may disclose information when required by law or when necessary to investigate misuse and protect the service.",
           ],
         },
         {
-          heading: "4. Retention and security",
+          heading: "4. Storage and security",
           body: [
-            "Enquiry and listing records are kept only as long as needed for service, audit, dispute handling, fraud prevention and legal requirements.",
-            "Rejected, unpublished or edited listings may still be retained in internal records where needed for audit, fraud prevention, dispute handling, moderation history or legal compliance.",
-            "We use access controls, secure systems and reasonable administrative safeguards to protect records. No online system is perfectly secure, so we keep collection limited to what is useful for the service.",
+            "We keep account, enquiry and listing records for the purposes described here, including required business records, dispute handling and fraud prevention. Some records may need to be retained after a listing is removed.",
+            "We use measures such as password hashing and access controls to protect information. No online system can guarantee complete security. Do not include unnecessary sensitive information in an enquiry.",
           ],
         },
         {
-          heading: "5. Your rights",
+          heading: "5. Your choices and requests",
           body: [
-            "You can request a copy of your data, ask for corrections, withdraw non-essential communication consent, or ask us to delete eligible records by writing to brajsetuproperties@gmail.com.",
-            "For listing ownership, removal or correction requests, please include the property title, locality and your contact number so our team can verify the request.",
-            "If you submitted a listing, you can ask us to update owner details, remove images, unpublish the listing or correct inaccurate information after verification.",
+            "You can contact us to request access, correction or deletion of your personal information, withdraw optional consent, or raise a privacy concern. We may need to verify your identity and may retain records where applicable law or an unresolved dispute requires it.",
+            "For a listing correction or removal, include the listing ID and your relationship to the property. You can update account contact details through your profile.",
           ],
         },
         {
-          heading: "6. Cookies",
+          heading: "6. Browser storage and other services",
           body: [
-            "We use essential cookies or local storage to keep sign-in, saved searches, filters and admin workflows working.",
-            "Analytics, if enabled, help us understand which locations and pages are useful so we can improve the Braj Setu Properties experience.",
+            "We use browser storage to keep you signed in, remember listing filters and store property preferences and saved listings on your device. Signing out removes the relevant sign-in token.",
+            "Maps, Google sign-in, externally hosted photos and links to WhatsApp or social platforms are provided by other services. Their own privacy terms apply when you use them.",
+            "This policy may change as the service changes. Check the date above for the latest version.",
           ],
         },
       ]}

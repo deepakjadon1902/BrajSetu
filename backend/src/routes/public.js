@@ -18,6 +18,7 @@ import {
 import { requireAuth } from "../middleware/auth.js";
 import { asyncHandler } from "../utils/errors.js";
 import { logActivity } from "../utils/activity.js";
+import { photoPreview, storeSubmittedPhotos } from "../utils/propertyPhotos.js";
 
 export const publicRouter = Router();
 
@@ -106,7 +107,7 @@ publicRouter.get(
       SiteSettings.findOne({ singleton: "site" }).lean(),
     ]);
     res.json({
-      properties: properties.map(publicProperty),
+      properties: properties.map((property) => ({ ...publicProperty(property), ...photoPreview(property.images) })),
       news,
       settings: { ...defaultSettings, ...(settings || {}) },
     });
@@ -146,10 +147,7 @@ publicRouter.post(
     const property = await Property.create({
       ...input,
       id: `user-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
-      images: input.images.map((src, index) => ({
-        src,
-        label: index === 0 ? "Main" : "Bedroom",
-      })),
+      images: await storeSubmittedPhotos(input.images),
       featured: false,
       status: "New",
       listingSource: "User",

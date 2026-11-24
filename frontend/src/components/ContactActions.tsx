@@ -1,38 +1,44 @@
-import { MessageCircle, Phone } from "lucide-react";
+import { Mail, MessageCircle, Phone } from "lucide-react";
+import { useStore } from "@/lib/mock-store";
 import { cn } from "@/lib/utils";
-
-const PHONE = "+919000000000";
-const WHATSAPP = "919000000000";
 
 interface ContactActionsProps {
   message?: string;
   layout?: "stacked" | "row";
   className?: string;
 }
-
 export function ContactActions({
-  message = "Hi Braj Setu Properties, I'd like to know more about a property listed on your site.",
+  message = "Hello, I would like to know more about a property on Braj Setu.",
   layout = "stacked",
   className,
 }: ContactActionsProps) {
+  const { settings } = useStore();
+  const phone = settings.contactPhone.replace(/[^+\d]/g, "");
+  const whatsapp = phone.replace(/\D/g, "");
   return (
-    <div className={cn("flex gap-3", layout === "stacked" ? "flex-col" : "flex-row", className)}>
-      <a
-        href={`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(message)}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="pv-smooth-state pv-tap flex flex-1 items-center justify-center gap-2 rounded-full bg-gold px-5 text-sm font-semibold text-primary-foreground hover:scale-[1.02]"
-      >
-        <MessageCircle className="h-4 w-4" />
-        WhatsApp
-      </a>
-      <a
-        href={`tel:${PHONE}`}
-        className="pv-smooth-state pv-tap flex flex-1 items-center justify-center gap-2 rounded-full bg-navy px-5 text-sm font-semibold text-background hover:scale-[1.02]"
-      >
-        <Phone className="h-4 w-4" />
-        Call now
-      </a>
+    <div className={cn("grid gap-3", layout === "row" && "min-[400px]:grid-cols-2", className)}>
+      {phone ? (
+        <>
+          <a
+            href={`https://wa.me/${whatsapp}?text=${encodeURIComponent(message)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="pv-button-secondary gap-2"
+          >
+            <MessageCircle className="h-4 w-4" /> WhatsApp
+          </a>
+          <a href={`tel:${phone}`} className="pv-button-primary gap-2">
+            <Phone className="h-4 w-4" /> Call our team
+          </a>
+        </>
+      ) : (
+        <a
+          href={`mailto:${settings.contactEmail}?subject=Property%20enquiry&body=${encodeURIComponent(message)}`}
+          className="pv-button-primary gap-2"
+        >
+          <Mail className="h-4 w-4" /> Email our team
+        </a>
+      )}
     </div>
   );
 }

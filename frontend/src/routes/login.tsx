@@ -14,12 +14,12 @@ export const Route = createFileRoute("/login")({
       {
         name: "description",
         content:
-          "Sign in to Braj Setu Properties to save searches, shortlist properties and track your enquiries.",
+          "Sign in to manage your Braj Setu Properties profile and submit property listings.",
       },
       { property: "og:title", content: "Sign in to Braj Setu Properties" },
       {
         property: "og:description",
-        content: "Save searches and shortlist properties with a Braj Setu Properties account.",
+        content: "Manage your contact details, preferences and property submissions.",
       },
     ],
   }),
@@ -52,7 +52,7 @@ function LoginPage() {
   return (
     <AuthLayout
       title="Sign in to continue"
-      subtitle="Save searches, shortlist properties and pick up enquiries where you left them."
+      subtitle="Manage your profile, update your preferences and list a property."
       footer={
         <>
           New to Braj Setu Properties?{" "}
@@ -98,7 +98,7 @@ function LoginPage() {
               type="button"
               aria-label={showPassword ? "Hide password" : "Show password"}
               onClick={() => setShowPassword((value) => !value)}
-              className="absolute inset-y-0 right-3 grid w-8 place-items-center text-muted-foreground transition-colors hover:text-navy"
+              className="absolute inset-y-0 right-1 grid w-11 place-items-center text-muted-foreground transition-colors hover:text-navy"
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>

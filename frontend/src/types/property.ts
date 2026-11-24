@@ -1,6 +1,20 @@
 export type PropertyCategory = "Shop" | "Flat" | "Plot" | "House" | "Farm House";
 export type PropertyIntent = "Sale" | "Rent";
-export type PropertyImageLabel = "Main" | "Bedroom" | "Kitchen" | "Bathroom" | "Balcony";
+export type PropertyImageLabel =
+  | "Main"
+  | "Front"
+  | "Exterior"
+  | "Living room"
+  | "Bedroom"
+  | "Kitchen"
+  | "Bathroom"
+  | "Balcony"
+  | "Terrace"
+  | "Garden"
+  | "Parking"
+  | "Floor plan"
+  | "View"
+  | "Other";
 export type VerificationLevel =
   "OWNER_LISTED" | "IDENTITY_CHECKED" | "DOCUMENT_CHECKED" | "VERIFIED_LISTING" | "RERA_VERIFIED";
 export type VerificationStatus =
@@ -16,6 +30,8 @@ export type VerificationStatus =
 export interface PropertyImage {
   src: string;
   label: PropertyImageLabel;
+  name?: string;
+  cover?: boolean;
 }
 
 export interface Property {
@@ -60,6 +76,7 @@ export interface Property {
     highlights?: string[];
   };
   images: (string | PropertyImage)[];
+  photoCount?: number;
   amenities: string[];
   featured?: boolean;
   status?: "New" | "Active" | "Price Drop";

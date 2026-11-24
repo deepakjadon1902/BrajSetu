@@ -22,7 +22,7 @@ export const Route = createFileRoute("/admin/")({
 });
 
 function AdminDashboard() {
-  const { properties, users, enquiries, news, can } = useStore();
+  const { adminProperties: properties, users, enquiries, news, can } = useStore();
 
   const allStats = [
     {
@@ -78,7 +78,7 @@ function AdminDashboard() {
           <Link
             key={stat.label}
             to={stat.to}
-            className="rounded-3xl border border-border bg-card p-6 transition-shadow hover:shadow-[var(--shadow-lift)]"
+            className="rounded-xl border border-border bg-card p-6 transition-shadow hover:shadow-[var(--shadow-lift)]"
           >
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -86,14 +86,14 @@ function AdminDashboard() {
               </span>
               <stat.icon className="h-4 w-4 text-gold-deep" />
             </div>
-            <p className="mt-4 text-3xl font-extrabold tracking-tight text-navy">{stat.value}</p>
+            <p className="mt-4 text-3xl font-semibold tracking-tight text-navy">{stat.value}</p>
             <p className="mt-1 text-xs text-muted-foreground">{stat.hint}</p>
           </Link>
         ))}
       </div>
 
       <div className="mt-6 grid gap-4 lg:grid-cols-3">
-        <div className="rounded-3xl border border-border bg-card p-6 lg:col-span-2">
+        <div className="rounded-xl border border-border bg-card p-6 lg:col-span-2">
           <h2 className="text-sm font-bold uppercase tracking-wide text-navy">Latest enquiries</h2>
           <ul className="mt-4 divide-y divide-border">
             {enquiries.slice(0, 5).map((enquiry) => (
@@ -115,7 +115,7 @@ function AdminDashboard() {
           </ul>
         </div>
 
-        <div className="rounded-3xl border border-border bg-card p-6">
+        <div className="rounded-xl border border-border bg-card p-6">
           <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-navy">
             <TrendingUp className="h-4 w-4 text-gold-deep" /> Portfolio
           </h2>

@@ -2,26 +2,29 @@ import { SearchX } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function PropertyCardSkeleton({ compact }: { compact?: boolean }) {
-  if (compact) {
-    return (
-      <div className="flex gap-4 rounded-2xl bg-card p-3 shadow-[var(--shadow-soft)]">
-        <div className="pv-shimmer h-28 w-28 shrink-0 rounded-xl sm:w-36" />
-        <div className="flex-1 space-y-3 py-1">
-          <div className="pv-shimmer h-4 w-24 rounded-full" />
-          <div className="pv-shimmer h-4 w-3/4 rounded-full" />
-          <div className="pv-shimmer h-3 w-1/2 rounded-full" />
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="overflow-hidden rounded-2xl bg-card shadow-[var(--shadow-soft)]">
-      <div className="pv-shimmer aspect-[4/3] w-full" />
-      <div className="space-y-3 p-5">
-        <div className="pv-shimmer h-4 w-3/4 rounded-full" />
-        <div className="pv-shimmer h-3 w-1/2 rounded-full" />
-        <div className="pv-shimmer h-3 w-2/3 rounded-full" />
+    <div
+      aria-hidden="true"
+      className={cn(
+        "overflow-hidden rounded-2xl border border-border bg-card",
+        compact && "sm:flex",
+      )}
+    >
+      <div
+        className={cn(
+          "pv-shimmer aspect-[4/3] w-full shrink-0",
+          compact && "sm:aspect-auto sm:w-[32%] sm:max-w-56 sm:min-h-44",
+        )}
+      />
+      <div className="min-w-0 flex-1 space-y-2 p-4">
+        <div className="pv-shimmer h-3 w-24 rounded" />
+        <div className="pv-shimmer h-5 w-24 rounded" />
+        <div className="pv-shimmer h-4 w-3/4 rounded" />
+        <div className="pv-shimmer h-3 w-2/3 rounded" />
+        <div className="pv-shimmer h-3 w-1/2 rounded" />
+        <div className="border-t border-border pt-2.5">
+          <div className="pv-shimmer h-5 w-24 rounded" />
+        </div>
       </div>
     </div>
   );
@@ -35,12 +38,7 @@ export function PropertyGridSkeleton({
   compact?: boolean;
 }) {
   return (
-    <div
-      className={cn(
-        "grid gap-6",
-        compact ? "grid-cols-1" : "sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4",
-      )}
-    >
+    <div className={compact ? "grid gap-4" : "pv-property-grid"}>
       {Array.from({ length: count }).map((_, i) => (
         <PropertyCardSkeleton key={i} compact={compact} />
       ))}

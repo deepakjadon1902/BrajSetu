@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import {
   listingLifecycleStatuses,
   ownerDeclarationVersion,
+  propertyAreaUnits,
   verificationLevels,
   verificationStatuses,
   verifiedListingDisclaimer,
@@ -107,7 +108,7 @@ const propertySchema = new mongoose.Schema(
     propertyDetails: {
       fullAddress: { type: String, default: "", trim: true },
       landmark: { type: String, default: "", trim: true },
-      areaUnit: { type: String, enum: ["sq.ft", "sq.m", "sq.yd", "acre", "bigha"], default: "sq.ft" },
+      areaUnit: { type: String, enum: propertyAreaUnits, default: "sq.ft" },
       plotArea: { type: Number, min: 0 },
       carpetArea: { type: Number, min: 0 },
       builtUpArea: { type: Number, min: 0 },

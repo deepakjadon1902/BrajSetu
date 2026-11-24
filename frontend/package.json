@@ -9,6 +9,9 @@
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test tests/*.test.mjs",
+    "test:smoke": "node tests/rendered-routes.smoke.mjs",
     "format": "prettier --write ."
   },
   "dependencies": {

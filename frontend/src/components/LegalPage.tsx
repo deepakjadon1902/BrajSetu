@@ -1,63 +1,82 @@
 import { Link } from "@tanstack/react-router";
-import { BrandLogo } from "@/components/BrandLogo";
+import { PageHeader } from "@/components/PageHeader";
+import { useStore } from "@/lib/mock-store";
 
 interface LegalSection {
   heading: string;
   body: string[];
 }
-
 interface LegalPageProps {
   title: string;
   updated: string;
   intro: string;
   sections: LegalSection[];
 }
-
 export function LegalPage({ title, updated, intro, sections }: LegalPageProps) {
+  const { settings } = useStore();
   return (
-    <div className="bg-[linear-gradient(180deg,#fffaf0_0%,#f7f4ee_42%,#ffffff_100%)]">
-      <div className="relative overflow-hidden border-b border-gold/20 bg-[linear-gradient(135deg,#0b1b34_0%,#182d52_52%,#3d2c66_100%)] text-background">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(201,161,53,0.24),transparent_28%),radial-gradient(circle_at_80%_78%,rgba(255,255,255,0.12),transparent_26%)]" />
-        <div className="pointer-events-none absolute right-8 top-1/2 hidden -translate-y-1/2 opacity-[0.045] md:block">
-          <BrandLogo className="[&_img]:h-72 [&_img]:max-w-none" />
-        </div>
-        <div className="pv-container relative py-14 sm:py-20">
-          <Link
-            to="/"
-            className="inline-flex h-16 w-40 items-center justify-center rounded-full border border-gold/30 bg-background px-4 shadow-[0_22px_50px_-32px_rgba(255,250,240,0.8)]"
-          >
-            <BrandLogo compact />
-          </Link>
-          <p className="mt-8 text-xs font-black tracking-[0.22em] text-gold uppercase">
-            Braj Setu Properties
-          </p>
-          <h1 className="mt-3 max-w-3xl text-3xl font-extrabold tracking-tight sm:text-5xl">
-            {title}
-          </h1>
-          <p className="mt-4 text-sm text-background/70">Last updated {updated}</p>
-          <p className="mt-6 max-w-3xl text-base leading-relaxed text-background/80">{intro}</p>
-        </div>
-      </div>
-
-      <article className="pv-container max-w-4xl py-10 sm:py-14">
-        <div className="overflow-hidden rounded-[1.5rem] border border-gold/20 bg-card shadow-[0_30px_90px_-46px_rgba(18,35,63,0.45)]">
-          {sections.map((section) => (
+    <div>
+      <PageHeader eyebrow="Legal information" title={title} description={intro}>
+        <p className="text-xs text-muted-foreground">Last updated: {updated}</p>
+      </PageHeader>
+      <div className="pv-container grid items-start gap-8 py-8 sm:py-12 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-12">
+        <nav
+          aria-label="On this page"
+          className="rounded-xl border border-border bg-card p-5 lg:sticky lg:top-24"
+        >
+          <p className="text-sm font-semibold text-navy">On this page</p>
+          <ol className="mt-3 space-y-1">
+            {sections.map((section, index) => (
+              <li key={section.heading}>
+                <a
+                  href={`#legal-section-${index + 1}`}
+                  className="flex min-h-11 items-center text-sm text-muted-foreground hover:text-navy"
+                >
+                  {section.heading}
+                </a>
+              </li>
+            ))}
+          </ol>
+        </nav>
+        <article className="min-w-0 max-w-3xl">
+          {sections.map((section, index) => (
             <section
+              id={`legal-section-${index + 1}`}
               key={section.heading}
-              className="border-b border-border p-6 last:border-b-0 sm:p-8"
+              className="scroll-mt-24 border-b border-border py-6 first:pt-0"
             >
-              <h2 className="text-xl font-bold text-navy">{section.heading}</h2>
-              <div className="mt-3 space-y-4">
-                {section.body.map((paragraph, i) => (
-                  <p key={i} className="text-sm leading-relaxed text-muted-foreground">
+              <h2 className="text-xl font-semibold text-navy">{section.heading}</h2>
+              <div className="mt-4 space-y-4">
+                {section.body.map((paragraph) => (
+                  <p
+                    key={paragraph}
+                    className="text-sm leading-7 text-muted-foreground sm:text-base"
+                  >
                     {paragraph}
                   </p>
                 ))}
               </div>
             </section>
           ))}
-        </div>
-      </article>
+          <div className="mt-8 rounded-xl border border-border bg-smoke p-5">
+            <h2 className="text-base font-semibold text-navy">Questions or requests?</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Email{" "}
+              <a
+                href={`mailto:${settings.contactEmail}`}
+                className="break-all text-navy underline underline-offset-4"
+              >
+                {settings.contactEmail}
+              </a>{" "}
+              or{" "}
+              <Link to="/contact" className="text-navy underline underline-offset-4">
+                contact our team
+              </Link>
+              .
+            </p>
+          </div>
+        </article>
+      </div>
     </div>
   );
 }

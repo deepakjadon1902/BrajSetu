@@ -3,18 +3,17 @@ import mongoose from "mongoose";
 export const defaultSettings = {
   siteName: "Braj Setu Properties",
   logoInitials: "BS",
-  tagline:
-    "A heritage-led property consultancy bridging owners and buyers to verified shops, flats, plots, houses and farm houses.",
+  tagline: "Connecting buyers, tenants and property owners across Braj Mandal.",
   metaTitle: "Braj Setu Properties | Premium Property Marketplace",
   metaDescription:
-    "Braj Setu Properties bridges buyers, tenants and owners to verified flats, houses, plots, shops and farm houses.",
+    "Find flats, houses, plots, shops and farm houses across Vrindavan, Mathura and nearby Braj towns.",
   contactEmail: "brajsetuproperties@gmail.com",
   contactPhone: "+91 90000 00000",
   address:
     "Raja wala mandir, Infront of Giriraj ji Maharaj, Goverdhan, Mathura, Uttar Pradesh 281502",
   ogTitle: "Braj Setu Properties | Premium Property Marketplace",
   ogDescription:
-    "Buy, rent and sell verified property with a boutique advisory team.",
+    "Local property listings and support for buyers, tenants and owners in Braj.",
   ogImage: "https://www.brajsetuproperties.com/braj-setu-logo.jpeg",
   twitterCard: "summary_large_image",
   twitterHandle: "@brajsetuproperties",
@@ -22,9 +21,9 @@ export const defaultSettings = {
   socialInstagram: "",
   socialLinkedin: "",
   socialX: "",
-  announcementEnabled: true,
+  announcementEnabled: false,
   announcementMessage:
-    "New this week: verified Braj Mandal listings added across Vrindavan, Mathura and Goverdhan.",
+    "Explore properties across Vrindavan, Mathura and nearby Braj towns.",
   announcementTone: "navy",
 };
 

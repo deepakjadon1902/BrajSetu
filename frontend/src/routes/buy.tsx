@@ -7,16 +7,17 @@ export const Route = createFileRoute("/buy")({
   }),
   head: () => ({
     meta: [
-      { title: "Buy Property in India | Braj Setu Properties" },
+      { title: "Buy Property in Braj | Braj Setu Properties" },
       {
         name: "description",
         content:
-          "Browse verified flats, houses, plots, shops and farm houses for sale with Braj Setu Properties' map-led search and honest advisory.",
+          "Browse flats, houses, plots, shops and farm houses for sale across Vrindavan, Mathura and nearby Braj towns.",
       },
-      { property: "og:title", content: "Buy Property in India | Braj Setu Properties" },
+      { property: "og:title", content: "Buy Property in Braj | Braj Setu Properties" },
       {
         property: "og:description",
-        content: "Verified homes and commercial spaces for sale, filtered the way you search.",
+        content:
+          "Search homes and commercial spaces for sale by location, budget and property type.",
       },
     ],
   }),
@@ -29,8 +30,8 @@ function BuyPage() {
     <ListingPage
       intent="Sale"
       searchIntent="Buy"
-      heading="Buy with confidence"
-      subheading="Every Braj Setu Properties listing is title-checked and visited by our team before it reaches this page."
+      heading="Find a property to buy."
+      subheading="Explore flats, houses, plots and commercial spaces in Braj. Compare details and contact our team when a property feels right."
       initialQuery={q ?? ""}
     />
   );

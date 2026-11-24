@@ -13,7 +13,7 @@ export const Route = createFileRoute("/register")({
       {
         name: "description",
         content:
-          "Register with Braj Setu Properties to shortlist homes, save searches and get matched with verified listings.",
+          "Create a Braj Setu account to manage contact details, property preferences and listing submissions.",
       },
       { property: "og:title", content: "Create your Braj Setu Properties account" },
       {
@@ -84,7 +84,7 @@ function RegisterPage() {
   return (
     <AuthLayout
       title="Create your account"
-      subtitle="One account for shortlists, saved searches and enquiry history."
+      subtitle="Create an account to manage your profile and submit property listings."
       footer={
         <>
           Already registered?{" "}

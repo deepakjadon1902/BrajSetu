@@ -64,7 +64,7 @@ function loadGoogleScript() {
 }
 
 function getGoogleClientId() {
-  const envClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
+  const envClientId = import.meta.env["VITE_GOOGLE_CLIENT_ID"] as string | undefined;
   if (envClientId) return Promise.resolve(envClientId);
   if (!googleClientIdPromise) {
     googleClientIdPromise = fetch(`${API_BASE}/auth/google/config`)
@@ -88,12 +88,14 @@ export function GoogleSignInButton({ onSuccess }: GoogleSignInButtonProps) {
 
     async function renderGoogleButton() {
       try {
-        const [clientId] = await Promise.all([getGoogleClientId(), loadGoogleScript()]);
+        const clientId = await getGoogleClientId();
         if (cancelled || !buttonRef.current) return;
         if (!clientId) {
-          setError("Google sign-in is not configured.");
+          setError("Google sign-in is unavailable. Please use your email and password.");
           return;
         }
+        await loadGoogleScript();
+        if (cancelled || !buttonRef.current) return;
 
         window.google?.accounts.id.initialize({
           client_id: clientId,
@@ -123,9 +125,7 @@ export function GoogleSignInButton({ onSuccess }: GoogleSignInButtonProps) {
         });
       } catch (loadError) {
         if (!cancelled) {
-          setError(
-            loadError instanceof Error ? loadError.message : "Google sign-in failed to load.",
-          );
+          setError("Google sign-in is unavailable. Please use your email and password.");
         }
       }
     }

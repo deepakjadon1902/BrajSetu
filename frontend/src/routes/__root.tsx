@@ -91,7 +91,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:title", content: "Braj Setu Properties | Premium Property Marketplace" },
       {
         property: "og:description",
-        content: "Buy, rent and sell verified property with a boutique advisory team.",
+        content: "Local property listings and support for buyers, tenants and owners across Braj.",
       },
       { property: "og:type", content: "website" },
       { property: "og:url", content: SITE_URL },
@@ -101,7 +101,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:title", content: "Braj Setu Properties | Premium Property Marketplace" },
       {
         name: "twitter:description",
-        content: "Buy, rent and sell verified property with a boutique advisory team.",
+        content: "Local property listings and support for buyers, tenants and owners across Braj.",
       },
       { name: "twitter:image", content: SITE_LOGO_URL },
     ],
@@ -187,9 +187,20 @@ function RootComponent() {
           <Outlet />
         ) : (
           <div className="flex min-h-screen flex-col">
+            <a
+              href="#main-content"
+              className="fixed left-4 top-3 z-[100] -translate-y-24 rounded-lg bg-navy px-5 py-3 text-sm font-semibold text-white focus:translate-y-0"
+            >
+              Skip to content
+            </a>
             <SiteAnnouncement />
             <Navbar />
-            <main key={pathname} className="pv-page-transition flex-1">
+            <main
+              id="main-content"
+              tabIndex={-1}
+              key={pathname}
+              className="pv-page-transition min-w-0 flex-1"
+            >
               {/* Required: nested routes render here. */}
               <Outlet />
             </main>
@@ -209,7 +220,7 @@ function SiteMeta() {
 
   useEffect(() => {
     if (!hydrated) return;
-    document.title = settings.metaTitle;
+    if (pathname === "/") document.title = settings.metaTitle;
     const upsert = (attr: "name" | "property", key: string, content: string) => {
       if (!content) return;
       let el = document.head.querySelector(`meta[${attr}="${key}"]`);
@@ -221,15 +232,17 @@ function SiteMeta() {
       el.setAttribute("content", content);
     };
 
-    upsert("name", "description", settings.metaDescription);
-    upsert("property", "og:title", settings.ogTitle || settings.metaTitle);
-    upsert("property", "og:description", settings.ogDescription || settings.metaDescription);
+    if (pathname === "/") {
+      upsert("name", "description", settings.metaDescription);
+      upsert("property", "og:title", settings.ogTitle || settings.metaTitle);
+      upsert("property", "og:description", settings.ogDescription || settings.metaDescription);
+      upsert("name", "twitter:title", settings.ogTitle || settings.metaTitle);
+      upsert("name", "twitter:description", settings.ogDescription || settings.metaDescription);
+    }
     upsert("property", "og:image", settings.ogImage);
     upsert("property", "og:url", `${SITE_URL}${pathname === "/" ? "" : pathname}`);
     upsert("property", "og:site_name", settings.siteName);
     upsert("name", "twitter:card", settings.twitterCard);
-    upsert("name", "twitter:title", settings.ogTitle || settings.metaTitle);
-    upsert("name", "twitter:description", settings.ogDescription || settings.metaDescription);
     upsert("name", "twitter:image", settings.ogImage);
     upsert("name", "twitter:site", settings.twitterHandle);
 

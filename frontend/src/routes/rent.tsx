@@ -11,12 +11,12 @@ export const Route = createFileRoute("/rent")({
       {
         name: "description",
         content:
-          "Find flats, houses, shops and farm houses on rent with transparent pricing, verified owners and flexible lease terms.",
+          "Find flats, houses, shops and farm houses for rent across Braj. Confirm prices, availability and lease terms with the listing contact.",
       },
       { property: "og:title", content: "Homes & Shops for Rent | Braj Setu Properties" },
       {
         property: "og:description",
-        content: "Rental homes and commercial spaces with verified owners and clear terms.",
+        content: "Explore rental homes and commercial spaces across Braj.",
       },
     ],
   }),
@@ -29,8 +29,8 @@ function RentPage() {
     <ListingPage
       intent="Rent"
       searchIntent="Rent"
-      heading="Rent something you'll want to stay in"
-      subheading="Long-lease homes and commercial spaces, each one photographed and inspected by a Braj Setu Properties advisor."
+      heading="Find your next rental."
+      subheading="Browse homes and commercial spaces in Braj. Choose a location, set your budget and explore the available listings."
       initialQuery={q ?? ""}
     />
   );

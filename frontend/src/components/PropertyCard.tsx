@@ -1,9 +1,9 @@
 import { Link } from "@tanstack/react-router";
-import { Bath, BedDouble, Maximize } from "lucide-react";
+import { ArrowUpRight, Bath, BedDouble, Camera, MapPin, Maximize } from "lucide-react";
 import { SmartImage } from "@/components/SmartImage";
 import { VerificationBadge } from "@/components/VerificationBadge";
 import { formatArea, formatPrice } from "@/lib/api";
-import { getMainImage } from "@/lib/property-images";
+import { getCoverPhotoIndex, getPhotoName, getPropertyPhotos } from "@/lib/property-images";
 import { cn } from "@/lib/utils";
 import type { Property } from "@/types/property";
 
@@ -14,24 +14,28 @@ interface PropertyCardProps {
   onSelect?: (property: Property) => void;
 }
 
-function MetaRow({ property, className }: { property: Property; className?: string }) {
-  const items = [
-    property.specs.bedrooms ? { icon: BedDouble, label: `${property.specs.bedrooms} Beds` } : null,
-    property.specs.bathrooms ? { icon: Bath, label: `${property.specs.bathrooms} Baths` } : null,
-    { icon: Maximize, label: formatArea(property.specs.area) },
-  ].filter(Boolean) as { icon: typeof Bath; label: string }[];
-
+function MetaRow({ property }: { property: Property }) {
+  const { bedrooms, bathrooms, area } = property.specs;
   return (
-    <div className={cn("flex flex-wrap items-center gap-x-4 gap-y-2", className)}>
-      {items.map(({ icon: Icon, label }) => (
-        <span
-          key={label}
-          className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"
-        >
-          <Icon className="h-3.5 w-3.5 text-navy-soft/70" />
-          {label}
+    <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs leading-5 text-navy-soft">
+      {area > 0 && (
+        <span className="inline-flex items-center gap-1.5">
+          <Maximize className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+          {formatArea(area, property.propertyDetails?.areaUnit)}
         </span>
-      ))}
+      )}
+      {!!bedrooms && (
+        <span className="inline-flex items-center gap-1.5">
+          <BedDouble className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+          {bedrooms} {bedrooms === 1 ? "bed" : "beds"}
+        </span>
+      )}
+      {!!bathrooms && (
+        <span className="inline-flex items-center gap-1.5">
+          <Bath className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+          {bathrooms} {bathrooms === 1 ? "bath" : "baths"}
+        </span>
+      )}
     </div>
   );
 }
@@ -40,89 +44,95 @@ export function PropertyCard({
   property,
   variant = "standard",
   active = false,
-  onSelect,
 }: PropertyCardProps) {
-  const badge = (
-    <span className="absolute top-3 left-3 rounded-full bg-navy/85 px-3 py-1 text-[11px] font-semibold text-background backdrop-blur-sm">
-      {property.category} · {property.intent}
-    </span>
-  );
-
-  if (variant === "compact") {
-    return (
-      <article
-        onClick={() => onSelect?.(property)}
-        className={cn(
-          "group flex cursor-pointer gap-4 rounded-2xl bg-card p-3 shadow-[var(--shadow-soft)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[var(--shadow-lift)]",
-          active && "ring-2 ring-gold",
-        )}
-      >
-        <SmartImage
-          src={getMainImage(property)}
-          alt={property.title}
-          aspect="aspect-square"
-          wrapperClassName="w-28 shrink-0 rounded-xl sm:w-36"
-        />
-        <div className="flex min-w-0 flex-1 flex-col justify-between py-0.5">
-          <div className="flex items-start justify-between gap-3">
-            <p className="text-base font-extrabold text-gold-deep">
-              {formatPrice(property.price, property.intent)}
-            </p>
-            <Link
-              to="/property/$propertyId"
-              params={{ propertyId: property.id }}
-              onClick={(e) => e.stopPropagation()}
-              className="shrink-0 text-xs font-semibold text-navy underline-offset-4 hover:underline"
-            >
-              View Details
-            </Link>
-          </div>
-          <h3 className="mt-1 truncate text-sm font-bold text-navy">{property.title}</h3>
-          <p className="truncate text-xs text-muted-foreground">
-            {property.location.locality}, {property.location.city}
-          </p>
-          <div className="mt-2">
-            <VerificationBadge property={property} compact />
-          </div>
-          <MetaRow property={property} className="mt-2" />
-        </div>
-      </article>
-    );
-  }
+  const compact = variant === "compact";
+  const photos = getPropertyPhotos(property.images);
+  const coverIndex = getCoverPhotoIndex(photos);
+  const cover = photos[coverIndex];
+  const totalPhotos = property.photoCount ?? photos.length;
+  const additionalDetails = [
+    property.specs.furnishing?.trim(),
+    property.propertyDetails?.availability?.trim(),
+  ].filter(Boolean);
 
   return (
     <article
       className={cn(
-        "pv-lift group overflow-hidden rounded-2xl bg-card shadow-[var(--shadow-soft)]",
-        variant === "featured" && "ring-1 ring-gold/40",
+        "group min-w-0 overflow-hidden rounded-2xl border border-border bg-card shadow-[var(--shadow-soft)] transition-[border-color,box-shadow,transform] duration-300 hover:border-navy/25 hover:shadow-[var(--shadow-lift)] motion-safe:hover:-translate-y-0.5",
+        active && "ring-2 ring-navy",
+        variant === "featured" && "border-gold/50",
       )}
     >
-      <Link to="/property/$propertyId" params={{ propertyId: property.id }} className="block">
-        <div className="relative">
-          <SmartImage src={getMainImage(property)} alt={property.title} />
-          {badge}
-          {property.status && (
-            <span className="absolute top-3 right-3 rounded-full bg-background/90 px-3 py-1 text-[11px] font-semibold text-navy">
-              {property.status}
+      <Link
+        to="/property/$propertyId"
+        params={{ propertyId: property.id }}
+        className={cn(
+          "flex h-full min-w-0 flex-col focus-visible:outline-offset-[-3px]",
+          compact && "sm:flex-row",
+        )}
+      >
+        <div
+          className={cn(
+            "relative min-w-0 overflow-hidden border-b border-border bg-smoke",
+            compact && "sm:w-[32%] sm:max-w-56 sm:shrink-0 sm:border-b-0 sm:border-r",
+          )}
+        >
+          <SmartImage
+            src={cover?.src ?? ""}
+            alt={cover ? `${property.title} — ${getPhotoName(cover, coverIndex)}` : ""}
+            aspect="aspect-[4/3]"
+            wrapperClassName={cn("bg-smoke", compact && "sm:aspect-auto sm:h-full sm:min-h-44")}
+            className="absolute inset-0 h-full w-full object-cover object-center transition-[transform,opacity] duration-300 motion-safe:group-hover:scale-[1.035]"
+          />
+          {totalPhotos > 1 && (
+            <span className="absolute right-3 bottom-3 inline-flex items-center gap-1.5 rounded-full bg-[#10192a]/80 px-2.5 py-1 text-xs font-medium text-white">
+              <Camera className="size-3.5" aria-hidden="true" /> {totalPhotos} photos
             </span>
           )}
         </div>
-        <div className="p-5">
-          <div className="flex items-start justify-between gap-3">
-            <h3 className="min-w-0 flex-1 truncate text-base font-bold text-navy">
-              {property.title}
-            </h3>
-            <p className="shrink-0 text-base font-extrabold text-gold-deep">
-              {formatPrice(property.price, property.intent)}
-            </p>
+        <div className="flex min-w-0 flex-1 flex-col p-4">
+          <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 text-[11px] leading-4 text-muted-foreground">
+            <span>
+              {property.category} · {property.intent === "Rent" ? "For rent" : "For sale"}
+            </span>
+            {(property.status === "New" || property.status === "Price Drop") && (
+              <span className="font-medium text-gold-deep">{property.status}</span>
+            )}
           </div>
-          <p className="mt-1 truncate text-sm text-muted-foreground">
-            {property.location.locality}, {property.location.city}
+          <p className="mt-1 text-lg font-semibold leading-6 tracking-tight text-navy">
+            {formatPrice(property.price, property.intent)}
           </p>
-          <div className="mt-3">
-            <VerificationBadge property={property} />
+          <h3 className="mt-1 break-words text-[0.9375rem] font-semibold leading-6 text-navy [text-wrap:pretty]">
+            {property.title}
+          </h3>
+          <p className="mt-1 flex items-start gap-1.5 text-xs leading-[1.125rem] text-muted-foreground">
+            <MapPin className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />
+            <span className="min-w-0 break-words">
+              {property.location.locality}, {property.location.city}
+            </span>
+          </p>
+          <MetaRow property={property} />
+          {additionalDetails.length > 0 && (
+            <p className="mt-1 break-words text-xs leading-5 text-muted-foreground">
+              {additionalDetails.join(" · ")}
+            </p>
+          )}
+          <div className="mt-auto pt-2">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-2">
+              <VerificationBadge
+                property={property}
+                compact
+                className="gap-1.5 px-2 py-0.5 text-[10px] font-medium [&_svg]:h-3 [&_svg]:w-3"
+              />
+              <span className="inline-flex items-center gap-1 text-xs font-semibold leading-5 text-navy">
+                View details{" "}
+                <ArrowUpRight
+                  className="size-3.5 transition-transform motion-safe:group-hover:translate-x-0.5"
+                  aria-hidden="true"
+                />
+              </span>
+            </div>
           </div>
-          <MetaRow property={property} className="mt-4 border-t border-border pt-4" />
         </div>
       </Link>
     </article>

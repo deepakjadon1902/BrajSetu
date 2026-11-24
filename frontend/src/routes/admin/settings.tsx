@@ -26,7 +26,7 @@ export const Route = createFileRoute("/admin/settings")({
 });
 
 const inputClass =
-  "w-full rounded-2xl border border-border bg-background px-4 py-2.5 text-sm text-navy outline-none focus:border-navy";
+  "w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm text-navy outline-none focus:border-navy";
 
 function Field({
   label,
@@ -56,7 +56,7 @@ function Card({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-3xl border border-border bg-background p-6">
+    <section className="rounded-xl border border-border bg-background p-6">
       <h2 className="text-base font-bold text-navy">{title}</h2>
       <p className="mt-1 text-sm text-muted-foreground">{description}</p>
       <div className="mt-5 grid gap-5 sm:grid-cols-2">{children}</div>

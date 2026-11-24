@@ -25,7 +25,7 @@ export const Route = createFileRoute("/admin/login")({
 });
 
 function AdminLoginPage() {
-  const { adminLogin, adminUser, hydrated } = useStore();
+  const { adminLogin, adminUser, sessionHydrated } = useStore();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -33,8 +33,8 @@ function AdminLoginPage() {
   const [error, setError] = useState<string | undefined>();
 
   useEffect(() => {
-    if (hydrated && adminUser) navigate({ to: "/admin", replace: true });
-  }, [hydrated, adminUser, navigate]);
+    if (sessionHydrated && adminUser) navigate({ to: "/admin", replace: true });
+  }, [sessionHydrated, adminUser, navigate]);
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
@@ -52,22 +52,22 @@ function AdminLoginPage() {
   }
 
   const inputClass =
-    "w-full rounded-2xl border border-background/15 bg-background/5 px-4 py-3 text-sm text-background outline-none transition-colors placeholder:text-background/40 focus:border-gold";
+    "w-full rounded-lg border border-background/15 bg-background/5 px-4 py-3 text-sm text-background outline-none transition-colors placeholder:text-background/40 focus:border-gold";
 
   return (
     <div className="grid min-h-screen place-items-center bg-navy px-4 py-14">
       <div className="w-full max-w-md">
         <div className="flex items-center gap-2">
-          <span className="grid h-10 w-10 place-items-center rounded-xl bg-gold text-sm font-extrabold text-navy">
+          <span className="grid h-10 w-10 place-items-center rounded-xl bg-gold text-sm font-semibold text-navy">
             BS
           </span>
-          <span className="text-lg font-extrabold tracking-tight text-background">
+          <span className="text-lg font-semibold tracking-tight text-background">
             Braj Setu Admin
           </span>
         </div>
 
-        <div className="mt-6 rounded-3xl border border-background/10 bg-background/5 p-7 sm:p-9">
-          <h1 className="flex items-center gap-2 text-2xl font-extrabold tracking-tight text-background">
+        <div className="mt-6 rounded-xl border border-background/10 bg-background/5 p-7 sm:p-9">
+          <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-background">
             <Lock className="h-5 w-5 text-gold" /> Restricted access
           </h1>
           <p className="mt-3 text-sm leading-relaxed text-background/60">

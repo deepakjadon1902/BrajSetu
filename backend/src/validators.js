@@ -1,21 +1,37 @@
 import { z } from "zod";
+import { isPropertyPhotoSource } from "./utils/propertyPhotos.js";
 import {
   listingLifecycleStatuses,
+  propertyAreaUnits,
   verificationLevels,
   verificationStatuses,
 } from "./constants.js";
 
 const email = z.string().trim().email().toLowerCase();
 const optionalEmail = z.preprocess(
-  (value) => (typeof value === "string" && value.trim() === "" ? undefined : value),
+  (value) =>
+    typeof value === "string" && value.trim() === "" ? undefined : value,
   email.optional(),
 );
 const optionalPhone = z.preprocess(
-  (value) => (typeof value === "string" && value.trim() === "" ? undefined : value),
+  (value) =>
+    typeof value === "string" && value.trim() === "" ? undefined : value,
   z.string().trim().min(8).max(20).optional(),
 );
 const propertyCategories = ["Shop", "Flat", "Plot", "House", "Farm House"];
 const propertyIntents = ["Sale", "Rent"];
+const propertyStatuses = ["New", "Active", "Price Drop"];
+const propertyImageLabels = [
+  "Main", "Front", "Exterior", "Living room", "Bedroom", "Kitchen", "Bathroom", "Balcony",
+  "Terrace", "Garden", "Parking", "Floor plan", "View", "Other",
+];
+const propertyPhotoSchema = z.object({
+  src: z.string().trim().default(""),
+  label: z.enum(propertyImageLabels).default("Other"),
+  name: z.string().trim().max(80).optional(),
+  cover: z.boolean().optional(),
+});
+const ownerPhotoSource = z.string().trim().refine(isPropertyPhotoSource, "Add a valid photo upload or image link.");
 const furnishingOptions = [
   "Unfurnished",
   "Semi-furnished",
@@ -64,7 +80,7 @@ const propertyDetailsSchema = z
   .object({
     fullAddress: z.string().trim().max(300).optional(),
     landmark: z.string().trim().max(160).optional(),
-    areaUnit: z.enum(["sq.ft", "sq.m", "sq.yd", "acre", "bigha"]).optional(),
+    areaUnit: z.enum(propertyAreaUnits).optional(),
     plotArea: z.coerce.number().min(0).max(10000000).optional(),
     carpetArea: z.coerce.number().min(0).max(10000000).optional(),
     builtUpArea: z.coerce.number().min(0).max(10000000).optional(),
@@ -97,7 +113,14 @@ const ownerDetailsSchema = z
     ownerPhone: z.string().trim().max(20).optional(),
     ownerEmail: optionalEmail,
     ownerRole: z
-      .enum(["Owner", "Landlord", "Developer", "Authorized Partner", "Broker", ""])
+      .enum([
+        "Owner",
+        "Landlord",
+        "Developer",
+        "Authorized Partner",
+        "Broker",
+        "",
+      ])
       .optional(),
     organizationName: z.string().trim().max(160).optional(),
     ownerAddress: z.string().trim().max(300).optional(),
@@ -138,39 +161,29 @@ export const resetPasswordSchema = z.object({
     .regex(/\d/),
 });
 
-export const propertySchema = z.object({
+const propertyLocationSchema = z.object({
+  city: z.string().trim().min(2, "Enter a main city or town.").max(80),
+  locality: z.string().trim().min(2, "Enter a locality or village.").max(120),
+});
+
+const propertySchema = z.object({
   id: z.string().trim().min(2),
   title: z.string().trim().min(2).max(120),
   category: z.enum(propertyCategories),
   intent: z.enum(propertyIntents),
   price: z.coerce.number().min(1).max(10000000000),
-  location: z.object({
-    city: z.string().trim().min(2).max(80),
-    locality: z.string().trim().min(2).max(120).default(""),
-  }),
+  location: propertyLocationSchema,
   specs: z.object({
-    area: z.coerce.number().min(1).max(10000000),
+    area: propertyAmount("property area", 10000000),
     bedrooms: z.coerce.number().int().min(0).max(50).optional(),
     bathrooms: z.coerce.number().int().min(0).max(50).optional(),
     furnishing: z.enum(furnishingOptions).optional(),
   }),
   propertyDetails: propertyDetailsSchema.optional(),
-  images: z
-    .array(
-      z.union([
-        z.string(),
-        z.object({
-          src: z.string().default(""),
-          label: z
-            .enum(["Main", "Bedroom", "Kitchen", "Bathroom", "Balcony"])
-            .default("Bedroom"),
-        }),
-      ]),
-    )
-    .default([]),
+  images: z.array(z.union([z.string(), propertyPhotoSchema])).default([]),
   amenities: z.array(z.string()).default([]),
   featured: z.boolean().optional(),
-  status: z.enum(["New", "Active", "Price Drop"]).optional(),
+  status: z.enum(propertyStatuses).optional(),
   description: z.string().trim().min(20).max(2500).optional(),
   listingSource: z.enum(["Admin", "User"]).optional(),
   reviewStatus: z.enum(reviewStatuses).optional(),
@@ -209,6 +222,90 @@ export const propertySchema = z.object({
   duplicateCandidates: z.array(z.unknown()).optional(),
 });
 
+function optionalAdminFields(schema) {
+  // Invalid optional values are skipped so older listing details cannot block a save.
+  return Object.fromEntries(
+    Object.entries(schema.shape).map(([key, field]) => [key, field.optional().catch(undefined)]),
+  );
+}
+
+function listingChoice(options, label) {
+  const message = `Select a valid ${label}.`;
+  return z.enum(options, { errorMap: () => ({ message }) });
+}
+
+function propertyAmount(label, max) {
+  const message = `Enter a positive ${label} up to ${max.toLocaleString("en-IN")}.`;
+  return z.preprocess(
+    (value) => (typeof value === "string" && value.trim() ? Number(value) : value),
+    z.number({ required_error: message, invalid_type_error: message }).positive(message).max(max, message),
+  );
+}
+
+export const requiredPropertyDetailsSchema = z.object(
+  {
+    landmark: z
+      .string({ required_error: "Enter a nearby landmark." })
+      .trim()
+      .min(1, "Enter a nearby landmark.")
+      .max(160, "Use at most 160 characters for the landmark."),
+    areaUnit: listingChoice(propertyAreaUnits, "area unit"),
+  },
+  { required_error: "Enter a nearby landmark and select an area unit." },
+);
+const optionalPropertyDetailsSchema = propertyDetailsSchema.omit({ landmark: true, areaUnit: true });
+
+const adminOwnerEmail = z
+  .union([email, z.string().trim().pipe(z.literal(""))])
+  .optional()
+  .catch(undefined);
+const adminOwnerPhone = ownerDetailsSchema.shape.ownerPhone.catch(undefined);
+
+export const adminPropertySchema = z.object({
+  ...optionalAdminFields(
+    propertySchema.omit({
+      submittedBy: true,
+      termsAcceptedAt: true,
+      lifecycleStatus: true,
+      declarations: true,
+      documents: true,
+      verificationChecklist: true,
+      riskFlags: true,
+      duplicateCandidates: true,
+    }),
+  ),
+  id: propertySchema.shape.id.optional(),
+  title: z
+    .string({ required_error: "Enter a listing title." })
+    .trim()
+    .min(2, "Enter a listing title with at least 2 characters.")
+    .max(120, "Use at most 120 characters for the listing title."),
+  category: listingChoice(propertyCategories, "property type"),
+  status: listingChoice(propertyStatuses, "status"),
+  reviewStatus: listingChoice(reviewStatuses, "review status"),
+  location: propertyLocationSchema,
+  price: propertyAmount("price", 10000000000),
+  specs: z.object({
+    ...optionalAdminFields(propertySchema.shape.specs),
+    area: propertySchema.shape.specs.shape.area,
+  }),
+  description: z.string().trim().max(2500).optional().catch(undefined),
+  propertyDetails: requiredPropertyDetailsSchema.extend(
+    optionalAdminFields(optionalPropertyDetailsSchema),
+  ),
+  ownerEmail: adminOwnerEmail,
+  ownerPhone: adminOwnerPhone,
+  ownerDetails: z
+    .object({ ...optionalAdminFields(ownerDetailsSchema), ownerEmail: adminOwnerEmail })
+    .optional()
+    .catch(undefined),
+  rera: z.object(optionalAdminFields(reraSchema.omit({ reviewer: true }))).optional().catch(undefined),
+  verification: z.object({
+    ...optionalAdminFields(verificationSchema.omit({ status: true, verifiedAt: true, verifiedBy: true })),
+    level: listingChoice(verificationLevels, "verification level"),
+  }),
+});
+
 export const propertySubmissionSchema = propertySchema
   .omit({
     id: true,
@@ -225,17 +322,24 @@ export const propertySubmissionSchema = propertySchema
   .extend({
     title: z.string().trim().min(8).max(120),
     description: z.string().trim().min(40).max(2500),
-    images: z.array(z.string().trim().url()).max(8).default([]),
+    images: z.array(z.union([ownerPhotoSource, propertyPhotoSchema.extend({ src: ownerPhotoSource })])).max(8).default([]),
     ownerName: z.string().trim().min(2).max(120),
     ownerEmail: email,
     ownerPhone: z.string().trim().min(8).max(20),
     ownerRole: z
-      .enum(["Owner", "Landlord", "Developer", "Authorized Partner", "Broker", ""])
+      .enum([
+        "Owner",
+        "Landlord",
+        "Developer",
+        "Authorized Partner",
+        "Broker",
+        "",
+      ])
       .default("Owner"),
     organizationName: z.string().trim().max(160).optional(),
     ownerAddress: z.string().trim().max(300).optional(),
     authorityType: z.string().trim().min(2).max(160),
-    propertyDetails: propertyDetailsSchema.optional(),
+    propertyDetails: requiredPropertyDetailsSchema.extend(optionalPropertyDetailsSchema.shape),
     termsAccepted: z.literal(true),
     loanOrEncumbrance: z.string().trim().max(500).optional(),
     litigationOrDispute: z.string().trim().max(500).optional(),
@@ -244,7 +348,14 @@ export const propertySubmissionSchema = propertySchema
 
 export const verificationDecisionSchema = z
   .object({
-    status: z.enum(["Under Review", "Needs Correction", "Approved", "Rejected", "Suspended", "Expired"]),
+    status: z.enum([
+      "Under Review",
+      "Needs Correction",
+      "Approved",
+      "Rejected",
+      "Suspended",
+      "Expired",
+    ]),
     level: z.enum(verificationLevels).default("OWNER_LISTED"),
     notes: z.string().trim().min(5).max(2000),
     reason: z.string().trim().max(1000).optional(),
@@ -252,7 +363,10 @@ export const verificationDecisionSchema = z
     rera: reraSchema.optional(),
   })
   .superRefine((input, ctx) => {
-    if (["Rejected", "Suspended", "Needs Correction"].includes(input.status) && !input.reason) {
+    if (
+      ["Rejected", "Suspended", "Needs Correction"].includes(input.status) &&
+      !input.reason
+    ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["reason"],
@@ -293,13 +407,36 @@ export const enquirySchema = z.object({
   propertyId: z.string().optional(),
 });
 
+export const profileUpdateSchema = z
+  .object({
+    name: z.string().trim().min(2).max(120),
+    phone: z
+      .string()
+      .trim()
+      .max(20)
+      .refine(
+        (value) => value === "" || /^[0-9+\-\s()]{8,20}$/.test(value),
+        "Enter a valid phone number.",
+      ),
+  })
+  .strict();
+
 export const userUpdateSchema = z.object({
   id: z.string().optional(),
   name: z.string().trim().min(2),
   email,
   phone: z.string().optional().default(""),
   password: z.string().min(8).optional(),
-  role: z.enum(["user", "owner", "developer", "editor", "manager", "verifier", "support", "admin"]),
+  role: z.enum([
+    "user",
+    "owner",
+    "developer",
+    "editor",
+    "manager",
+    "verifier",
+    "support",
+    "admin",
+  ]),
   permissions: z.array(z.string()).optional(),
   status: z.enum(["Active", "Suspended"]).default("Active"),
 });

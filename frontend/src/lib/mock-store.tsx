@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -121,16 +122,15 @@ export const VRINDAVAN_SARTHI_ADDRESS =
 export const defaultSettings: SiteSettings = {
   siteName: "Braj Setu Properties",
   logoInitials: "BS",
-  tagline:
-    "A heritage-led property consultancy bridging owners and buyers to verified shops, flats, plots, houses and farm houses.",
+  tagline: "Connecting buyers, tenants and property owners across Braj Mandal.",
   metaTitle: "Braj Setu Properties | Premium Property Marketplace",
   metaDescription:
-    "Braj Setu Properties bridges buyers, tenants and owners to verified flats, houses, plots, shops and farm houses.",
+    "Find flats, houses, plots, shops and farm houses across Vrindavan, Mathura and nearby Braj towns.",
   contactEmail: "brajsetuproperties@gmail.com",
   contactPhone: "+91 90000 00000",
   address: VRINDAVAN_SARTHI_ADDRESS,
   ogTitle: "Braj Setu Properties | Premium Property Marketplace",
-  ogDescription: "Buy, rent and sell verified property with a boutique advisory team.",
+  ogDescription: "Local property listings and support for buyers, tenants and owners in Braj.",
   ogImage: "https://www.brajsetuproperties.com/braj-setu-logo.jpeg",
   twitterCard: "summary_large_image",
   twitterHandle: "@brajsetuproperties",
@@ -138,14 +138,24 @@ export const defaultSettings: SiteSettings = {
   socialInstagram: "",
   socialLinkedin: "",
   socialX: "",
-  announcementEnabled: true,
-  announcementMessage:
-    "New this week: verified Braj Mandal listings added across Vrindavan, Mathura and Goverdhan.",
+  announcementEnabled: false,
+  announcementMessage: "Explore properties across Vrindavan, Mathura and nearby Braj towns.",
   announcementTone: "navy",
 };
 
 function normalizeSettings(settings: Partial<SiteSettings> | undefined): SiteSettings {
   const merged = { ...defaultSettings, ...(settings ?? {}) };
+  if (
+    merged.tagline ===
+    "A heritage-led property consultancy bridging owners and buyers to verified shops, flats, plots, houses and farm houses."
+  )
+    merged.tagline = defaultSettings.tagline;
+  if (merged.contactPhone.replace(/\D/g, "") === "919000000000") merged.contactPhone = "";
+  if (
+    merged.announcementMessage ===
+    "New this week: verified Braj Mandal listings added across Vrindavan, Mathura and Goverdhan."
+  )
+    merged.announcementMessage = defaultSettings.announcementMessage;
   return {
     ...merged,
     address:
@@ -190,10 +200,23 @@ interface StoreShape {
   settingsHistory: SettingsVersion[];
   users: AppUser[];
   properties: Property[];
+  adminProperties: Property[];
   news: NewsArticle[];
   enquiries: Enquiry[];
   currentUser: AppUser | null;
   adminUser: AppUser | null;
+}
+
+type AdminSnapshot = Partial<Omit<StoreShape, "adminProperties">>;
+
+function applyAdminSnapshot(state: StoreShape, snapshot: AdminSnapshot): StoreShape {
+  const { properties, ...rest } = snapshot;
+  return {
+    ...state,
+    ...rest,
+    adminProperties: properties ?? state.adminProperties,
+    settings: normalizeSettings(snapshot.settings),
+  };
 }
 
 export interface AuthResult {
@@ -204,6 +227,9 @@ export interface AuthResult {
 
 interface StoreContextValue extends StoreShape {
   hydrated: boolean;
+  sessionHydrated: boolean;
+  publicDataError: string | null;
+  refreshPublic: () => Promise<void>;
   permissions: AdminPermission[];
   can: (permission: AdminPermission) => boolean;
   register: (input: {
@@ -220,7 +246,10 @@ interface StoreContextValue extends StoreShape {
   resetPassword: (token: string, password: string) => Promise<AuthResult>;
   adminLogin: (email: string, password: string) => Promise<AuthResult>;
   adminLogout: () => void;
-  uploadPropertyImages: (files: File[]) => Promise<string[]>;
+  uploadPropertyImages: (
+    files: File[],
+    source: "admin" | "owner",
+  ) => Promise<PromiseSettledResult<string>[]>;
   saveProperty: (property: Property) => Promise<void>;
   deleteProperty: (id: string) => Promise<void>;
   saveNews: (article: NewsArticle) => Promise<void>;
@@ -267,10 +296,10 @@ interface StoreContextValue extends StoreShape {
 }
 
 const localApiBase = import.meta.env.DEV
-  ? import.meta.env.VITE_API_BASE_URL?.trim() || "http://localhost:5000/api"
+  ? import.meta.env["VITE_API_BASE_URL"]?.trim() || "http://localhost:5000/api"
   : "";
 const productionApiBase = import.meta.env.PROD
-  ? import.meta.env.VITE_PRODUCTION_API_BASE_URL?.trim() || "https://brajsetu.onrender.com/api"
+  ? import.meta.env["VITE_PRODUCTION_API_BASE_URL"]?.trim() || "https://brajsetu.onrender.com/api"
   : "";
 
 const API_BASE_ALIASES: Record<string, string> = {
@@ -298,6 +327,7 @@ function initialState(): StoreShape {
     settingsHistory: [],
     users: [],
     properties: [],
+    adminProperties: [],
     news: [],
     enquiries: [],
     currentUser: null,
@@ -311,11 +341,13 @@ async function api<T>(path: string, options: RequestInit = {}, token?: string | 
   if (token) headers.set("Authorization", `Bearer ${token}`);
   let response: Response;
   try {
-    response = await fetch(`${API_BASE}${path}`, { ...options, headers });
+    response = await fetch(`${API_BASE}${path}`, {
+      ...options,
+      headers,
+      signal: options.signal ?? AbortSignal.timeout(12000),
+    });
   } catch {
-    throw new Error(
-      `Cannot reach the API at ${API_BASE}. Please make sure the backend is running.`,
-    );
+    throw new Error("We could not connect to the service. Please try again in a moment.");
   }
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(data.error || "Request failed.");
@@ -334,28 +366,35 @@ function blobToDataUrl(blob: Blob): Promise<string> {
 async function fileToWebp(file: File): Promise<File> {
   if (!file.type.startsWith("image/")) throw new Error(`${file.name} is not an image.`);
 
-  const bitmap = await createImageBitmap(file);
-  const maxSide = 1600;
-  const ratio = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
-  const width = Math.max(1, Math.round(bitmap.width * ratio));
-  const height = Math.max(1, Math.round(bitmap.height * ratio));
-  const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error(`Could not optimize ${file.name}.`);
-  ctx.drawImage(bitmap, 0, 0, width, height);
-  bitmap.close();
-
-  const blob = await new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob(
-      (result) => (result ? resolve(result) : reject(new Error(`Could not convert ${file.name}.`))),
-      "image/webp",
-      0.82,
-    );
+  const bitmap = await createImageBitmap(file).catch(() => {
+    throw new Error(`Could not open ${file.name}. Try a JPEG, PNG or WebP photo.`);
   });
-  const name = file.name.replace(/\.[^.]+$/, "") || "property-image";
-  return new File([blob], `${name}.webp`, { type: "image/webp" });
+  const canvas = document.createElement("canvas");
+  try {
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error(`Could not optimize ${file.name}.`);
+    for (const [maxSide, quality] of [
+      [1600, 0.82],
+      [1400, 0.74],
+      [1100, 0.68],
+      [800, 0.62],
+    ] as const) {
+      const ratio = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
+      canvas.width = Math.max(1, Math.round(bitmap.width * ratio));
+      canvas.height = Math.max(1, Math.round(bitmap.height * ratio));
+      ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+      const blob = await new Promise<Blob | null>((resolve) =>
+        canvas.toBlob(resolve, "image/webp", quality),
+      );
+      if (blob?.type === "image/webp" && blob.size <= 240 * 1024) {
+        const name = file.name.replace(/\.[^.]+$/, "") || "property-image";
+        return new File([blob], `${name}.webp`, { type: blob.type });
+      }
+    }
+    throw new Error(`Could not optimize ${file.name}. Try a smaller photo or add a link.`);
+  } finally {
+    bitmap.close();
+  }
 }
 
 async function uploadToImageKit(file: File, token: string | null): Promise<string> {
@@ -380,6 +419,7 @@ async function uploadToImageKit(file: File, token: string | null): Promise<strin
   const response = await fetch("https://upload.imagekit.io/api/v1/files/upload", {
     method: "POST",
     body: form,
+    signal: AbortSignal.timeout(10000),
   });
   const data = (await response.json().catch(() => ({}))) as { url?: string; filePath?: string };
   if (!response.ok) throw new Error("ImageKit upload failed.");
@@ -401,18 +441,42 @@ const StoreContext = createContext<StoreContextValue | null>(null);
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<StoreShape>(() => initialState());
   const [hydrated, setHydrated] = useState(false);
+  const [sessionHydrated, setSessionHydrated] = useState(false);
+  const [publicDataError, setPublicDataError] = useState<string | null>(null);
+  const publicRequest = useRef(0);
   const [userToken, setUserToken] = useState<string | null>(null);
   const [adminToken, setAdminToken] = useState<string | null>(null);
+
+  const refreshPublic = useCallback(async () => {
+    const request = ++publicRequest.current;
+    setHydrated(false);
+    setPublicDataError(null);
+    try {
+      const boot = await api<Partial<StoreShape>>("/bootstrap", { cache: "no-store" });
+      if (request !== publicRequest.current) return;
+      setState((prev) => ({
+        ...prev,
+        properties: Array.isArray(boot.properties) ? boot.properties : prev.properties,
+        news: Array.isArray(boot.news) ? boot.news : prev.news,
+        settings: normalizeSettings(boot.settings),
+      }));
+    } catch {
+      if (request === publicRequest.current)
+        setPublicDataError("We could not load the latest properties.");
+    } finally {
+      if (request === publicRequest.current) setHydrated(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    void refreshPublic();
+  }, [refreshPublic]);
 
   const refreshAdmin = useCallback(
     async (token = adminToken) => {
       if (!token) return;
-      const snapshot = await api<Partial<StoreShape>>("/admin/snapshot", {}, token);
-      setState((prev) => ({
-        ...prev,
-        ...snapshot,
-        settings: normalizeSettings(snapshot.settings),
-      }));
+      const snapshot = await api<AdminSnapshot>("/admin/snapshot", {}, token);
+      setState((prev) => applyAdminSnapshot(prev, snapshot));
     },
     [adminToken],
   );
@@ -420,39 +484,39 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let mounted = true;
     async function hydrate() {
-      const storedUser = window.localStorage.getItem(USER_TOKEN_KEY);
-      const storedAdmin = window.localStorage.getItem(ADMIN_TOKEN_KEY);
-      setUserToken(storedUser);
-      setAdminToken(storedAdmin);
       try {
-        const boot = await api<Partial<StoreShape>>("/bootstrap");
-        if (!mounted) return;
-        setState((prev) => ({
-          ...prev,
-          properties: Array.isArray(boot.properties) ? boot.properties : prev.properties,
-          news: Array.isArray(boot.news) ? boot.news : prev.news,
-          settings: normalizeSettings(boot.settings),
-        }));
+        const storedUser = window.localStorage.getItem(USER_TOKEN_KEY);
+        const storedAdmin = window.localStorage.getItem(ADMIN_TOKEN_KEY);
+        setUserToken(storedUser);
+        setAdminToken(storedAdmin);
         if (storedUser) {
-          const me = await api<{ user: AppUser }>("/auth/me", {}, storedUser);
-          if (mounted) setState((prev) => ({ ...prev, currentUser: me.user }));
+          try {
+            const me = await api<{ user: AppUser }>("/auth/me", {}, storedUser);
+            if (mounted) setState((prev) => ({ ...prev, currentUser: me.user }));
+          } catch {
+            /* The saved public session could not be restored. */
+          }
         }
         if (storedAdmin) {
           const me = await api<{ user: AppUser }>("/auth/me", {}, storedAdmin);
-          if (mounted) setState((prev) => ({ ...prev, adminUser: me.user }));
-          await refreshAdmin(storedAdmin);
+          const snapshot = await api<AdminSnapshot>("/admin/snapshot", {}, storedAdmin);
+          if (mounted)
+            setState((prev) => ({
+              ...applyAdminSnapshot(prev, snapshot),
+              adminUser: me.user,
+            }));
         }
       } catch {
-        /* The bundled catalogue keeps the frontend useful while the API is offline. */
+        /* A failed session restore does not prevent browsing public listings. */
       } finally {
-        if (mounted) setHydrated(true);
+        if (mounted) setSessionHydrated(true);
       }
     }
     hydrate();
     return () => {
       mounted = false;
     };
-  }, [refreshAdmin]);
+  }, []);
 
   const value = useMemo<StoreContextValue>(() => {
     const permissions = permissionsFor(state.adminUser);
@@ -480,6 +544,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return {
       ...state,
       hydrated,
+      sessionHydrated,
+      publicDataError,
+      refreshPublic,
       permissions,
       can: (permission) => permissions.includes(permission),
       register: (input) => authCall("/auth/register", input, USER_TOKEN_KEY),
@@ -491,10 +558,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         setState((prev) => ({ ...prev, currentUser: null }));
       },
       updateCurrentUser: async (user) => {
+        const result = await api<{ user: AppUser }>(
+          "/auth/me",
+          {
+            method: "PATCH",
+            body: JSON.stringify({ name: user.name, phone: user.phone }),
+          },
+          userToken,
+        );
         setState((prev) => ({
           ...prev,
-          currentUser: user,
-          users: prev.users.map((entry) => (entry.id === user.id ? user : entry)),
+          currentUser: result.user,
+          users: prev.users.map((entry) => (entry.id === user.id ? result.user : entry)),
         }));
       },
       requestPasswordReset: async (email) => {
@@ -503,7 +578,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             method: "POST",
             body: JSON.stringify({ email }),
           });
-          return { ok: true, token: result.token };
+          return { ok: true, ...(result.token ? { token: result.token } : {}) };
         } catch (error) {
           return { ok: false, error: error instanceof Error ? error.message : "Request failed." };
         }
@@ -524,19 +599,27 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       adminLogout: () => {
         removeToken(ADMIN_TOKEN_KEY);
         setAdminToken(null);
-        setState((prev) => ({ ...prev, adminUser: null }));
+        setState((prev) => ({ ...prev, adminUser: null, adminProperties: [] }));
       },
-      uploadPropertyImages: async (files) => {
-        const optimized = await Promise.all(files.map(fileToWebp));
-        return Promise.all(
-          optimized.map(async (file) => {
-            try {
-              return await uploadToImageKit(file, adminToken);
-            } catch {
-              return blobToDataUrl(file);
-            }
-          }),
-        );
+      uploadPropertyImages: async (files, source) => {
+        const results: PromiseSettledResult<string>[] = [];
+        for (let start = 0; start < files.length; start += 3) {
+          const batch = await Promise.allSettled(
+            files.slice(start, start + 3).map(async (file) => {
+              const photo = await fileToWebp(file);
+              if (source === "admin") {
+                try {
+                  return await uploadToImageKit(photo, adminToken);
+                } catch {
+                  /* Use the optimized photo. */
+                }
+              }
+              return blobToDataUrl(photo);
+            }),
+          );
+          results.push(...batch);
+        }
+        return results;
       },
       saveProperty: async (property) => {
         const result = await api<{ property: Property }>(
@@ -546,16 +629,20 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         );
         setState((prev) => ({
           ...prev,
-          properties: prev.properties.some((p) => p.id === property.id)
-            ? prev.properties.map((p) => (p.id === property.id ? result.property : p))
-            : [result.property, ...prev.properties],
+          adminProperties: prev.adminProperties.some((p) => p.id === property.id)
+            ? prev.adminProperties.map((p) => (p.id === property.id ? result.property : p))
+            : [result.property, ...prev.adminProperties],
         }));
-        await refreshAdmin();
+        await Promise.allSettled([refreshAdmin(), refreshPublic()]);
       },
       deleteProperty: async (id) => {
         await api(`/admin/properties/${id}`, { method: "DELETE" }, adminToken);
-        setState((prev) => ({ ...prev, properties: prev.properties.filter((p) => p.id !== id) }));
-        await refreshAdmin();
+        setState((prev) => ({
+          ...prev,
+          adminProperties: prev.adminProperties.filter((p) => p.id !== id),
+          properties: prev.properties.filter((p) => p.id !== id),
+        }));
+        await Promise.allSettled([refreshAdmin(), refreshPublic()]);
       },
       saveNews: async (article) => {
         const result = await api<{ article: NewsArticle }>(
@@ -630,6 +717,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           {
             method: "POST",
             body: JSON.stringify(property),
+            signal: AbortSignal.timeout(25000),
           },
           userToken,
         );
@@ -684,7 +772,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         setState((prev) => ({ ...prev, activity: [] }));
       },
     };
-  }, [adminToken, hydrated, refreshAdmin, state, userToken]);
+  }, [
+    adminToken,
+    hydrated,
+    sessionHydrated,
+    publicDataError,
+    refreshPublic,
+    refreshAdmin,
+    state,
+    userToken,
+  ]);
 
   void userToken;
 

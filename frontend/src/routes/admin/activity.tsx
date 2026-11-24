@@ -65,7 +65,7 @@ function AdminActivity() {
       }
     >
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
-        <section className="rounded-3xl border border-border bg-background p-6">
+        <section className="rounded-xl border border-border bg-background p-6">
           <div className="flex flex-wrap items-center gap-2">
             {areas.map((item) => (
               <button
@@ -88,7 +88,7 @@ function AdminActivity() {
           ) : (
             <ul className="mt-6 space-y-3">
               {rows.map((entry) => (
-                <li key={entry.id} className="rounded-2xl border border-border/70 bg-smoke/40 p-4">
+                <li key={entry.id} className="rounded-lg border border-border/70 bg-smoke/40 p-4">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="rounded-full bg-navy/10 px-3 py-1 text-[11px] font-semibold text-navy">
                       {entry.area}
@@ -106,7 +106,7 @@ function AdminActivity() {
           )}
         </section>
 
-        <section className="rounded-3xl border border-border bg-background p-6">
+        <section className="rounded-xl border border-border bg-background p-6">
           <div className="flex items-center gap-2">
             <History className="h-4 w-4 text-gold" />
             <h2 className="text-base font-bold text-navy">Settings version history</h2>
@@ -122,7 +122,7 @@ function AdminActivity() {
           ) : (
             <ul className="mt-5 space-y-3">
               {settingsHistory.map((version) => (
-                <li key={version.id} className="rounded-2xl border border-border/70 p-4">
+                <li key={version.id} className="rounded-lg border border-border/70 p-4">
                   <p className="text-sm font-semibold text-navy">
                     {version.settings.siteName} · {version.summary}
                   </p>

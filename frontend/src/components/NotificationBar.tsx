@@ -30,7 +30,7 @@ export function NotificationBar({
           type="button"
           onClick={() => setVisible(false)}
           aria-label="Dismiss announcement"
-          className="grid h-8 w-8 shrink-0 place-items-center rounded-full transition-colors hover:bg-background/15"
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-lg transition-colors hover:bg-background/15"
         >
           <X className="h-4 w-4" />
         </button>

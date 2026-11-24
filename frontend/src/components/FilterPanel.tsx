@@ -1,6 +1,5 @@
 import { Bath, BedDouble, Building2, Home, Landmark, Store, Trees } from "lucide-react";
 import { AMENITY_OPTIONS } from "@/data/properties";
-import { PRICE_BOUNDS, formatPrice } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import type { PropertyCategory, PropertyFilters } from "@/types/property";
 
@@ -16,6 +15,7 @@ interface FilterPanelProps {
   filters: PropertyFilters;
   onChange: (next: PropertyFilters) => void;
   onApply?: () => void;
+  onReset?: () => void;
   className?: string;
 }
 
@@ -41,7 +41,8 @@ function Counter({
           type="button"
           aria-label={`Decrease ${label}`}
           onClick={() => onChange(Math.max(0, value - 1))}
-          className="pv-smooth-state h-9 w-9 rounded-full text-navy hover:bg-ice"
+          className="pv-smooth-state h-11 w-11 rounded-lg text-navy hover:bg-ice disabled:opacity-40"
+          disabled={value === 0}
         >
           −
         </button>
@@ -52,7 +53,8 @@ function Counter({
           type="button"
           aria-label={`Increase ${label}`}
           onClick={() => onChange(Math.min(6, value + 1))}
-          className="pv-smooth-state h-9 w-9 rounded-full text-navy hover:bg-ice"
+          className="pv-smooth-state h-11 w-11 rounded-lg text-navy hover:bg-ice disabled:opacity-40"
+          disabled={value === 6}
         >
           +
         </button>
@@ -61,11 +63,10 @@ function Counter({
   );
 }
 
-export function FilterPanel({ filters, onChange, onApply, className }: FilterPanelProps) {
+export function FilterPanel({ filters, onChange, onApply, onReset, className }: FilterPanelProps) {
   const selectedCategories = filters.categories ?? [];
   const selectedAmenities = filters.amenities ?? [];
-  const maxPrice = filters.maxPrice ?? PRICE_BOUNDS.max;
-  const minPrice = filters.minPrice ?? PRICE_BOUNDS.min;
+  const minPrice = filters.minPrice ?? 0;
 
   function toggleCategory(value: PropertyCategory) {
     const next = selectedCategories.includes(value)
@@ -82,7 +83,17 @@ export function FilterPanel({ filters, onChange, onApply, className }: FilterPan
   }
 
   return (
-    <div className={cn("flex h-full flex-col rounded-2xl bg-card", className)}>
+    <div className={cn("flex flex-col overflow-hidden rounded-xl bg-card", className)}>
+      <div className="flex items-center justify-between border-b border-border px-5 py-3">
+        <h2 className="text-sm font-semibold text-navy">Filters</h2>
+        <button
+          type="button"
+          onClick={() => (onReset ? onReset() : onChange({ intent: filters.intent }))}
+          className="pv-tap text-xs font-medium text-muted-foreground underline underline-offset-4"
+        >
+          Reset
+        </button>
+      </div>
       <div className="flex-1 space-y-7 overflow-y-auto p-5">
         <div>
           <label
@@ -96,47 +107,55 @@ export function FilterPanel({ filters, onChange, onApply, className }: FilterPan
             value={filters.city ?? ""}
             onChange={(e) => onChange({ ...filters, city: e.target.value })}
             placeholder="City or locality"
-            className="pv-smooth-state mt-2 min-h-11 w-full rounded-full border border-border bg-background px-4 text-sm text-navy outline-none focus:border-gold"
+            className="pv-smooth-state mt-2 min-h-11 w-full rounded-lg border border-border bg-card px-3 text-sm text-navy focus:border-navy"
           />
         </div>
 
         <div>
           <p className="text-xs font-semibold tracking-wide text-navy uppercase">Price range</p>
-          <div className="mt-3 space-y-3">
-            <input
-              type="range"
-              aria-label="Minimum price"
-              min={PRICE_BOUNDS.min}
-              max={PRICE_BOUNDS.max}
-              step={100000}
-              value={minPrice}
-              onChange={(e) =>
-                onChange({
-                  ...filters,
-                  minPrice: Math.min(Number(e.target.value), maxPrice),
-                })
-              }
-              className="w-full accent-[var(--gold)]"
-            />
-            <input
-              type="range"
-              aria-label="Maximum price"
-              min={PRICE_BOUNDS.min}
-              max={PRICE_BOUNDS.max}
-              step={100000}
-              value={maxPrice}
-              onChange={(e) =>
-                onChange({
-                  ...filters,
-                  maxPrice: Math.max(Number(e.target.value), minPrice),
-                })
-              }
-              className="w-full accent-[var(--gold)]"
-            />
-            <div className="flex items-center justify-between text-xs font-medium text-muted-foreground">
-              <span>{formatPrice(minPrice)}</span>
-              <span>{formatPrice(maxPrice)}</span>
-            </div>
+          <div className="mt-3 grid grid-cols-2 gap-3">
+            <label className="text-xs text-muted-foreground">
+              Minimum (₹)
+              <input
+                type="number"
+                min={0}
+                inputMode="numeric"
+                step={filters.intent === "Rent" ? 1000 : 100000}
+                value={filters.minPrice ?? ""}
+                placeholder="Any"
+                onChange={(e) =>
+                  onChange({
+                    ...filters,
+                    minPrice: e.target.value ? Math.max(0, Number(e.target.value)) : undefined,
+                    maxPrice:
+                      filters.maxPrice && Number(e.target.value) > filters.maxPrice
+                        ? Number(e.target.value)
+                        : filters.maxPrice,
+                  })
+                }
+                className="mt-2 min-h-11 w-full rounded-lg border border-border bg-card px-3 text-sm text-navy"
+              />
+            </label>
+            <label className="text-xs text-muted-foreground">
+              Maximum (₹)
+              <input
+                type="number"
+                min={minPrice}
+                inputMode="numeric"
+                step={filters.intent === "Rent" ? 1000 : 100000}
+                value={filters.maxPrice ?? ""}
+                placeholder="Any"
+                onChange={(e) =>
+                  onChange({
+                    ...filters,
+                    maxPrice: e.target.value
+                      ? Math.max(Number(e.target.value), minPrice)
+                      : undefined,
+                  })
+                }
+                className="mt-2 min-h-11 w-full rounded-lg border border-border bg-card px-3 text-sm text-navy"
+              />
+            </label>
           </div>
         </div>
 
@@ -193,7 +212,7 @@ export function FilterPanel({ filters, onChange, onApply, className }: FilterPan
                   aria-pressed={active}
                   onClick={() => toggleAmenity(amenity)}
                   className={cn(
-                    "pv-smooth-state rounded-full border px-4 py-2.5 text-xs font-medium",
+                    "pv-smooth-state pv-tap rounded-lg border px-3 py-2 text-xs font-medium",
                     active
                       ? "border-gold bg-gold text-primary-foreground"
                       : "border-border text-navy-soft hover:border-navy/40",
@@ -207,15 +226,13 @@ export function FilterPanel({ filters, onChange, onApply, className }: FilterPan
         </div>
       </div>
 
-      <div className="border-t border-border p-4">
-        <button
-          type="button"
-          onClick={onApply}
-          className="pv-smooth-state pv-tap w-full rounded-full bg-gold text-sm font-semibold text-primary-foreground hover:scale-[1.01]"
-        >
-          Apply filters
-        </button>
-      </div>
+      {onApply && (
+        <div className="border-t border-border p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+          <button type="button" onClick={onApply} className="pv-button-primary w-full">
+            Show properties
+          </button>
+        </div>
+      )}
     </div>
   );
 }

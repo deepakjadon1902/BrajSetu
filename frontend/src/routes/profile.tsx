@@ -1,253 +1,170 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { toast } from "sonner";
-
-import { Field, inputClass, primaryButtonClass } from "@/components/auth/AuthLayout";
-import { SmartImage } from "@/components/SmartImage";
-import { useStore, type AppUser } from "@/lib/mock-store";
-import { getMainImage } from "@/lib/property-images";
+import { Field, inputClass } from "@/components/auth/AuthLayout";
+import { PageHeader } from "@/components/PageHeader";
+import { PropertyCard } from "@/components/PropertyCard";
+import { useStore } from "@/lib/mock-store";
+import { useSavedProperties } from "@/lib/saved-properties";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
-    meta: [
-      { title: "My Profile | Braj Setu Properties" },
-      {
-        name: "description",
-        content:
-          "Manage your Braj Setu Properties profile, property preferences, contact details and visit support.",
-      },
-    ],
+    meta: [{ title: "My Profile | Braj Setu Properties" }, { name: "robots", content: "noindex" }],
   }),
   component: ProfilePage,
 });
-
-type ProfileDetails = {
+type Preferences = {
   city: string;
   locality: string;
-  address: string;
   intent: "Buy" | "Rent" | "Sell";
   propertyType: string;
   budget: string;
   moveTimeline: string;
-  familySize: string;
-  occupation: string;
-  visitSlot: string;
-  kycStatus: "Pending" | "In Review" | "Verified";
   notes: string;
-  alerts: boolean;
 };
-
-const defaultDetails: ProfileDetails = {
+const defaults: Preferences = {
   city: "",
   locality: "",
-  address: "",
   intent: "Buy",
   propertyType: "",
   budget: "",
   moveTimeline: "",
-  familySize: "",
-  occupation: "",
-  visitSlot: "",
-  kycStatus: "Pending",
   notes: "",
-  alerts: true,
 };
 
-function storageKey(user: AppUser) {
-  return `braj-setu-profile-details-${user.id}`;
-}
-
 function ProfilePage() {
-  const { currentUser, updateCurrentUser, properties, enquiries } = useStore();
-  const navigate = useNavigate();
-  const [userForm, setUserForm] = useState({
-    name: currentUser?.name ?? "",
-    email: currentUser?.email ?? "",
-    phone: currentUser?.phone ?? "",
-  });
-  const [details, setDetails] = useState<ProfileDetails>(defaultDetails);
-
+  const { currentUser, updateCurrentUser, properties, sessionHydrated } = useStore();
+  const { savedIds } = useSavedProperties();
+  const [form, setForm] = useState({ name: "", phone: "" });
+  const [preferences, setPreferences] = useState<Preferences>(defaults);
+  const [saving, setSaving] = useState(false);
+  const storageKey = currentUser ? "braj-setu-profile-details-" + currentUser.id : "";
   useEffect(() => {
     if (!currentUser) return;
-    setUserForm({
-      name: currentUser.name,
-      email: currentUser.email,
-      phone: currentUser.phone,
-    });
-    const saved = window.localStorage.getItem(storageKey(currentUser));
-    if (saved) {
-      setDetails({ ...defaultDetails, ...(JSON.parse(saved) as Partial<ProfileDetails>) });
+    setForm({ name: currentUser.name, phone: currentUser.phone });
+    try {
+      const saved = JSON.parse(
+        window.localStorage.getItem(storageKey) || "{}",
+      ) as Partial<Preferences>;
+      setPreferences({ ...defaults, ...saved });
+    } catch {
+      setPreferences(defaults);
     }
-  }, [currentUser]);
-
-  const recommended = useMemo(
-    () =>
-      properties
-        .filter((property) => property.intent === (details.intent === "Rent" ? "Rent" : "Sale"))
-        .slice(0, 3),
-    [details.intent, properties],
+  }, [currentUser, storageKey]);
+  const savedProperties = useMemo(
+    () => properties.filter((property) => savedIds.includes(property.id)),
+    [properties, savedIds],
   );
 
-  if (!currentUser) {
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    if (!currentUser) return;
+    setSaving(true);
+    try {
+      await updateCurrentUser({ ...currentUser, name: form.name.trim(), phone: form.phone.trim() });
+      try {
+        window.localStorage.setItem(storageKey, JSON.stringify(preferences));
+      } catch {
+        toast.error("Contact details saved. This browser could not store your preferences.");
+        return;
+      }
+      toast.success("Your profile has been saved.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Your profile could not be saved.");
+    } finally {
+      setSaving(false);
+    }
+  }
+  function set<K extends keyof Preferences>(key: K, value: Preferences[K]) {
+    setPreferences((previous) => ({ ...previous, [key]: value }));
+  }
+
+  if (!sessionHydrated)
     return (
-      <div className="bg-[linear-gradient(135deg,#fffaf0,#f2ead7_52%,#fff7df)] py-20">
+      <div className="pv-container py-12">
+        <p role="status" className="text-sm text-muted-foreground">
+          Loading your profile…
+        </p>
+      </div>
+    );
+  if (!currentUser)
+    return (
+      <div className="bg-smoke py-12 sm:py-16">
         <div className="pv-container">
-          <div className="mx-auto max-w-xl rounded-xl border border-gold/25 bg-card p-8 text-center shadow-[var(--shadow-float)]">
-            <p className="text-xs font-black uppercase text-gold-deep">Braj Setu Account</p>
-            <h1 className="mt-5 text-3xl font-black text-navy">Sign in to view your profile</h1>
-            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-              Your profile keeps contact details, property preferences, visit support and saved
-              matches in one premium Braj Setu account.
+          <div className="mx-auto max-w-md rounded-xl border border-border bg-card p-6 sm:p-8">
+            <p className="pv-eyebrow">Your account</p>
+            <h1 className="mt-4 text-2xl font-semibold text-navy">Sign in to view your profile.</h1>
+            <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+              Manage your contact details and property preferences in one place.
             </p>
-            <div className="mt-7 flex flex-wrap justify-center gap-3">
-              <Link
-                to="/login"
-                className="rounded-full bg-navy px-6 py-3 text-sm font-black text-background"
-              >
-                Login
+            <div className="mt-6 grid gap-3">
+              <Link to="/login" className="pv-button-primary">
+                Sign in
               </Link>
-              <Link
-                to="/register"
-                className="rounded-full border border-gold/35 bg-background px-6 py-3 text-sm font-black text-navy"
-              >
-                Create account
+              <Link to="/register" className="pv-button-secondary">
+                Create an account
               </Link>
             </div>
           </div>
         </div>
       </div>
     );
-  }
-
-  function setUser(key: keyof typeof userForm, value: string) {
-    setUserForm((prev) => ({ ...prev, [key]: value }));
-  }
-
-  function setDetail<K extends keyof ProfileDetails>(key: K, value: ProfileDetails[K]) {
-    setDetails((prev) => ({ ...prev, [key]: value }));
-  }
-
-  async function onSubmit(event: FormEvent) {
-    event.preventDefault();
-    if (!userForm.name.trim() || !userForm.email.trim() || !userForm.phone.trim()) {
-      toast.error("Name, email and phone are required.");
-      return;
-    }
-    const updatedUser = {
-      ...currentUser,
-      name: userForm.name.trim(),
-      email: userForm.email.trim(),
-      phone: userForm.phone.trim(),
-    };
-    await updateCurrentUser(updatedUser);
-    window.localStorage.setItem(storageKey(updatedUser), JSON.stringify(details));
-    toast.success("Profile updated with your latest property preferences.");
-    navigate({ to: "/profile" });
-  }
 
   return (
-    <div className="bg-[linear-gradient(180deg,#fffaf0_0%,#f7f1e5_46%,#ffffff_100%)] pb-16">
-      <section className="relative overflow-hidden border-b border-gold/20 bg-navy py-12 text-background">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gold" />
-        <div className="pv-container">
-          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-end">
-            <div>
-              <p className="inline-flex rounded-full border border-gold/30 bg-background/10 px-4 py-2 text-xs font-black uppercase">
-                Braj Setu user profile
-              </p>
-              <h1 className="mt-5 text-4xl font-black tracking-tight sm:text-5xl">
-                {currentUser.name}
-              </h1>
-              <div className="mt-5 grid gap-2 text-sm text-background/84 sm:grid-cols-3">
-                <span>{currentUser.email}</span>
-                <span>{currentUser.phone}</span>
-                <span>{details.kycStatus} profile</span>
-              </div>
-            </div>
-            <div className="rounded-xl border border-gold/30 bg-background/10 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]">
-              <p className="text-xs font-black uppercase text-gold">Preferred requirement</p>
-              <p className="mt-2 text-2xl font-black">
-                {details.intent}
-                {details.propertyType ? ` ${details.propertyType}` : ""}
-              </p>
-              <p className="mt-2 text-sm text-background/78">
-                {[details.locality, details.city, details.budget].filter(Boolean).join(" | ") ||
-                  "No property requirement added yet"}
+    <div className="bg-smoke pb-12">
+      <PageHeader
+        eyebrow="Your account"
+        title="My profile"
+        description="Keep your contact details and property preferences up to date."
+      />
+      <div className="pv-container mt-7 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
+        <form
+          onSubmit={submit}
+          className="min-w-0 rounded-xl border border-border bg-card p-5 sm:p-7"
+        >
+          <h2 className="text-lg font-semibold text-navy">Contact details</h2>
+          <div className="mt-5 grid gap-5 sm:grid-cols-2">
+            <Field label="Full name">
+              <input
+                autoComplete="name"
+                required
+                minLength={2}
+                maxLength={120}
+                className={inputClass}
+                value={form.name}
+                onChange={(event) => setForm({ ...form, name: event.target.value })}
+              />
+            </Field>
+            <Field label="Phone number">
+              <input
+                type="tel"
+                autoComplete="tel"
+                minLength={8}
+                maxLength={20}
+                className={inputClass}
+                value={form.phone}
+                onChange={(event) => setForm({ ...form, phone: event.target.value })}
+              />
+            </Field>
+            <div className="sm:col-span-2">
+              <p className="text-sm font-medium text-navy">Account email</p>
+              <p className="mt-2 break-all text-sm text-muted-foreground">{currentUser.email}</p>
+              <p className="mt-2 text-xs text-muted-foreground">
+                Contact our team if you need help with your account email.
               </p>
             </div>
           </div>
-        </div>
-      </section>
-
-      <div className="pv-container mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_23rem]">
-        <main>
-          <div className="grid gap-4 sm:grid-cols-4">
-            {[
-              { label: "Saved", value: "00" },
-              { label: "Seen", value: "00" },
-              { label: "Searches", value: "00" },
-              { label: "Enquiries", value: String(enquiries.length).padStart(2, "0") },
-            ].map((item) => (
-              <div
-                key={item.label}
-                className="rounded-xl border border-gold/20 bg-card p-4 shadow-[var(--shadow-soft)]"
-              >
-                <p className="text-2xl font-black text-navy">{item.value}</p>
-                <p className="text-xs font-bold uppercase text-muted-foreground">{item.label}</p>
-              </div>
-            ))}
-          </div>
-
-          <form
-            onSubmit={onSubmit}
-            className="mt-6 rounded-xl border border-gold/20 bg-card p-5 shadow-[var(--shadow-lift)] sm:p-7"
-          >
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-5">
-              <div>
-                <h2 className="text-xl font-black text-navy">Editable profile details</h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Keep your contact, requirement and visit support details current.
-                </p>
-              </div>
-              <span className="inline-flex rounded-full bg-gold/15 px-4 py-2 text-xs font-black text-gold-deep">
-                Premium ready
-              </span>
-            </div>
-
-            <div className="mt-6 grid gap-5 md:grid-cols-2">
-              <Field label="Full name">
-                <input
-                  className={inputClass}
-                  value={userForm.name}
-                  onChange={(e) => setUser("name", e.target.value)}
-                />
-              </Field>
-              <Field label="Phone number">
-                <input
-                  className={inputClass}
-                  value={userForm.phone}
-                  onChange={(e) => setUser("phone", e.target.value)}
-                />
-              </Field>
-              <Field label="Email address">
-                <input
-                  className={inputClass}
-                  value={userForm.email}
-                  onChange={(e) => setUser("email", e.target.value)}
-                />
-              </Field>
-              <Field label="Occupation">
-                <input
-                  className={inputClass}
-                  value={details.occupation}
-                  onChange={(e) => setDetail("occupation", e.target.value)}
-                />
-              </Field>
-              <Field label="Requirement">
+          <div className="mt-7 border-t border-border pt-6">
+            <h2 className="text-lg font-semibold text-navy">Property preferences</h2>
+            <p className="mt-2 text-xs text-muted-foreground">
+              These preferences are saved on this device.
+            </p>
+            <div className="mt-5 grid gap-5 sm:grid-cols-2">
+              <Field label="I want to">
                 <select
+                  value={preferences.intent}
+                  onChange={(event) => set("intent", event.target.value as Preferences["intent"])}
                   className={inputClass}
-                  value={details.intent}
-                  onChange={(e) => setDetail("intent", e.target.value as ProfileDetails["intent"])}
                 >
                   <option>Buy</option>
                   <option>Rent</option>
@@ -256,171 +173,123 @@ function ProfilePage() {
               </Field>
               <Field label="Property type">
                 <select
+                  value={preferences.propertyType}
+                  onChange={(event) => set("propertyType", event.target.value)}
                   className={inputClass}
-                  value={details.propertyType}
-                  onChange={(e) => setDetail("propertyType", e.target.value)}
                 >
-                  <option>Flat</option>
-                  <option>House</option>
-                  <option>Plot</option>
-                  <option>Shop</option>
-                  <option>Farm House</option>
+                  <option value="">Any property type</option>
+                  {["Flat", "House", "Plot", "Shop", "Farm House"].map((type) => (
+                    <option key={type}>{type}</option>
+                  ))}
                 </select>
               </Field>
               <Field label="Preferred city">
                 <input
                   className={inputClass}
-                  value={details.city}
-                  onChange={(e) => setDetail("city", e.target.value)}
+                  value={preferences.city}
+                  onChange={(event) => set("city", event.target.value)}
+                  placeholder="For example, Vrindavan"
                 />
               </Field>
               <Field label="Preferred locality">
                 <input
                   className={inputClass}
-                  value={details.locality}
-                  onChange={(e) => setDetail("locality", e.target.value)}
+                  value={preferences.locality}
+                  onChange={(event) => set("locality", event.target.value)}
                 />
               </Field>
               <Field label="Budget">
                 <input
                   className={inputClass}
-                  value={details.budget}
-                  onChange={(e) => setDetail("budget", e.target.value)}
+                  value={preferences.budget}
+                  onChange={(event) => set("budget", event.target.value)}
+                  placeholder="For example, up to ₹50 lakh"
                 />
               </Field>
-              <Field label="Move timeline">
+              <Field label="When would you like to move?">
                 <input
                   className={inputClass}
-                  value={details.moveTimeline}
-                  onChange={(e) => setDetail("moveTimeline", e.target.value)}
+                  value={preferences.moveTimeline}
+                  onChange={(event) => set("moveTimeline", event.target.value)}
+                  placeholder="For example, in 3 months"
                 />
               </Field>
-              <Field label="Family size">
-                <input
-                  className={inputClass}
-                  value={details.familySize}
-                  onChange={(e) => setDetail("familySize", e.target.value)}
-                />
-              </Field>
-              <Field label="Visit slot">
-                <input
-                  className={inputClass}
-                  value={details.visitSlot}
-                  onChange={(e) => setDetail("visitSlot", e.target.value)}
-                />
-              </Field>
-              <Field label="Current address">
-                <input
-                  className={inputClass}
-                  value={details.address}
-                  onChange={(e) => setDetail("address", e.target.value)}
-                  placeholder="House, street, landmark"
-                />
-              </Field>
-              <Field label="KYC status">
-                <select
-                  className={inputClass}
-                  value={details.kycStatus}
-                  onChange={(e) =>
-                    setDetail("kycStatus", e.target.value as ProfileDetails["kycStatus"])
-                  }
-                >
-                  <option>Pending</option>
-                  <option>In Review</option>
-                  <option>Verified</option>
-                </select>
-              </Field>
+              <div className="sm:col-span-2">
+                <Field label="Notes for your own reference">
+                  <textarea
+                    rows={4}
+                    className={inputClass}
+                    value={preferences.notes}
+                    onChange={(event) => set("notes", event.target.value)}
+                  />
+                </Field>
+              </div>
             </div>
-
-            <Field label="Advisor notes">
-              <textarea
-                className={`${inputClass} min-h-28 rounded-2xl`}
-                value={details.notes}
-                onChange={(e) => setDetail("notes", e.target.value)}
-              />
-            </Field>
-
-            <label className="mt-5 flex items-center gap-3 rounded-2xl border border-border bg-background p-4 text-sm font-bold text-navy">
-              <input
-                type="checkbox"
-                checked={details.alerts}
-                onChange={(e) => setDetail("alerts", e.target.checked)}
-                className="h-4 w-4 accent-[var(--gold)]"
-              />
-              Send me premium match alerts and visit confirmations.
-            </label>
-
-            <button type="submit" className={`${primaryButtonClass} mt-6 sm:w-auto`}>
-              Save profile
-            </button>
-          </form>
-        </main>
-
+          </div>
+          <button
+            type="submit"
+            disabled={saving}
+            className="pv-button-primary mt-6 w-full sm:w-auto"
+          >
+            {saving ? "Saving…" : "Save profile"}
+          </button>
+        </form>
         <aside className="space-y-5">
-          <section className="rounded-xl border border-gold/20 bg-card p-5 shadow-[var(--shadow-lift)]">
-            <h2 className="text-lg font-black text-navy">Profile completeness</h2>
-            <div className="mt-4 h-3 overflow-hidden rounded-full bg-smoke">
-              <div className="h-full w-[82%] rounded-full bg-gold" />
-            </div>
-            <div className="mt-4 grid gap-3 text-sm">
-              {[
-                "Contact details added",
-                "Requirement preference selected",
-                "Advisor notes available",
-                "KYC document pending",
-              ].map((item, index) => (
-                <span key={item} className="flex items-center gap-2 text-navy-soft">
-                  <span className="h-2 w-2 rounded-full bg-gold" aria-hidden="true" />
-                  {item}
-                </span>
-              ))}
-            </div>
-          </section>
-
-          <section className="rounded-xl border border-gold/20 bg-card p-5 shadow-[var(--shadow-lift)]">
-            <div className="flex items-center justify-between gap-3">
-              <h2 className="text-lg font-black text-navy">Recommended for you</h2>
-            </div>
-            <div className="mt-4 grid gap-4">
-              {recommended.length > 0 ? (
-                recommended.map((property) => {
-                  const src = getMainImage(property);
-                  return (
-                    <Link
-                      key={property.id}
-                      to="/property/$propertyId"
-                      params={{ propertyId: property.id }}
-                      className="group block overflow-hidden rounded-2xl border border-border bg-background"
-                    >
-                      <SmartImage src={src} alt={property.title} aspect="aspect-[16/9]" />
-                      <div className="p-3">
-                        <p className="truncate text-sm font-black text-navy">{property.title}</p>
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          {property.location.locality}, {property.location.city}
-                        </p>
-                      </div>
-                    </Link>
-                  );
-                })
-              ) : null}
+          <section className="rounded-xl border border-border bg-card p-5">
+            <h2 className="text-base font-semibold text-navy">Your next step</h2>
+            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+              Explore current listings or share the details of a property you would like to sell or
+              rent out.
+            </p>
+            <div className="mt-5 grid gap-3">
+              <Link
+                to={preferences.intent === "Rent" ? "/rent" : "/buy"}
+                search={{ q: preferences.city || undefined }}
+                className="pv-button-primary"
+              >
+                Browse properties
+              </Link>
+              <Link to="/list-property" className="pv-button-secondary">
+                List a property
+              </Link>
             </div>
           </section>
-
-          <section className="rounded-xl border border-gold/25 bg-background p-5">
-            <h2 className="text-lg font-black text-navy">Property support desk</h2>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Share documents, shortlist needs, preferred routes and visit windows with your Braj
-              Setu advisor.
+          <section className="rounded-xl border border-border bg-card p-5">
+            <h2 className="text-base font-semibold text-navy">Need some help?</h2>
+            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+              Our team can help with enquiries, property visits and listing questions.
             </p>
             <Link
               to="/contact"
-              className="mt-5 inline-flex h-11 w-full items-center justify-center rounded-full bg-navy text-sm font-black text-background"
+              className="pv-tap mt-3 inline-flex items-center text-sm font-medium text-navy underline underline-offset-4"
             >
-              Contact advisor
+              Contact us
             </Link>
           </section>
         </aside>
       </div>
+      <section className="pv-container mt-10">
+        <h2 className="text-2xl font-semibold text-navy">Saved properties</h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Saved on this device. Listings may change or become unavailable.
+        </p>
+        {savedProperties.length ? (
+          <div className="pv-property-grid mt-5">
+            {savedProperties.map((property) => (
+              <PropertyCard key={property.id} property={property} />
+            ))}
+          </div>
+        ) : (
+          <div className="mt-5 rounded-xl border border-dashed border-border bg-card p-6">
+            <p className="text-sm text-muted-foreground">
+              No saved properties are available yet. Use Save on a property page to keep it here.
+            </p>
+            <Link to="/buy" search={{ q: undefined }} className="pv-button-secondary mt-4">
+              Explore listings
+            </Link>
+          </div>
+        )}
+      </section>
     </div>
   );
 }

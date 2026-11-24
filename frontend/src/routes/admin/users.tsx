@@ -34,7 +34,7 @@ export const Route = createFileRoute("/admin/users")({
 });
 
 const inputClass =
-  "w-full rounded-2xl border border-border bg-background px-4 py-2.5 text-sm text-navy outline-none focus:border-navy";
+  "w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm text-navy outline-none focus:border-navy";
 
 function AdminUsers() {
   const { users, saveUser, deleteUser, adminUser } = useStore();
@@ -91,7 +91,7 @@ function AdminUsers() {
       {creating ? (
         <form
           onSubmit={onSubmit}
-          className="mb-6 grid gap-4 rounded-3xl border border-border bg-card p-6 sm:grid-cols-2 xl:grid-cols-3"
+          className="mb-6 grid gap-4 rounded-xl border border-border bg-card p-6 sm:grid-cols-2 xl:grid-cols-3"
         >
           <input
             className={inputClass}
@@ -139,7 +139,7 @@ function AdminUsers() {
         </form>
       ) : null}
 
-      <div className="overflow-x-auto rounded-3xl border border-border bg-card">
+      <div className="overflow-x-auto rounded-xl border border-border bg-card">
         <table className="w-full min-w-[760px] text-left text-sm">
           <thead className="text-xs uppercase tracking-wide text-muted-foreground">
             <tr>

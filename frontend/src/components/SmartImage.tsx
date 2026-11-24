@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { ImageOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface SmartImageProps {
@@ -28,30 +29,40 @@ export function SmartImage({
 }: SmartImageProps) {
   const imageRef = useRef<HTMLImageElement>(null);
   const [loaded, setLoaded] = useState(false);
+  const [failed, setFailed] = useState(!src);
 
   useEffect(() => {
-    if (imageRef.current?.complete) setLoaded(true);
+    setFailed(!src);
+    setLoaded(Boolean(imageRef.current?.complete && imageRef.current?.naturalWidth));
   }, [src]);
 
   return (
     <div className={cn("relative overflow-hidden bg-ice", aspect, wrapperClassName)}>
-      {!loaded && <div className="pv-shimmer absolute inset-0" aria-hidden="true" />}
-      <img
-        ref={imageRef}
-        src={src}
-        alt={alt}
-        width={width}
-        height={height}
-        loading={priority ? "eager" : "lazy"}
-        fetchPriority={priority ? "high" : "auto"}
-        decoding="async"
-        onLoad={() => setLoaded(true)}
-        className={cn(
-          "h-full w-full object-cover transition-opacity duration-500",
-          loaded ? "opacity-100" : "opacity-0",
-          className,
-        )}
-      />
+      {!loaded && !failed && <div className="pv-shimmer absolute inset-0" aria-hidden="true" />}
+      {failed ? (
+        <div className="absolute inset-0 flex min-w-0 flex-col items-center justify-center gap-1.5 overflow-hidden bg-smoke p-2 text-xs text-muted-foreground">
+          <ImageOff className="size-5 shrink-0" aria-hidden="true" />
+          <span className="max-w-full truncate">Photo unavailable</span>
+        </div>
+      ) : (
+        <img
+          ref={imageRef}
+          src={src}
+          alt={alt}
+          width={width}
+          height={height}
+          loading={priority ? "eager" : "lazy"}
+          fetchPriority={priority ? "high" : "auto"}
+          decoding="async"
+          onLoad={() => setLoaded(true)}
+          onError={() => setFailed(true)}
+          className={cn(
+            "h-full w-full object-cover transition-opacity duration-200",
+            loaded ? "opacity-100" : "opacity-0",
+            className,
+          )}
+        />
+      )}
     </div>
   );
 }

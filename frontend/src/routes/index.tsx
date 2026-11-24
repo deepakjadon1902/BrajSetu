@@ -1,318 +1,290 @@
-import { useMemo, useRef, useState } from "react";
+import { useDeferredValue, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, ArrowRight, Check } from "lucide-react";
-import { OverlayCard } from "@/components/OverlayCard";
+import { ArrowRight, Check, MapPin } from "lucide-react";
 import { PropertyCard } from "@/components/PropertyCard";
+import { EmptyState, PropertyGridSkeleton } from "@/components/States";
 import { SearchPill } from "@/components/SearchPill";
 import { SmartImage } from "@/components/SmartImage";
 import { filterProperties, pickFeatured } from "@/lib/api";
-import { getMainImage } from "@/lib/property-images";
 import { useStore } from "@/lib/mock-store";
 import { cn } from "@/lib/utils";
+import type { PropertyCategory } from "@/types/property";
 import heroHouse from "@/assets/hero-house.jpg";
 import sellHome from "@/assets/sell-home.jpg";
-import tileNeighborhoods from "@/assets/tile-neighborhoods.jpg";
-import tileNewHomes from "@/assets/tile-new-homes.jpg";
-import tileAgents from "@/assets/tile-agents.jpg";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Braj Setu Properties | Buy, Rent & Sell Property with Confidence" },
+      { title: "Braj Setu Properties | Buy, Rent & Sell in Braj" },
       {
         name: "description",
         content:
-          "Search verified flats, houses, plots, shops and farm houses across Vrindavan, Mathura, Govardhan, Barsana and nearby Braj Mandal locations.",
+          "Find flats, houses, plots, shops and farm houses in Vrindavan, Mathura, Govardhan and Barsana. Browse listings or list your property.",
       },
-      { property: "og:title", content: "Braj Setu Properties | Buy, Rent & Sell Property" },
+      { property: "og:title", content: "Find your place in Braj | Braj Setu Properties" },
       {
         property: "og:description",
-        content: "Verified Braj Mandal listings with one advisor from first visit to handover.",
+        content:
+          "Local property listings and support for buyers, tenants and owners across Braj Mandal.",
       },
     ],
-    links: [
-      {
-        rel: "preload",
-        as: "image",
-        href: heroHouse,
-        fetchPriority: "high",
-      },
-    ],
+    links: [{ rel: "preload", as: "image", href: heroHouse, fetchPriority: "high" }],
   }),
   component: HomePage,
 });
 
-const exploreFilters = [
-  "New to Market",
-  "3D Tours",
-  "Most Viewed",
-  "Open Houses",
-  "Price Drop",
-  "Luxury Homes",
-  "Sold",
+const categories: ("All" | PropertyCategory)[] = [
+  "All",
+  "Flat",
+  "House",
+  "Plot",
+  "Shop",
+  "Farm House",
+];
+const areas = [
+  { name: "Vrindavan", description: "Homes around the temple town" },
+  { name: "Mathura", description: "City homes and commercial spaces" },
+  { name: "Govardhan", description: "Plots, homes and farm houses" },
+  { name: "Barsana", description: "Explore properties in the area" },
 ];
 
 function HomePage() {
-  const [activeFilter, setActiveFilter] = useState(exploreFilters[0]);
-  const newsRef = useRef<HTMLDivElement>(null);
-  const { properties, news } = useStore();
-
-  const exploreCards = useMemo(() => filterProperties(properties).slice(0, 3), [properties]);
-  const homesForYou = useMemo(() => pickFeatured(properties, 8), [properties]);
-
-  function scrollNews(direction: -1 | 1) {
-    newsRef.current?.scrollBy({ left: direction * 340, behavior: "smooth" });
-  }
+  const [category, setCategory] = useState<"All" | PropertyCategory>("All");
+  const displayedCategory = useDeferredValue(category);
+  const { properties, news, hydrated, publicDataError, refreshPublic } = useStore();
+  const featured = useMemo(
+    () =>
+      pickFeatured(
+        filterProperties(properties, {
+          categories: displayedCategory === "All" ? undefined : [displayedCategory],
+        }),
+        6,
+      ),
+    [properties, displayedCategory],
+  );
 
   return (
     <div>
-      {/* Hero */}
-      <section className="bg-background">
-        <div className="pv-container pt-2 pb-0 sm:pt-3">
-          <div className="hidden">
-            <h1 className="text-3xl leading-[1.05] font-extrabold tracking-tight text-navy sm:text-5xl lg:text-6xl">
-              Find the address
-              <br />
-              you'll keep for years.
+      <section className="border-b border-border bg-[radial-gradient(ellipse_at_top_left,#f5ead7,transparent_58%),linear-gradient(135deg,#fafbfc,#edf2f8)]">
+        <div className="pv-container grid gap-8 py-8 sm:py-12 lg:grid-cols-[1.05fr_1fr] lg:items-center lg:gap-14 lg:py-16">
+          <div className="min-w-0">
+            <h1 className="max-w-xl text-[2.65rem] font-semibold leading-[1.06] tracking-[-0.045em] text-navy sm:text-5xl lg:text-[3.6rem]">
+              Find your place
+              <br className="hidden sm:block" /> in Braj.
             </h1>
-            <p className="max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base">
-              Flats, houses, plots, shops and farm houses — each one visited, photographed and
-              title-checked by a Braj Setu Properties advisor before it reaches this page.
+            <p className="mt-5 max-w-lg text-base leading-relaxed text-muted-foreground">
+              A home, a fresh start, a space for your business. Explore properties across Vrindavan,
+              Mathura and nearby towns.
+            </p>
+            <div className="mt-7 rounded-2xl border border-border bg-card p-4 shadow-[var(--shadow-soft)] sm:p-6">
+              <SearchPill />
+            </div>
+            <p className="mt-5 flex items-center gap-2 text-xs text-muted-foreground">
+              <MapPin className="h-4 w-4" aria-hidden="true" /> Vrindavan · Mathura · Govardhan ·
+              Barsana
             </p>
           </div>
-
-          <div className="pv-fade-up relative">
+          <div className="relative min-w-0">
             <SmartImage
               src={heroHouse}
-              alt="Contemporary house with landscaped frontage listed by Braj Setu Properties"
-              aspect="aspect-[4/5] sm:aspect-[16/9] lg:aspect-[16/7]"
-              wrapperClassName="rounded-[1.75rem] sm:rounded-[2rem]"
-              className="object-center"
+              alt="A contemporary home with a landscaped garden"
+              aspect="aspect-[5/4] sm:aspect-[16/10] lg:aspect-[6/5]"
+              wrapperClassName="rounded-3xl border border-card shadow-[var(--shadow-lift)]"
               priority
               width={1600}
               height={1008}
             />
-            <div className="pointer-events-none absolute inset-0 rounded-[1.75rem] bg-gradient-to-b from-navy/50 via-navy/5 to-navy/30 sm:rounded-[2rem]" />
-            <div className="absolute inset-x-5 top-6 max-w-2xl sm:inset-x-8 sm:top-8 lg:inset-x-12 lg:top-10">
-              <p className="text-xs font-bold tracking-wide text-background/80 uppercase">
-                Braj Mandal Property Advisory
-              </p>
-              <h1 className="mt-3 max-w-2xl text-3xl leading-[1.05] font-extrabold text-background drop-shadow-sm sm:text-5xl lg:text-6xl">
-                Buy, rent and sell around Shri Vrindavan.
-              </h1>
-              <p className="mt-4 max-w-xl text-sm leading-relaxed text-background/85 sm:text-base">
-                Verified shops, flats, plots, houses and farm houses across Vrindavan, Mathura,
-                Govardhan, Barsana and nearby villages.
-              </p>
-            </div>
-            <div className="relative z-10 mx-auto -mt-20 w-[calc(100%-2rem)] max-w-5xl sm:-mt-16 lg:-mt-20">
-              <SearchPill />
-            </div>
           </div>
         </div>
       </section>
 
-      {/* Explore */}
-      {exploreCards.length > 0 ? (
-        <section className="mt-10 bg-ice pt-14 pb-16 sm:mt-24 sm:pt-20">
-          <div className="pv-container">
-            <div className="text-center">
-              <h2 className="text-2xl font-extrabold tracking-tight text-navy sm:text-4xl">
-                Explore our homes
-              </h2>
-              <p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground sm:text-base">
-                Start with the places families ask us about most across Braj Mandal.
-              </p>
-            </div>
-
-            <div className="pv-no-scrollbar mt-8 flex gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:justify-center">
-              {exploreFilters.map((filter) => (
-                <button
-                  key={filter}
-                  type="button"
-                  onClick={() => setActiveFilter(filter)}
-                  className={cn(
-                    "pv-smooth-state shrink-0 rounded-full border px-5 py-2.5 text-xs font-semibold sm:text-sm",
-                    activeFilter === filter
-                      ? "border-navy bg-navy text-background"
-                      : "border-border bg-background text-navy-soft hover:border-navy/40",
-                  )}
-                >
-                  {filter}
-                </button>
-              ))}
-            </div>
-
-            <div className="pv-no-scrollbar pv-snap-row mt-10 flex gap-6 overflow-x-auto pb-2 sm:grid sm:grid-cols-2 sm:overflow-visible lg:grid-cols-3">
-              {exploreCards.map((property) => (
-                <OverlayCard
-                  key={property.id}
-                  image={getMainImage(property)}
-                  title={property.title}
-                  subtitle={`${property.location.locality}, ${property.location.city}`}
-                  to={property.intent === "Rent" ? "/rent" : "/buy"}
-                  className="w-[82%] shrink-0 snap-start sm:w-auto"
-                />
-              ))}
-            </div>
-          </div>
-        </section>
-      ) : null}
-
-      {/* Homes for you */}
-      {homesForYou.length > 0 ? (
-        <section className="py-16 sm:py-20">
-          <div className="pv-container">
-            <div className="text-center">
-              <h2 className="text-2xl font-extrabold tracking-tight text-navy sm:text-4xl">
-                Homes for you
-              </h2>
-              <p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground sm:text-base">
-                Latest verified properties from Braj Setu.
-              </p>
-            </div>
-
-            <div className="pv-no-scrollbar pv-snap-row mt-10 flex gap-6 overflow-x-auto pb-2 sm:grid sm:grid-cols-2 sm:overflow-visible lg:grid-cols-3 xl:grid-cols-4">
-              {homesForYou.map((property) => (
-                <div key={property.id} className="w-[82%] shrink-0 snap-start sm:w-auto">
-                  <PropertyCard property={property} />
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-10 flex justify-center">
-              <Link
-                to="/buy"
-                search={{ q: undefined }}
-                className="pv-smooth-state pv-tap inline-flex items-center rounded-full border border-navy px-7 text-sm font-semibold text-navy hover:bg-navy hover:text-background"
-              >
-                Browse all listings
-              </Link>
-            </div>
-          </div>
-        </section>
-      ) : null}
-
-      {/* Sell split section */}
-      <section className="bg-ice py-16 sm:py-20">
-        <div className="pv-container grid gap-10 lg:grid-cols-2 lg:items-center">
+      <section className="pv-container pv-section">
+        <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h2 className="text-2xl leading-tight font-extrabold tracking-tight text-navy sm:text-4xl">
-              The smarter way to <span className="text-muted-foreground">sell your home.</span>
+            <p className="pv-eyebrow">Explore the area</p>
+            <h2 className="mt-2 text-2xl font-semibold text-navy sm:text-3xl">
+              Where would you like to be?
             </h2>
-            <p className="mt-4 max-w-lg text-sm leading-relaxed text-muted-foreground sm:text-base">
-              We price from recent, verifiable transactions in your own micro-market, then bring
-              qualified buyers to the door instead of broadcasting your address across every portal.
-            </p>
-            <ul className="mt-7 space-y-3">
-              {[
-                "A valuation backed by six recent comparables",
-                "Professional photography and a floor plan, included",
-                "Only pre-qualified buyers at your viewings",
-              ].map((item) => (
-                <li key={item} className="flex items-start gap-3">
-                  <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-gold text-primary-foreground">
-                    <Check className="h-3 w-3" />
-                  </span>
-                  <span className="text-sm font-medium text-navy">{item}</span>
-                </li>
-              ))}
-            </ul>
-            <Link
-              to="/sale"
-              search={{ q: undefined }}
-              className="pv-smooth-state pv-tap mt-8 inline-flex items-center rounded-full bg-gold px-7 text-sm font-semibold text-primary-foreground hover:scale-[1.02]"
-            >
-              Learn more
-            </Link>
           </div>
-          <SmartImage
-            src={sellHome}
-            alt="Bright kitchen and dining area in a home listed with Braj Setu Properties"
-            aspect="aspect-[4/3]"
-            wrapperClassName="rounded-3xl shadow-[var(--shadow-lift)]"
-          />
-        </div>
-      </section>
-
-      {/* Discovery tiles */}
-      <section className="py-16 sm:py-20">
-        <div className="pv-container grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          <OverlayCard
-            image={tileNeighborhoods}
-            title="Search neighbourhoods"
-            subtitle="Compare localities on price trend, commute and schools."
+          <Link
             to="/buy"
-            cta="Explore"
-          />
-          <OverlayCard
-            image={tileNewHomes}
-            title="New homes"
-            subtitle="Fresh inventory from developers we've vetted ourselves."
-            to="/buy"
-            cta="Explore"
-          />
-          <OverlayCard
-            image={tileAgents}
-            title="Agent directory"
-            subtitle="Meet the advisor who covers your micro-market."
-            to="/about"
-            cta="Explore"
-          />
+            search={{ q: undefined }}
+            className="pv-tap inline-flex items-center gap-2 text-sm font-semibold text-navy"
+          >
+            All locations <ArrowRight className="h-4 w-4" />
+          </Link>
         </div>
-      </section>
-
-      {/* News */}
-      {news.length > 0 ? (
-        <section className="bg-ice py-16 sm:py-20">
-          <div className="pv-container">
-            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4 sm:flex sm:justify-between">
-              <div className="min-w-0">
-                <h2 className="text-2xl font-extrabold tracking-tight text-navy sm:text-4xl">
-                  Real estate news
-                </h2>
-                <p className="mt-3 max-w-xl text-sm text-muted-foreground sm:text-base">
-                  Short, practical reads from our advisory desk.
+        <div className="mt-7 grid grid-cols-1 gap-3 min-[480px]:grid-cols-2 lg:grid-cols-4">
+          {areas.map((area) => (
+            <Link
+              key={area.name}
+              to="/buy"
+              search={{ q: area.name }}
+              className="group flex min-w-0 items-start gap-3 rounded-xl border border-border bg-card p-5 transition-colors hover:border-navy/30 hover:bg-smoke"
+            >
+              <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-gold-deep" aria-hidden="true" />
+              <div className="min-w-0 flex-1">
+                <h3 className="text-base font-semibold text-navy">{area.name}</h3>
+                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                  {area.description}
                 </p>
               </div>
-              <div className="flex shrink-0 gap-2">
-                <button
-                  type="button"
-                  aria-label="Previous articles"
-                  onClick={() => scrollNews(-1)}
-                  className="pv-smooth-state grid h-11 w-11 place-items-center rounded-full border border-navy/20 bg-background text-navy hover:border-navy"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                </button>
-                <button
-                  type="button"
-                  aria-label="Next articles"
-                  onClick={() => scrollNews(1)}
-                  className="pv-smooth-state grid h-11 w-11 place-items-center rounded-full border border-navy/20 bg-background text-navy hover:border-navy"
-                >
-                  <ArrowRight className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
+              <ArrowRight
+                className="mt-1 h-4 w-4 shrink-0 text-muted-foreground"
+                aria-hidden="true"
+              />
+            </Link>
+          ))}
+        </div>
+      </section>
 
-            <div
-              ref={newsRef}
-              className="pv-no-scrollbar pv-snap-row mt-8 flex gap-6 overflow-x-auto pb-2"
-            >
-              {news.map((article) => (
+      <section className="border-y border-border bg-smoke">
+        <div className="pv-container pv-section">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="pv-eyebrow">A place for every plan</p>
+              <h2 className="mt-2 text-2xl font-semibold text-navy sm:text-3xl">
+                Explore properties
+              </h2>
+              <p className="mt-3 text-sm text-muted-foreground">
+                Browse the current listings and find what fits your needs.
+              </p>
+            </div>
+            <Link to="/buy" search={{ q: undefined }} className="pv-button-secondary gap-2">
+              View all <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+          <div
+            role="group"
+            aria-label="Filter by property type"
+            className="mt-6 flex flex-wrap gap-2"
+          >
+            {categories.map((value) => (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={category === value}
+                onClick={() => setCategory(value)}
+                className={cn(
+                  "min-h-11 rounded-lg border px-4 text-sm font-medium transition-colors",
+                  category === value
+                    ? "border-navy bg-navy text-white"
+                    : "border-border bg-card text-navy hover:border-navy/40",
+                )}
+              >
+                {value === "All"
+                  ? "All properties"
+                  : value === "Flat"
+                    ? "Flats"
+                    : value === "House"
+                      ? "Houses"
+                      : value === "Plot"
+                        ? "Plots"
+                        : value === "Shop"
+                          ? "Shops"
+                          : "Farm houses"}
+              </button>
+            ))}
+          </div>
+          <div
+            className="mt-7"
+            aria-live="polite"
+            aria-busy={!hydrated || displayedCategory !== category}
+          >
+            {!hydrated ? (
+              <PropertyGridSkeleton count={4} />
+            ) : featured.length ? (
+              <div className="pv-property-grid">
+                {featured.map((property) => (
+                  <PropertyCard key={property.id} property={property} />
+                ))}
+              </div>
+            ) : (
+              <EmptyState
+                title={
+                  publicDataError ? "Listings are temporarily unavailable" : "No listings here yet"
+                }
+                description={
+                  publicDataError
+                    ? "We could not load the latest properties. Try again or contact our team for help."
+                    : "Try another property type or let our team know what you are looking for."
+                }
+                action={
+                  publicDataError ? (
+                    <button
+                      type="button"
+                      onClick={() => void refreshPublic()}
+                      className="pv-button-primary"
+                    >
+                      Try again
+                    </button>
+                  ) : (
+                    <Link to="/contact" className="pv-button-primary">
+                      Contact our team
+                    </Link>
+                  )
+                }
+              />
+            )}
+          </div>
+        </div>
+      </section>
+
+      <section className="pv-container pv-section grid gap-8 lg:grid-cols-2 lg:items-center lg:gap-16">
+        <SmartImage
+          src={sellHome}
+          alt="A bright kitchen and dining area"
+          aspect="aspect-[4/3]"
+          wrapperClassName="rounded-2xl"
+        />
+        <div>
+          <p className="pv-eyebrow">For property owners</p>
+          <h2 className="mt-3 max-w-lg text-2xl font-semibold text-navy sm:text-3xl">
+            Your property. Its next chapter.
+          </h2>
+          <p className="mt-4 max-w-lg text-base leading-relaxed text-muted-foreground">
+            Selling or renting out a property? Share the details with our team. We will review your
+            submission and help you take the next step.
+          </p>
+          <ul className="mt-6 space-y-3">
+            {[
+              "Add your property details and photos",
+              "Our team reviews the information",
+              "Connect with interested buyers or tenants",
+            ].map((item) => (
+              <li key={item} className="flex items-start gap-3 text-sm text-navy">
+                <Check className="mt-0.5 h-4 w-4 shrink-0 text-gold-deep" aria-hidden="true" />
+                {item}
+              </li>
+            ))}
+          </ul>
+          <div className="mt-7 flex flex-wrap gap-3">
+            <Link to="/list-property" className="pv-button-primary gap-2">
+              List your property <ArrowRight className="h-4 w-4" />
+            </Link>
+            <Link to="/sale" search={{ q: undefined }} className="pv-button-secondary">
+              How it works
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {news.length > 0 && (
+        <section className="border-t border-border bg-smoke">
+          <div className="pv-container pv-section">
+            <p className="pv-eyebrow">From our team</p>
+            <h2 className="mt-2 text-2xl font-semibold text-navy sm:text-3xl">Property notes</h2>
+            <div className="mt-7 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {news.slice(0, 3).map((article) => (
                 <article
                   key={article.id}
-                  className="pv-lift w-[82%] shrink-0 snap-start overflow-hidden rounded-2xl bg-card shadow-[var(--shadow-soft)] sm:w-[46%] lg:w-[31%]"
+                  className="overflow-hidden rounded-xl border border-border bg-card"
                 >
-                  <SmartImage src={article.image} alt={article.title} aspect="aspect-[16/10]" />
+                  <SmartImage src={article.image} alt="" aspect="aspect-[16/10]" />
                   <div className="p-5">
-                    <p className="text-xs font-semibold tracking-wide text-gold-deep uppercase">
-                      {article.date}
-                    </p>
-                    <h3 className="mt-2 text-base leading-snug font-bold text-navy">
-                      {article.title}
-                    </h3>
-                    <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">
+                    <p className="text-xs text-muted-foreground">{article.date}</p>
+                    <h3 className="mt-2 text-lg font-semibold text-navy">{article.title}</h3>
+                    <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
                       {article.excerpt}
                     </p>
                   </div>
@@ -321,7 +293,20 @@ function HomePage() {
             </div>
           </div>
         </section>
-      ) : null}
+      )}
+      <section className="border-t border-border">
+        <div className="pv-container flex flex-col items-start justify-between gap-6 py-10 sm:flex-row sm:items-center">
+          <div>
+            <h2 className="text-xl font-semibold text-navy">Need a little guidance?</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Tell us what you have in mind. We are here to help.
+            </p>
+          </div>
+          <Link to="/contact" className="pv-button-primary gap-2">
+            Talk to our team <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+      </section>
     </div>
   );
 }

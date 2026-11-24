@@ -10,40 +10,27 @@ import {
   Newspaper,
   Settings,
   Users,
-  X,
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
-
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { permissionLabels, roleLabels, useStore, type AdminPermission } from "@/lib/mock-store";
 import { cn } from "@/lib/utils";
 
 const nav = [
-  { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true, permission: "dashboard" },
-  {
-    to: "/admin/properties",
-    label: "Properties",
-    icon: Building2,
-    exact: false,
-    permission: "properties",
-  },
-  { to: "/admin/users", label: "Users", icon: Users, exact: false, permission: "users" },
-  { to: "/admin/enquiries", label: "Enquiries", icon: Mail, exact: false, permission: "enquiries" },
-  { to: "/admin/news", label: "News", icon: Newspaper, exact: false, permission: "news" },
-  {
-    to: "/admin/settings",
-    label: "Settings",
-    icon: Settings,
-    exact: false,
-    permission: "settings",
-  },
-  { to: "/admin/activity", label: "Activity", icon: History, exact: false, permission: "activity" },
-] as const satisfies ReadonlyArray<{
-  to: string;
-  label: string;
-  icon: typeof LayoutDashboard;
-  exact: boolean;
-  permission: AdminPermission;
-}>;
+  { to: "/admin", label: "Dashboard", icon: LayoutDashboard, permission: "dashboard" },
+  { to: "/admin/properties", label: "Properties", icon: Building2, permission: "properties" },
+  { to: "/admin/users", label: "Users", icon: Users, permission: "users" },
+  { to: "/admin/enquiries", label: "Enquiries", icon: Mail, permission: "enquiries" },
+  { to: "/admin/news", label: "News", icon: Newspaper, permission: "news" },
+  { to: "/admin/settings", label: "Settings", icon: Settings, permission: "settings" },
+  { to: "/admin/activity", label: "Activity", icon: History, permission: "activity" },
+] as const;
 
 export function AdminShell({
   title,
@@ -58,67 +45,52 @@ export function AdminShell({
   permission?: AdminPermission;
   children: ReactNode;
 }) {
-  const { adminUser, adminLogout, hydrated, can } = useStore();
+  const { adminUser, adminLogout, sessionHydrated, can } = useStore();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
-
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
   useEffect(() => {
-    if (hydrated && !adminUser) navigate({ to: "/admin/login", replace: true });
-  }, [hydrated, adminUser, navigate]);
-
-  useEffect(() => {
-    setOpen(false);
-  }, [pathname]);
-
-  if (!hydrated || !adminUser) {
+    if (sessionHydrated && !adminUser) void navigate({ to: "/admin/login", replace: true });
+  }, [sessionHydrated, adminUser, navigate]);
+  if (!sessionHydrated || !adminUser)
     return (
-      <div className="grid min-h-screen place-items-center bg-navy text-sm text-background/70">
-        Checking your admin session…
+      <div className="grid min-h-screen place-items-center bg-smoke">
+        <p role="status" className="text-sm text-muted-foreground">
+          Checking your admin session…
+        </p>
       </div>
     );
-  }
 
   const allowed = !permission || can(permission);
-  const visibleNav = nav.filter((item) => can(item.permission));
-
-  return (
-    <div className="min-h-screen bg-smoke">
-      <aside
-        className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-navy transition-transform duration-300 lg:translate-x-0",
-          open ? "translate-x-0" : "-translate-x-full",
-        )}
+  const navigation = (
+    <div className="flex h-full flex-col bg-navy text-white">
+      <Link
+        to="/admin"
+        onClick={() => setOpen(false)}
+        className="flex h-[72px] items-center gap-3 border-b border-white/10 px-5"
       >
-        <div className="flex h-16 items-center justify-between px-5">
-          <div className="flex items-center gap-2">
-            <span className="grid h-9 w-9 place-items-center rounded-xl bg-gold text-sm font-extrabold text-navy">
-              BS
-            </span>
-            <span className="text-sm font-bold tracking-tight text-background">Admin Console</span>
-          </div>
-          <button
-            type="button"
-            aria-label="Close menu"
-            onClick={() => setOpen(false)}
-            className="text-background/70 lg:hidden"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-
-        <nav className="flex-1 space-y-1 px-3 py-4">
-          {visibleNav.map((item) => {
-            const active = item.exact ? pathname === item.to : pathname.startsWith(item.to);
+        <span className="grid h-9 w-9 place-items-center rounded-lg bg-gold text-xs font-semibold text-navy">
+          BS
+        </span>
+        <span className="text-sm font-semibold">Braj Setu Console</span>
+      </Link>
+      <nav aria-label="Admin navigation" className="flex-1 space-y-1 overflow-y-auto p-3">
+        {nav
+          .filter((item) => can(item.permission))
+          .map((item) => {
+            const active =
+              item.to === "/admin" ? pathname === item.to : pathname.startsWith(item.to);
             return (
               <Link
                 key={item.to}
                 to={item.to}
+                onClick={() => setOpen(false)}
+                aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+                  "flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors",
                   active
-                    ? "bg-background/10 text-background"
-                    : "text-background/60 hover:bg-background/5 hover:text-background",
+                    ? "bg-white/10 text-white"
+                    : "text-white/65 hover:bg-white/5 hover:text-white",
                 )}
               >
                 <item.icon className="h-4 w-4" />
@@ -126,78 +98,76 @@ export function AdminShell({
               </Link>
             );
           })}
-        </nav>
-
-        <div className="border-t border-background/10 p-4">
-          <p className="truncate text-xs text-background/50">{adminUser.email}</p>
-          <p className="mt-1 inline-flex rounded-full bg-background/10 px-2.5 py-1 text-[10px] font-semibold tracking-wide text-background/80 uppercase">
-            {roleLabels[adminUser.role]}
-          </p>
-          <button
-            type="button"
-            onClick={() => {
-              adminLogout();
-              navigate({ to: "/admin/login", replace: true });
-            }}
-            className="mt-3 flex w-full items-center justify-center gap-2 rounded-full border border-background/20 px-4 py-2 text-xs font-semibold text-background transition-colors hover:bg-background/10"
-          >
-            <LogOut className="h-3.5 w-3.5" /> Sign out
-          </button>
-        </div>
-      </aside>
-
-      {open ? (
+      </nav>
+      <div className="border-t border-white/10 p-5">
+        <p className="break-all text-xs text-white/65">{adminUser.email}</p>
+        <p className="mt-2 text-xs text-white/65">{roleLabels[adminUser.role]}</p>
         <button
           type="button"
-          aria-label="Close menu overlay"
-          onClick={() => setOpen(false)}
-          className="fixed inset-0 z-40 bg-navy/50 lg:hidden"
-        />
-      ) : null}
-
-      <div className="lg:pl-64">
-        <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border bg-background/90 px-4 backdrop-blur sm:px-6">
-          <button
-            type="button"
-            aria-label="Open menu"
-            onClick={() => setOpen(true)}
-            className="text-navy lg:hidden"
-          >
-            <Menu className="h-5 w-5" />
-          </button>
-          <a
-            href="/"
-            className="ml-auto rounded-full border border-border px-4 py-2 text-xs font-semibold text-navy"
-          >
-            View site
-          </a>
+          onClick={() => {
+            adminLogout();
+            void navigate({ to: "/admin/login", replace: true });
+          }}
+          className="mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-white/20 text-sm font-medium hover:bg-white/10"
+        >
+          <LogOut className="h-4 w-4" /> Sign out
+        </button>
+      </div>
+    </div>
+  );
+  return (
+    <div className="min-h-screen bg-smoke">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 lg:block">{navigation}</aside>
+      <div className="min-w-0 lg:pl-60">
+        <header className="sticky top-0 z-30 flex h-[72px] items-center justify-between gap-3 border-b border-border bg-card/95 px-4 backdrop-blur-md sm:px-6">
+          <Sheet open={open} onOpenChange={setOpen}>
+            <SheetTrigger asChild>
+              <button
+                type="button"
+                aria-label="Open admin navigation"
+                className="pv-icon-button lg:hidden"
+              >
+                <Menu className="h-5 w-5" />
+              </button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-64 border-0 bg-navy p-0 [&>button]:text-white">
+              <SheetTitle className="sr-only">Admin navigation</SheetTitle>
+              <SheetDescription className="sr-only">
+                Manage properties, accounts and settings.
+              </SheetDescription>
+              {navigation}
+            </SheetContent>
+          </Sheet>
+          <p className="hidden text-sm text-muted-foreground lg:block">Administration</p>
+          <Link to="/" className="pv-button-secondary ml-auto px-4">
+            View website
+          </Link>
         </header>
-
-        <main className="px-4 py-8 sm:px-6 lg:px-10">
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-extrabold tracking-tight text-navy sm:text-3xl">
-                {title}
-              </h1>
-              {description ? (
-                <p className="mt-2 max-w-xl text-sm text-muted-foreground">{description}</p>
-              ) : null}
+        <main className="admin-content min-w-0 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="min-w-0">
+              <h1 className="text-2xl font-semibold text-navy sm:text-3xl">{title}</h1>
+              {description && (
+                <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+                  {description}
+                </p>
+              )}
             </div>
             {actions}
           </div>
-          <div className="mt-8">
+          <div className="mt-6">
             {allowed ? (
               children
             ) : (
-              <div className="rounded-3xl border border-border bg-background p-10 text-center">
-                <Lock className="mx-auto h-6 w-6 text-gold" />
-                <h2 className="mt-4 text-lg font-bold text-navy">
-                  You don't have access to this area
+              <div className="rounded-xl border border-border bg-card p-6 text-center sm:p-10">
+                <Lock className="mx-auto h-6 w-6 text-gold-deep" />
+                <h2 className="mt-4 text-lg font-semibold text-navy">
+                  You do not have access to this area.
                 </h2>
-                <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-                  Your role ({roleLabels[adminUser.role]}) doesn't include the
-                  {permission ? ` "${permissionLabels[permission]}" ` : " required "}
-                  permission. Ask an admin to grant it from Users.
+                <p className="mx-auto mt-3 max-w-md text-sm text-muted-foreground">
+                  Your role ({roleLabels[adminUser.role]}) does not include{" "}
+                  {permission ? permissionLabels[permission] : "the required permission"}. Ask an
+                  administrator for help.
                 </p>
               </div>
             )}

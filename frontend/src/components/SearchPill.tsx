@@ -1,25 +1,17 @@
-import { useEffect, useRef, useState } from "react";
-import { useLocation, useNavigate } from "@tanstack/react-router";
-import { ArrowRight, Mic, Search, SlidersHorizontal } from "lucide-react";
+import { useEffect, useId, useState, type FormEvent } from "react";
+import { useNavigate } from "@tanstack/react-router";
+import { ArrowRight, MapPin, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export type SearchIntent = "Buy" | "Sell" | "Rent";
-
-const intents: SearchIntent[] = ["Buy", "Sell", "Rent"];
-const brajAreas = ["Vrindavan", "Mathura", "Govardhan", "Barsana", "Chhatikara"];
-
-const intentRoute: Record<SearchIntent, "/buy" | "/sale" | "/rent"> = {
-  Buy: "/buy",
-  Sell: "/sale",
-  Rent: "/rent",
-};
+const intents: SearchIntent[] = ["Buy", "Rent", "Sell"];
+const intentRoute = { Buy: "/buy", Rent: "/rent", Sell: "/sale" } as const;
 
 interface SearchPillProps {
   variant?: "hero" | "bar";
   defaultIntent?: SearchIntent;
   defaultQuery?: string;
   onSearch?: (query: string, intent: SearchIntent) => void;
-  onToggleFilters?: () => void;
   className?: string;
 }
 
@@ -28,149 +20,112 @@ export function SearchPill({
   defaultIntent = "Buy",
   defaultQuery = "",
   onSearch,
-  onToggleFilters,
   className,
 }: SearchPillProps) {
   const [intent, setIntent] = useState<SearchIntent>(defaultIntent);
   const [query, setQuery] = useState(defaultQuery);
-  const debounceReady = useRef(false);
-  const location = useLocation();
+  const inputId = useId();
   const navigate = useNavigate();
 
   useEffect(() => {
     setIntent(defaultIntent);
   }, [defaultIntent]);
-
   useEffect(() => {
     setQuery(defaultQuery);
   }, [defaultQuery]);
 
-  useEffect(() => {
-    if (variant !== "bar" || !onSearch) return;
-    if (!debounceReady.current) {
-      debounceReady.current = true;
+  function submit(event: FormEvent) {
+    event.preventDefault();
+    const trimmed = query.trim();
+    if (onSearch && intent === defaultIntent) {
+      onSearch(trimmed, intent);
       return;
     }
-    const id = window.setTimeout(() => onSearch(query, intent), 300);
-    return () => window.clearTimeout(id);
-  }, [intent, onSearch, query, variant]);
-
-  function submit(e: React.FormEvent) {
-    e.preventDefault();
-    if (onSearch) {
-      onSearch(query, intent);
-      return;
-    }
-    void navigate({ to: intentRoute[intent], search: { q: query || undefined } });
-  }
-
-  function chooseIntent(option: SearchIntent) {
-    setIntent(option);
-    if (variant === "bar" && location.pathname !== intentRoute[option]) {
-      void navigate({ to: intentRoute[option], search: { q: query || undefined } });
-      return;
-    }
-    onSearch?.(query, option);
+    void navigate({
+      to: intentRoute[intent],
+      search: { q: intent === "Sell" ? undefined : trimmed || undefined },
+    });
   }
 
   return (
     <form
       onSubmit={submit}
-      className={cn(
-        "pv-smooth-state w-full bg-background/95 backdrop-blur-md",
-        variant === "hero"
-          ? "rounded-[1.75rem] border border-background/70 p-4 shadow-[var(--shadow-float)] sm:rounded-[2rem] sm:p-5"
-          : "rounded-3xl border border-border p-3 shadow-[var(--shadow-soft)] sm:rounded-full sm:py-2 sm:pr-2 sm:pl-3",
-        className,
-      )}
+      role="search"
+      aria-label="Property search"
+      className={cn("min-w-0", className)}
     >
-      <div
-        className={cn(
-          "flex flex-col gap-3",
-          variant === "bar" && "sm:flex-row sm:items-center sm:gap-2",
-        )}
-      >
+      {variant === "hero" && (
         <div
-          className={cn(
-            "flex rounded-full bg-ice p-1",
-            variant === "hero" ? "w-full sm:w-auto sm:self-start" : "shrink-0",
-          )}
-          role="tablist"
-          aria-label="Search intent"
+          role="group"
+          aria-label="Choose buy, rent or sell"
+          className="mb-5 flex gap-6 border-b border-border"
         >
           {intents.map((option) => (
             <button
               key={option}
               type="button"
-              role="tab"
-              aria-selected={intent === option}
-              onClick={() => chooseIntent(option)}
+              aria-pressed={intent === option}
+              onClick={() => setIntent(option)}
               className={cn(
-                "pv-smooth-state flex-1 rounded-full px-4 py-2 text-sm font-semibold sm:flex-none sm:px-5",
+                "min-h-11 border-b-2 px-1 pb-3 text-sm font-semibold transition-colors",
                 intent === option
-                  ? "bg-gold text-primary-foreground shadow-[var(--shadow-soft)]"
-                  : "text-navy-soft/80 hover:text-navy",
+                  ? "border-navy text-navy"
+                  : "border-transparent text-muted-foreground hover:text-navy",
               )}
             >
               {option}
             </button>
           ))}
         </div>
-
-        <div
-          className={cn(
-            "flex items-center gap-2 rounded-full",
-            variant === "hero" ? "border border-border px-4 py-2" : "flex-1 px-2",
-          )}
-        >
-          <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            aria-label="Search properties"
-            placeholder="Plot near Prem Mandir, flat in Vrindavan, shop near Mathura Junction"
-            className="min-h-11 min-w-0 flex-1 bg-transparent text-sm text-navy outline-none placeholder:text-muted-foreground"
-          />
-          <button
-            type="button"
-            aria-label="Search by voice"
-            className="pv-smooth-state grid h-11 w-11 shrink-0 place-items-center rounded-full text-muted-foreground hover:text-navy"
-          >
-            <Mic className="h-4 w-4" />
-          </button>
-          {onToggleFilters && (
-            <button
-              type="button"
-              onClick={onToggleFilters}
-              aria-label="Toggle filters"
-              className="pv-smooth-state grid h-11 w-11 shrink-0 place-items-center rounded-full text-muted-foreground hover:text-navy"
-            >
-              <SlidersHorizontal className="h-4 w-4" />
-            </button>
-          )}
-          <button
-            type="submit"
-            aria-label="Search"
-            className="pv-smooth-state grid h-11 w-11 shrink-0 place-items-center rounded-full bg-navy text-background hover:scale-[1.02]"
-          >
-            <ArrowRight className="h-4 w-4" />
+      )}
+      {intent === "Sell" ? (
+        <div className="grid gap-4 sm:grid-cols-[1fr_auto] sm:items-center">
+          <p className="text-sm text-muted-foreground">
+            List your property and connect with people looking in Braj.
+          </p>
+          <button type="submit" className="pv-button-primary gap-2">
+            Get started <ArrowRight className="h-4 w-4" />
           </button>
         </div>
-      </div>
-      {variant === "hero" ? (
-        <div className="mt-3 flex flex-wrap gap-2">
-          {brajAreas.map((area) => (
+      ) : (
+        <>
+          <label
+            htmlFor={inputId}
+            className={variant === "hero" ? "mb-2 block text-xs font-medium text-navy" : "sr-only"}
+          >
+            City, locality or property type
+          </label>
+          <div className="flex min-w-0 items-center gap-2 rounded-xl border border-border bg-card p-1.5 focus-within:border-navy">
+            <MapPin
+              className="ml-2 hidden h-5 w-5 shrink-0 text-muted-foreground sm:block"
+              aria-hidden="true"
+            />
+            <input
+              id={inputId}
+              type="search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Try Vrindavan or a 2 BHK flat"
+              autoComplete="off"
+              enterKeyHint="search"
+              className="min-h-11 w-full min-w-0 flex-1 bg-transparent px-2 text-sm text-navy outline-none focus-visible:outline-none placeholder:text-muted-foreground"
+            />
             <button
-              key={area}
-              type="button"
-              onClick={() => setQuery(area)}
-              className="pv-smooth-state rounded-full border border-border bg-background px-3 py-1.5 text-xs font-semibold text-navy-soft hover:border-gold hover:text-navy"
+              type="submit"
+              aria-label="Search properties"
+              className="pv-button-primary shrink-0 gap-2 px-3 sm:px-5"
             >
-              {area}
+              <Search className="h-4 w-4" aria-hidden="true" />
+              <span className="hidden sm:inline">Search</span>
             </button>
-          ))}
-        </div>
-      ) : null}
+          </div>
+          {variant === "hero" && (
+            <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+              Search flats, houses, plots, shops and farm houses.
+            </p>
+          )}
+        </>
+      )}
     </form>
   );
 }

@@ -19,8 +19,9 @@ import { User } from "../models/User.js";
 import { logActivity } from "../utils/activity.js";
 import { ApiError, asyncHandler } from "../utils/errors.js";
 import {
+  adminPropertySchema,
   newsSchema,
-  propertySchema,
+  requiredPropertyDetailsSchema,
   userUpdateSchema,
   verificationDecisionSchema,
 } from "../validators.js";
@@ -87,10 +88,13 @@ adminRouter.post(
   "/properties",
   requirePermission("properties"),
   asyncHandler(async (req, res) => {
-    const input = propertySchema.parse(req.body);
-    const existing = await Property.findOne({ id: input.id });
-    const next = normalizePropertyForSave(input, req.user.id);
-    const property = await Property.findOneAndUpdate({ id: input.id }, next, {
+    const result = adminPropertySchema.safeParse(req.body);
+    if (!result.success) throw new ApiError(400, result.error.issues[0].message);
+    const input = result.data;
+    const id = input.id ?? `braj-${crypto.randomUUID()}`;
+    const existing = await Property.findOne({ id }).lean();
+    const next = normalizePropertyForSave(input, existing, req.user.id);
+    const property = await Property.findOneAndUpdate({ id }, { $set: next }, {
       new: true,
       upsert: true,
     });
@@ -98,8 +102,8 @@ adminRouter.post(
       req.user.email,
       "Properties",
       existing ? "Updated property" : "Created property",
-      `${input.id} - ${input.title}`,
-    );
+      `${id} - ${input.title}`,
+    ).catch((error) => console.error("Could not record property save activity.", error));
     res.json({ property });
   }),
 );
@@ -111,6 +115,10 @@ adminRouter.patch(
     const input = verificationDecisionSchema.parse(req.body);
     const property = await Property.findOne({ id: req.params.id });
     if (!property) throw new ApiError(404, "Property listing not found.");
+    if (input.status === "Approved") {
+      const details = requiredPropertyDetailsSchema.safeParse(property.propertyDetails);
+      if (!details.success) throw new ApiError(400, details.error.issues[0].message);
+    }
 
     const now = new Date();
     const update = {
@@ -213,39 +221,74 @@ adminRouter.delete(
   }),
 );
 
-function normalizePropertyForSave(input, actorId) {
-  const status = input.reviewStatus || "Approved";
-  return {
-    ...input,
-    transactionType: input.transactionType || input.intent?.toLowerCase(),
-    legalOwnerName: input.legalOwnerName || input.ownerName || "",
+function normalizePropertyForSave(input, existing, actorId) {
+  const { specs, propertyDetails, ownerDetails, verification, rera, ...fields } = input;
+  const { city, locality } = input.location;
+  const intent = input.intent ?? existing?.intent ?? "Sale";
+  const sameIntent = intent === existing?.intent;
+  const sameLocation = city === existing?.location?.city && locality === existing?.location?.locality;
+  const approved = input.reviewStatus === "Approved";
+  const reviewChanged = input.reviewStatus !== existing?.reviewStatus;
+  const publishDraft = approved && existing?.lifecycleStatus === "Draft";
+  const reviewUpdated = reviewChanged || publishDraft;
+  const defaultLifecycle = approved ? "Active" : "Draft";
+  const lifecycleStatus = reviewUpdated
+    ? defaultLifecycle
+    : (existing?.lifecycleStatus ?? defaultLifecycle);
+  const reviewVerificationStatus =
+    input.reviewStatus === "Needs Changes" ? "Needs Correction" : input.reviewStatus;
+  const verificationStatus = reviewUpdated
+    ? reviewVerificationStatus
+    : (existing?.verification?.status ?? reviewVerificationStatus);
+  const now = new Date();
+  const next = {
+    ...fields,
+    intent,
+    transactionType:
+      (sameIntent && (input.transactionType ?? existing?.transactionType)) || intent.toLowerCase(),
+    legalOwnerName: input.legalOwnerName || existing?.legalOwnerName || input.ownerName,
     publicLocation:
-      input.publicLocation || `${input.location?.locality || ""}, ${input.location?.city || ""}`,
+      (sameLocation && (input.publicLocation || existing?.publicLocation)) || `${locality}, ${city}`,
+    lifecycleStatus,
+  };
+
+  if (approved && lifecycleStatus === "Active" && !existing?.publishedAt) next.publishedAt = now;
+
+  // Update only the nested details supplied in this save so a short form can edit older listings.
+  const nested = {
+    specs,
+    propertyDetails,
     ownerDetails: {
-      ...(input.ownerDetails || {}),
-      ownerName: input.ownerDetails?.ownerName || input.ownerName || "",
-      ownerPhone: input.ownerDetails?.ownerPhone || input.ownerPhone || "",
-      ownerEmail: input.ownerDetails?.ownerEmail || input.ownerEmail || "",
+      ...ownerDetails,
+      ownerName: ownerDetails?.ownerName ?? input.ownerName,
+      ownerPhone: ownerDetails?.ownerPhone ?? input.ownerPhone,
+      ownerEmail: ownerDetails?.ownerEmail ?? input.ownerEmail,
       publicContactName:
-        input.ownerDetails?.publicContactName || input.ownerDetails?.ownerName || input.ownerName || "",
+        ownerDetails?.publicContactName || existing?.ownerDetails?.publicContactName ||
+        ownerDetails?.ownerName || input.ownerName,
       publicContactRole:
-        input.ownerDetails?.publicContactRole || input.ownerDetails?.ownerRole || "Owner",
+        ownerDetails?.publicContactRole || existing?.ownerDetails?.publicContactRole ||
+        ownerDetails?.ownerRole || "Owner",
     },
-    lifecycleStatus: input.lifecycleStatus || (status === "Approved" ? "Active" : "Draft"),
-    publishedAt: status === "Approved" ? input.publishedAt || new Date() : input.publishedAt,
+    rera,
     verification: {
-      level: input.verification?.level || (status === "Approved" ? "VERIFIED_LISTING" : "OWNER_LISTED"),
-      status: input.verification?.status || status,
-      scope: input.verification?.scope || verifiedListingDisclaimer,
+      ...verification,
+      status: verificationStatus,
+      scope: verification.scope || existing?.verification?.scope || verifiedListingDisclaimer,
       verifiedAt:
-        input.verification?.verifiedAt || (status === "Approved" ? new Date() : undefined),
-      verifiedBy: input.verification?.verifiedBy || (status === "Approved" ? actorId : undefined),
-      expiresAt: input.verification?.expiresAt,
-      rejectionReason: input.verification?.rejectionReason || "",
-      suspensionReason: input.verification?.suspensionReason || "",
-      reviewNotes: input.verification?.reviewNotes || "",
+        existing?.verification?.verifiedAt ?? (verificationStatus === "Approved" ? now : undefined),
+      verifiedBy:
+        existing?.verification?.verifiedBy ?? (verificationStatus === "Approved" ? actorId : undefined),
+      rejectionReason: approved && reviewUpdated ? "" : verification.rejectionReason,
+      suspensionReason: approved && reviewUpdated ? "" : verification.suspensionReason,
     },
   };
+  for (const [section, values] of Object.entries(nested)) {
+    for (const [field, value] of Object.entries(values ?? {})) {
+      if (value !== undefined) next[`${section}.${field}`] = value;
+    }
+  }
+  return next;
 }
 
 function mapReviewStatus(status) {
