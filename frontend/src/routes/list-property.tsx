@@ -1,10 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { BadgeIndianRupee, Check, FileCheck2, Home, MapPin, ShieldCheck } from "lucide-react";
-import { useMemo, useState, type FormEvent } from "react";
+import { BadgeIndianRupee, Check, FileCheck2, Home, MapPin } from "lucide-react";
+import { useMemo, useRef, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 
 import { BrajLocationFields } from "@/components/BrajLocationFields";
+import { PageHeader } from "@/components/PageHeader";
 import { PropertyPhotoEditor } from "@/components/PropertyPhotoEditor";
+import { listingDraftMessage, useListingDrafts } from "@/lib/listing-drafts";
 import { useStore } from "@/lib/mock-store";
 import { cn } from "@/lib/utils";
 import type { Property, PropertyCategory, PropertyIntent } from "@/types/property";
@@ -126,9 +128,27 @@ const initialDraft: Draft = {
 };
 
 function ListPropertyPage() {
+  const { currentUser, sessionHydrated } = useStore();
+  const scope = currentUser ? `owner:${currentUser.id}` : null;
+  return <ListPropertyForm key={scope} scope={scope} sessionHydrated={sessionHydrated} />;
+}
+
+const ownerDraftId = "new-listing";
+
+function ListPropertyForm({
+  scope,
+  sessionHydrated,
+}: {
+  scope: string | null;
+  sessionHydrated: boolean;
+}) {
   const { currentUser, submitProperty, uploadPropertyImages } = useStore();
   const navigate = useNavigate();
-  const [draft, setDraft] = useState<Draft>(() => ({
+  const drafts = useListingDrafts<Draft>(scope);
+  const savedDraft = drafts.entries.find((entry) => entry.id === ownerDraftId);
+  const [editedDraft, setEditedDraft] = useState<Draft | null>(null);
+  const latestEdit = useRef<Draft | null>(null);
+  const [defaultDraft] = useState<Draft>(() => ({
     ...initialDraft,
     ownerName: currentUser?.name ?? "",
     ownerEmail: currentUser?.email ?? "",
@@ -136,6 +156,8 @@ function ListPropertyPage() {
   }));
   const [preparingPhotos, setPreparingPhotos] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const draft = editedDraft ?? savedDraft?.draft ?? defaultDraft;
+  const loading = !sessionHydrated || drafts.loading;
 
   const errors = useMemo(() => validateDraft(draft), [draft]);
   const canSubmit =
@@ -143,7 +165,10 @@ function ListPropertyPage() {
   const areaUnit = draft.propertyDetails.areaUnit;
 
   function set<K extends keyof Draft>(key: K, value: Draft[K]) {
-    setDraft((current) => ({ ...current, [key]: value }));
+    const next = { ...(latestEdit.current ?? draft), [key]: value };
+    latestEdit.current = next;
+    setEditedDraft(next);
+    drafts.save(ownerDraftId, next);
   }
 
   async function onSubmit(event: FormEvent) {
@@ -171,6 +196,11 @@ function ListPropertyPage() {
         specs: { ...draft.specs, area: Number(draft.specs.area) },
       });
       toast.success("Property submitted for admin review.");
+      if (!(await drafts.clear(ownerDraftId))) {
+        toast.warning(
+          "Your property was submitted, but its draft couldn't be removed from this browser.",
+        );
+      }
       navigate({ to: "/" });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Property could not be submitted.");
@@ -181,55 +211,43 @@ function ListPropertyPage() {
 
   return (
     <div className="bg-smoke pb-20">
-      <div className="pv-container grid gap-8 pt-8 lg:grid-cols-[minmax(0,1fr)_22rem]">
-        <section>
-          <p className="text-sm font-bold text-gold-deep">Owner listing desk</p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-navy sm:text-4xl">
-            List your property
-          </h1>
-          <p className="mt-3 max-w-3xl text-sm leading-relaxed text-muted-foreground sm:text-base">
-            Submit your property details, owner contact information and optional photos. Braj Setu
-            Properties reviews user listings before publishing them in public search.
-          </p>
-        </section>
+      <PageHeader
+        eyebrow="For property owners"
+        title="List your property"
+        description="Add the property details and photos. Our team reviews your submission before it appears in public search."
+      />
 
-        <aside className="rounded-xl border border-border bg-card p-5 shadow-[var(--shadow-soft)]">
-          <div className="flex items-center gap-3">
-            <span className="grid h-11 w-11 place-items-center rounded-full bg-ice text-navy">
-              <ShieldCheck className="h-5 w-5" />
-            </span>
-            <div>
-              <p className="text-sm font-semibold text-navy">Review workflow</p>
-              <p className="text-xs text-muted-foreground">Valid listings go to admin first.</p>
-            </div>
-          </div>
-          <div className="mt-5 grid gap-3 text-sm text-muted-foreground">
-            {["Share accurate details", "Accept listing terms", "Admin checks and publishes"].map(
-              (item) => (
-                <p key={item} className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-gold-deep" />
-                  {item}
-                </p>
-              ),
-            )}
-          </div>
-        </aside>
-      </div>
-
+      {loading ? (
+        <p role="status" className="pv-container mt-6 text-sm text-muted-foreground">
+          Checking for a saved draft…
+        </p>
+      ) : null}
       <form
         onSubmit={onSubmit}
-        className="pv-container mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]"
+        hidden={loading}
+        className="pv-container mt-6 grid items-start gap-5 sm:mt-8 lg:grid-cols-[minmax(0,1fr)_minmax(19rem,0.47fr)] lg:gap-7"
       >
-        <div className="space-y-6 rounded-xl border border-border bg-card p-5 shadow-[var(--shadow-soft)]">
+        <div inert={submitting} className="pv-panel space-y-6 p-4 sm:p-6">
+          <div>
+            <h2 className="text-lg font-semibold text-navy">Property details</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Fields marked * are required.</p>
+          </div>
           {!currentUser ? (
             <div className="rounded-lg border border-gold/40 bg-gold/10 p-4 text-sm text-navy">
               Please{" "}
               <Link to="/login" className="font-bold underline decoration-gold underline-offset-4">
                 sign in
               </Link>{" "}
-              or create an account before submitting a property.
+              or create an account to save a draft on this browser and submit a property.
             </div>
-          ) : null}
+          ) : (
+            <p
+              role="status"
+              className="rounded-lg border border-border bg-ice p-3 text-sm text-navy"
+            >
+              {listingDraftMessage(savedDraft?.status, drafts.unavailable)}
+            </p>
+          )}
 
           <section className="grid gap-4 sm:grid-cols-2">
             <label className="block sm:col-span-2">
@@ -635,7 +653,7 @@ function ListPropertyPage() {
             maxPhotos={8}
           />
 
-          <section className="rounded-xl border border-border bg-card p-5 shadow-[var(--shadow-soft)]">
+          <section inert={submitting} className="pv-panel p-4 sm:p-5">
             <div className="flex items-center gap-2">
               <Home className="h-4 w-4 text-gold-deep" />
               <h2 className="text-base font-semibold text-navy">Owner details</h2>
@@ -727,13 +745,14 @@ function ListPropertyPage() {
             </div>
           </section>
 
-          <section className="rounded-xl border border-border bg-card p-5 shadow-[var(--shadow-soft)]">
+          <section className="pv-panel p-4 sm:p-5">
             <label className="flex items-start gap-3 text-sm leading-relaxed text-navy">
               <input
                 type="checkbox"
                 checked={draft.termsAccepted}
                 onChange={(event) => set("termsAccepted", event.target.checked)}
                 className="mt-1 h-5 w-5 shrink-0 accent-[var(--navy)]"
+                disabled={submitting}
                 required
               />
               <span>

@@ -1,4 +1,5 @@
 import { Bath, BedDouble, Building2, Home, Landmark, Store, Trees } from "lucide-react";
+import { useId } from "react";
 import { AMENITY_OPTIONS } from "@/data/properties";
 import { cn } from "@/lib/utils";
 import type { PropertyCategory, PropertyFilters } from "@/types/property";
@@ -64,6 +65,7 @@ function Counter({
 }
 
 export function FilterPanel({ filters, onChange, onApply, onReset, className }: FilterPanelProps) {
+  const locationId = useId();
   const selectedCategories = filters.categories ?? [];
   const selectedAmenities = filters.amenities ?? [];
   const minPrice = filters.minPrice ?? 0;
@@ -84,8 +86,13 @@ export function FilterPanel({ filters, onChange, onApply, onReset, className }: 
 
   return (
     <div className={cn("flex flex-col overflow-hidden rounded-xl bg-card", className)}>
-      <div className="flex items-center justify-between border-b border-border px-5 py-3">
-        <h2 className="text-sm font-semibold text-navy">Filters</h2>
+      <div
+        className={cn(
+          "flex items-center justify-between gap-3 border-b border-border px-5 py-2",
+          onApply && "pr-16",
+        )}
+      >
+        <h2 className="text-base font-semibold text-navy">Filters</h2>
         <button
           type="button"
           onClick={() => (onReset ? onReset() : onChange({ intent: filters.intent }))}
@@ -94,16 +101,16 @@ export function FilterPanel({ filters, onChange, onApply, onReset, className }: 
           Reset
         </button>
       </div>
-      <div className="flex-1 space-y-7 overflow-y-auto p-5">
+      <div className="flex-1 space-y-6 overflow-y-auto overscroll-contain p-5">
         <div>
           <label
-            htmlFor="filter-location"
+            htmlFor={locationId}
             className="text-xs font-semibold tracking-wide text-navy uppercase"
           >
             Location
           </label>
           <input
-            id="filter-location"
+            id={locationId}
             value={filters.city ?? ""}
             onChange={(e) => onChange({ ...filters, city: e.target.value })}
             placeholder="City or locality"

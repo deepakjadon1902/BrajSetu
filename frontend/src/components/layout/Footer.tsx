@@ -7,8 +7,8 @@ import { OFFICE_MAP_URL } from "@/lib/location";
 export function Footer() {
   const { settings } = useStore();
   return (
-    <footer className="border-t border-navy-soft bg-navy text-white/75">
-      <div className="pv-container grid grid-cols-2 gap-x-6 gap-y-8 py-10 sm:py-12 lg:grid-cols-[1.4fr_1fr_1fr_1.4fr] lg:gap-10">
+    <footer className="border-t border-navy-soft bg-navy text-white/75 [&_a:focus-visible]:outline-white">
+      <div className="pv-container grid grid-cols-2 gap-x-5 gap-y-8 py-10 sm:py-12 lg:grid-cols-[1.2fr_0.85fr_0.85fr_1.25fr] lg:gap-9 lg:py-14">
         <div className="col-span-2 lg:col-span-1">
           <BrandLogo compact inverted />
           <p className="mt-4 max-w-xs text-sm leading-relaxed">{settings.tagline}</p>
@@ -125,7 +125,7 @@ export function Footer() {
               <Mail className="mt-1 h-4 w-4 shrink-0 text-gold" />
               <a
                 href={`mailto:${settings.contactEmail}`}
-                className="min-w-0 break-all hover:text-white"
+                className="min-w-0 [overflow-wrap:anywhere] hover:text-white"
               >
                 {settings.contactEmail}
               </a>
@@ -134,12 +134,12 @@ export function Footer() {
         </div>
       </div>
       <div className="border-t border-white/10">
-        <div className="pv-container py-6">
+        <div className="pv-container flex flex-col gap-3 py-5 lg:flex-row lg:items-start lg:justify-between lg:gap-10">
           <p className="max-w-4xl text-xs leading-relaxed text-white/60">
             Property information is provided for your reference. Prices and availability may change.
             Please confirm details and complete independent checks before a transaction.
           </p>
-          <p className="mt-4 text-xs text-white/60">
+          <p className="text-xs text-white/60 lg:max-w-[21rem]">
             © {new Date().getFullYear()} {settings.siteName}. All rights reserved.
           </p>
         </div>

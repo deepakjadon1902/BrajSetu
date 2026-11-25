@@ -33,12 +33,14 @@ export function PropertyCardSkeleton({ compact }: { compact?: boolean }) {
 export function PropertyGridSkeleton({
   count = 6,
   compact = false,
+  className,
 }: {
   count?: number;
   compact?: boolean;
+  className?: string;
 }) {
   return (
-    <div className={compact ? "grid gap-4" : "pv-property-grid"}>
+    <div className={className ?? (compact ? "grid gap-4" : "pv-property-grid")}>
       {Array.from({ length: count }).map((_, i) => (
         <PropertyCardSkeleton key={i} compact={compact} />
       ))}

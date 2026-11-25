@@ -13,7 +13,7 @@ import {
   Store,
   Trash2,
 } from "lucide-react";
-import { useMemo, useState, type FormEvent } from "react";
+import { useMemo, useRef, useState, type FormEvent, type SetStateAction } from "react";
 import { toast } from "sonner";
 
 import { AdminShell } from "@/components/admin/AdminShell";
@@ -22,6 +22,7 @@ import { PropertyPhotoEditor } from "@/components/PropertyPhotoEditor";
 import { SmartImage } from "@/components/SmartImage";
 import { VerificationBadge } from "@/components/VerificationBadge";
 import { formatPrice } from "@/lib/api";
+import { listingDraftMessage, useListingDrafts } from "@/lib/listing-drafts";
 import { uid, useStore } from "@/lib/mock-store";
 import { getMainImage } from "@/lib/property-images";
 import { cn } from "@/lib/utils";
@@ -166,13 +167,21 @@ function normalizeAdminProperty(property: Property): Property {
 }
 
 function AdminProperties() {
+  const { adminUser, can } = useStore();
+  const scope = adminUser && can("properties") ? `admin:${adminUser.id}` : null;
+  return <AdminPropertyEditor key={scope} scope={scope} />;
+}
+
+function AdminPropertyEditor({ scope }: { scope: string | null }) {
   const {
     adminProperties: storedProperties,
     saveProperty,
     deleteProperty,
     uploadPropertyImages,
   } = useStore();
-  const [draft, setDraft] = useState<PropertyDraft | null>(null);
+  const [draft, setOpenDraft] = useState<PropertyDraft | null>(null);
+  const openDraftRef = useRef<PropertyDraft | null>(null);
+  const drafts = useListingDrafts<PropertyDraft>(scope);
   const [search, setSearch] = useState("");
   const [intentFilter, setIntentFilter] = useState<"All" | PropertyIntent>("All");
   const [uploading, setUploading] = useState(false);
@@ -182,6 +191,20 @@ function AdminProperties() {
     [storedProperties],
   );
   const areaUnit = draft?.propertyDetails?.areaUnit;
+  const openDraftStatus = drafts.entries.find((entry) => entry.id === draft?.id)?.status;
+
+  function openDraft(next: PropertyDraft | null) {
+    openDraftRef.current = next;
+    setOpenDraft(next);
+  }
+
+  function setDraft(update: SetStateAction<PropertyDraft | null>) {
+    const current = openDraftRef.current;
+    const next = typeof update === "function" ? update(current) : update;
+    if (!next || next === current) return;
+    openDraft(next);
+    drafts.save(next.id, next);
+  }
 
   const metrics = useMemo(
     () => ({
@@ -228,8 +251,13 @@ function AdminProperties() {
     setSaving(true);
     try {
       await saveProperty({ ...draft, title, category, specs: { ...draft.specs, area } });
+      if (!(await drafts.clear(draft.id))) {
+        toast.warning(
+          "The listing was saved, but its draft couldn't be removed from this browser.",
+        );
+      }
       toast.success("Listing saved.");
-      setDraft(null);
+      openDraft(null);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Listing could not be saved.");
     } finally {
@@ -245,9 +273,9 @@ function AdminProperties() {
       actions={
         <button
           type="button"
-          disabled={saving || uploading}
-          onClick={() => setDraft(emptyProperty())}
-          className="pv-smooth-state flex items-center gap-2 rounded-full bg-navy px-5 py-2.5 text-sm font-semibold text-background shadow-[var(--shadow-soft)] hover:scale-[1.02]"
+          disabled={drafts.loading || saving || uploading}
+          onClick={() => openDraft(emptyProperty())}
+          className="pv-smooth-state flex items-center gap-2 rounded-full bg-navy px-5 py-2.5 text-sm font-semibold text-background shadow-[var(--shadow-soft)] hover:scale-[1.02] disabled:opacity-60"
         >
           <Plus className="h-4 w-4" /> New listing
         </button>
@@ -275,6 +303,46 @@ function AdminProperties() {
         ))}
       </div>
 
+      {!draft && (drafts.loading || drafts.unavailable || drafts.entries.length > 0) ? (
+        <section className="mt-6 rounded-xl border border-border bg-card p-5 shadow-[var(--shadow-soft)]">
+          <h2 className="text-lg font-semibold text-navy">Listing drafts</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {drafts.loading
+              ? "Loading drafts…"
+              : listingDraftMessage(undefined, drafts.unavailable)}
+          </p>
+          {drafts.entries.length > 0 ? (
+            <ul className="mt-4 divide-y divide-border border-t border-border">
+              {drafts.entries.map((entry) => {
+                const title = entry.draft.title.trim() || "Untitled listing";
+                return (
+                  <li key={entry.id} className="flex items-center justify-between gap-3 py-3">
+                    <div className="min-w-0">
+                      <p className="break-words text-sm font-semibold text-navy">{title}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {entry.status === "saved"
+                          ? [entry.draft.category, entry.draft.location.city]
+                              .filter(Boolean)
+                              .join(" · ") || "New draft"
+                          : listingDraftMessage(entry.status)}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => openDraft(entry.draft)}
+                      aria-label={`Resume draft for ${title}`}
+                      className="shrink-0 rounded-full border border-border px-4 py-2 text-sm font-semibold text-navy hover:bg-ice"
+                    >
+                      Resume draft
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : null}
+        </section>
+      ) : null}
+
       {draft ? (
         <form
           onSubmit={onSubmit}
@@ -297,7 +365,7 @@ function AdminProperties() {
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 rounded-lg bg-ice p-2">
+            <div inert={saving} className="grid grid-cols-2 gap-2 rounded-lg bg-ice p-2">
               {(["Sale", "Rent"] as PropertyIntent[]).map((intent) => (
                 <button
                   key={intent}
@@ -316,7 +384,7 @@ function AdminProperties() {
             </div>
           </div>
 
-          <div className="grid gap-6 p-5 xl:grid-cols-[minmax(0,1fr)_22rem]">
+          <div inert={saving} className="grid gap-6 p-5 xl:grid-cols-[minmax(0,1fr)_22rem]">
             <div className="space-y-6">
               <section className="grid gap-4 sm:grid-cols-2">
                 <label className="block sm:col-span-2">
@@ -996,7 +1064,7 @@ function AdminProperties() {
             </aside>
           </div>
 
-          <div className="flex flex-wrap gap-3 border-t border-border bg-smoke/70 p-5">
+          <div className="flex flex-wrap items-center gap-3 border-t border-border bg-smoke/70 p-5">
             <button
               type="submit"
               disabled={uploading || saving}
@@ -1007,11 +1075,14 @@ function AdminProperties() {
             <button
               type="button"
               disabled={saving || uploading}
-              onClick={() => setDraft(null)}
+              onClick={() => openDraft(null)}
               className="rounded-full border border-border px-6 py-2.5 text-sm font-semibold text-navy"
             >
-              Cancel
+              Close editor
             </button>
+            <p role="status" className="text-sm text-muted-foreground">
+              {listingDraftMessage(openDraftStatus, drafts.unavailable)}
+            </p>
           </div>
         </form>
       ) : null}
@@ -1132,12 +1203,14 @@ function AdminProperties() {
                   <button
                     type="button"
                     aria-label={`Edit ${property.title}`}
-                    disabled={saving || uploading}
+                    disabled={drafts.loading || saving || uploading}
                     onClick={() =>
-                      setDraft({
-                        ...property,
-                        specs: { ...property.specs, area: String(property.specs.area || "") },
-                      })
+                      openDraft(
+                        drafts.entries.find((entry) => entry.id === property.id)?.draft ?? {
+                          ...property,
+                          specs: { ...property.specs, area: String(property.specs.area || "") },
+                        },
+                      )
                     }
                     className="pv-smooth-state rounded-full border border-border p-2 text-navy hover:bg-ice"
                   >
@@ -1146,9 +1219,18 @@ function AdminProperties() {
                   <button
                     type="button"
                     aria-label={`Delete ${property.title}`}
+                    disabled={drafts.loading || saving || uploading}
                     onClick={async () => {
                       try {
                         await deleteProperty(property.id);
+                        if (openDraftRef.current?.id === property.id) openDraft(null);
+                        if (drafts.entries.some((entry) => entry.id === property.id)) {
+                          if (!(await drafts.clear(property.id))) {
+                            toast.warning(
+                              "The listing was removed, but its draft is still on this browser.",
+                            );
+                          }
+                        }
                         toast.success("Listing removed.");
                       } catch (error) {
                         toast.error(

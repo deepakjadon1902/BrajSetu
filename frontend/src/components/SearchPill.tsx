@@ -58,7 +58,7 @@ export function SearchPill({
         <div
           role="group"
           aria-label="Choose buy, rent or sell"
-          className="mb-5 flex gap-6 border-b border-border"
+          className="mb-3 grid grid-cols-3 gap-1 rounded-xl bg-smoke p-1 sm:mb-4"
         >
           {intents.map((option) => (
             <button
@@ -67,10 +67,10 @@ export function SearchPill({
               aria-pressed={intent === option}
               onClick={() => setIntent(option)}
               className={cn(
-                "min-h-11 border-b-2 px-1 pb-3 text-sm font-semibold transition-colors",
+                "pv-smooth-state min-h-11 rounded-lg px-2 text-sm font-semibold",
                 intent === option
-                  ? "border-navy text-navy"
-                  : "border-transparent text-muted-foreground hover:text-navy",
+                  ? "bg-card text-navy shadow-[var(--shadow-soft)]"
+                  : "text-muted-foreground hover:bg-card/70 hover:text-navy",
               )}
             >
               {option}
@@ -89,13 +89,10 @@ export function SearchPill({
         </div>
       ) : (
         <>
-          <label
-            htmlFor={inputId}
-            className={variant === "hero" ? "mb-2 block text-xs font-medium text-navy" : "sr-only"}
-          >
+          <label htmlFor={inputId} className="sr-only">
             City, locality or property type
           </label>
-          <div className="flex min-w-0 items-center gap-2 rounded-xl border border-border bg-card p-1.5 focus-within:border-navy">
+          <div className="pv-smooth-state flex min-w-0 items-center gap-1 rounded-xl border border-border bg-card p-1.5 focus-within:border-navy/60 focus-within:ring-2 focus-within:ring-navy/10 sm:gap-2">
             <MapPin
               className="ml-2 hidden h-5 w-5 shrink-0 text-muted-foreground sm:block"
               aria-hidden="true"
@@ -105,7 +102,7 @@ export function SearchPill({
               type="search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Try Vrindavan or a 2 BHK flat"
+              placeholder="City, locality or type"
               autoComplete="off"
               enterKeyHint="search"
               className="min-h-11 w-full min-w-0 flex-1 bg-transparent px-2 text-sm text-navy outline-none focus-visible:outline-none placeholder:text-muted-foreground"
@@ -115,15 +112,10 @@ export function SearchPill({
               aria-label="Search properties"
               className="pv-button-primary shrink-0 gap-2 px-3 sm:px-5"
             >
-              <Search className="h-4 w-4" aria-hidden="true" />
-              <span className="hidden sm:inline">Search</span>
+              <Search className="hidden size-4 min-[380px]:block" aria-hidden="true" />
+              Search
             </button>
           </div>
-          {variant === "hero" && (
-            <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
-              Search flats, houses, plots, shops and farm houses.
-            </p>
-          )}
         </>
       )}
     </form>

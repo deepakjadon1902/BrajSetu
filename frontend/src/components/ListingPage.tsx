@@ -1,6 +1,6 @@
 import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { LayoutGrid, List, SlidersHorizontal } from "lucide-react";
+import { LayoutGrid, List, SlidersHorizontal, X } from "lucide-react";
 import { FilterPanel } from "@/components/FilterPanel";
 import { PropertyCard } from "@/components/PropertyCard";
 import { EmptyState, PropertyGridSkeleton } from "@/components/States";
@@ -12,8 +12,9 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { filterProperties } from "@/lib/api";
+import { filterProperties, formatPrice } from "@/lib/api";
 import { useStore } from "@/lib/mock-store";
+import { useSavedProperties } from "@/lib/saved-properties";
 import { cn } from "@/lib/utils";
 import type { PropertyFilters, PropertyIntent } from "@/types/property";
 
@@ -43,6 +44,7 @@ export function ListingPage({
   const [panelOpen, setPanelOpen] = useState(false);
   const restored = useRef(false);
   const { properties, hydrated, publicDataError, refreshPublic } = useStore();
+  const { savedIds, toggleSaved } = useSavedProperties();
   const navigate = useNavigate();
   const storageKey = "listing-state:" + searchIntent;
 
@@ -107,45 +109,94 @@ export function ListingPage({
     handleSearch("");
   }
 
-  const activeFilters =
-    [filters.city, filters.minPrice, filters.maxPrice, filters.bedrooms, filters.bathrooms].filter(
-      Boolean,
-    ).length +
-    (filters.categories?.length ?? 0) +
-    (filters.amenities?.length ?? 0);
+  const criteria = [
+    filters.city?.trim() && {
+      key: "city",
+      label: filters.city.trim(),
+      remove: () => setFilters((current) => ({ ...current, city: undefined })),
+    },
+    (filters.minPrice !== undefined || filters.maxPrice !== undefined) && {
+      key: "budget",
+      label: [
+        filters.minPrice !== undefined && `From ${formatPrice(filters.minPrice)}`,
+        filters.maxPrice !== undefined && `Up to ${formatPrice(filters.maxPrice)}`,
+      ]
+        .filter(Boolean)
+        .join(" · "),
+      remove: () =>
+        setFilters((current) => ({ ...current, minPrice: undefined, maxPrice: undefined })),
+    },
+    !!filters.bedrooms && {
+      key: "beds",
+      label: `${filters.bedrooms}+ beds`,
+      remove: () => setFilters((current) => ({ ...current, bedrooms: undefined })),
+    },
+    !!filters.bathrooms && {
+      key: "baths",
+      label: `${filters.bathrooms}+ baths`,
+      remove: () => setFilters((current) => ({ ...current, bathrooms: undefined })),
+    },
+    ...(filters.categories ?? []).map((category) => ({
+      key: `type-${category}`,
+      label: category,
+      remove: () =>
+        setFilters((current) => ({
+          ...current,
+          categories: current.categories?.filter((item) => item !== category),
+        })),
+    })),
+    ...(filters.amenities ?? []).map((amenity) => ({
+      key: `amenity-${amenity}`,
+      label: amenity,
+      remove: () =>
+        setFilters((current) => ({
+          ...current,
+          amenities: current.amenities?.filter((item) => item !== amenity),
+        })),
+    })),
+  ].filter((item) => typeof item === "object");
+  const activeFilters = criteria.length;
+  const chips = filters.query
+    ? [
+        { key: "query", label: `Search: ${filters.query}`, remove: () => handleSearch("") },
+        ...criteria,
+      ]
+    : criteria;
 
   return (
     <div className="bg-smoke pb-12 sm:pb-16">
-      <div className="border-b border-border bg-card">
-        <div className="pv-container py-8 sm:py-10">
-          <p className="pv-eyebrow">
-            {intent === "Sale" ? "Properties for sale" : "Rental properties"}
-          </p>
-          <h1 className="mt-3 text-3xl font-semibold text-navy sm:text-4xl">{heading}</h1>
-          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">
-            {subheading}
-          </p>
+      <div className="pv-page-intro border-b border-border">
+        <div className="pv-container py-8 sm:py-11 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(22rem,0.78fr)] lg:items-end lg:gap-12 lg:py-14">
+          <div className="min-w-0">
+            <p className="pv-eyebrow">
+              {intent === "Sale" ? "Properties for sale" : "Rental properties"}
+            </p>
+            <h1 className="pv-title mt-3">{heading}</h1>
+            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">
+              {subheading}
+            </p>
+          </div>
           <SearchPill
             variant="bar"
             defaultIntent={searchIntent}
             defaultQuery={initialQuery}
             onSearch={handleSearch}
-            className="mt-6 max-w-3xl"
+            className="mt-5 max-w-2xl lg:mt-0"
           />
         </div>
       </div>
-      <div className="pv-container mt-6 grid items-start gap-6 lg:grid-cols-[240px_minmax(0,1fr)]">
+      <div className="pv-container mt-6 grid items-start gap-5 lg:grid-cols-[270px_minmax(0,1fr)] lg:gap-7">
         <aside aria-label="Property filters" className="hidden lg:sticky lg:top-24 lg:block">
           <FilterPanel
             filters={filters}
             onChange={setFilters}
             onReset={resetFilters}
-            className="max-h-[calc(100dvh-7rem)] border border-border"
+            className="pv-panel max-h-[calc(100dvh-7rem)]"
           />
         </aside>
         <section className="min-w-0" aria-label="Property results">
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card p-3 shadow-[var(--shadow-soft)] sm:px-4">
-            <p aria-live="polite" className="text-sm font-medium text-navy">
+          <div className="pv-panel flex flex-wrap items-center justify-between gap-2 p-3 sm:gap-3 sm:px-4">
+            <p aria-live="polite" className="text-sm font-semibold tabular-nums text-navy">
               {hydrated
                 ? results.length + (results.length === 1 ? " property" : " properties")
                 : "Loading properties…"}
@@ -158,19 +209,17 @@ export function ListingPage({
                     {activeFilters ? " (" + activeFilters + ")" : ""}
                   </button>
                 </SheetTrigger>
-                <SheetContent side="bottom" className="max-h-[90dvh] rounded-t-2xl bg-card p-0">
-                  <div className="border-b border-border px-5 py-4 pr-14">
-                    <SheetTitle>Filter properties</SheetTitle>
-                    <SheetDescription className="mt-1">
-                      Choose your budget, location and property type.
-                    </SheetDescription>
-                  </div>
+                <SheetContent side="bottom" className="max-h-[90dvh] rounded-t-3xl bg-card p-0">
+                  <SheetTitle className="sr-only">Filter properties</SheetTitle>
+                  <SheetDescription className="sr-only">
+                    Choose a location, budget and property type.
+                  </SheetDescription>
                   <FilterPanel
                     filters={filters}
                     onChange={setFilters}
                     onReset={resetFilters}
                     onApply={() => setPanelOpen(false)}
-                    className="h-[min(70dvh,40rem)] rounded-none"
+                    className="h-[min(80dvh,40rem)] rounded-none"
                   />
                 </SheetContent>
               </Sheet>
@@ -213,14 +262,34 @@ export function ListingPage({
               </div>
             </div>
           </div>
-          {activeFilters > 0 && (
-            <button
-              type="button"
-              onClick={resetFilters}
-              className="pv-tap mt-2 text-xs font-medium text-muted-foreground underline underline-offset-4"
+          {chips.length > 0 && (
+            <div
+              className="mt-3 flex flex-wrap items-center gap-2"
+              aria-label="Active filters"
+              role="group"
             >
-              Clear all filters
-            </button>
+              {chips.map(({ key, label, remove }) => (
+                <button
+                  key={key}
+                  type="button"
+                  aria-label={`Remove ${label}`}
+                  onClick={remove}
+                  className="pv-smooth-state pv-tap inline-flex max-w-full items-center gap-2 rounded-full border border-border bg-card px-3 text-xs font-semibold text-navy hover:border-navy/40"
+                >
+                  <span className="truncate">{label}</span>
+                  <X className="size-3.5 shrink-0" aria-hidden="true" />
+                </button>
+              ))}
+              {chips.length > 1 && (
+                <button
+                  type="button"
+                  onClick={resetFilters}
+                  className="pv-tap px-2 text-xs font-medium text-muted-foreground underline underline-offset-4"
+                >
+                  Clear all filters
+                </button>
+              )}
+            </div>
           )}
           <div className="mt-5" aria-busy={!hydrated || displayedFilters !== filters}>
             {!hydrated ? (
@@ -232,6 +301,8 @@ export function ListingPage({
                     key={property.id}
                     property={property}
                     variant={view === "list" ? "compact" : "standard"}
+                    saved={savedIds.includes(property.id)}
+                    onToggleSaved={toggleSaved}
                   />
                 ))}
               </div>

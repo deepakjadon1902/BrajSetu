@@ -11,6 +11,7 @@
 
 @theme inline {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "DM Serif Display", Georgia, serif;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -180,9 +181,39 @@
 
 @utility pv-property-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
   align-items: stretch;
-  gap: 1rem;
+  gap: clamp(1rem, 2vw, 1.5rem);
+}
+
+@utility pv-page-intro {
+  background: linear-gradient(120deg, #f4eee3, #fbfaf7 78%);
+}
+
+@utility pv-title {
+  font-family: var(--font-display);
+  font-size: clamp(2.35rem, 1.7rem + 2.7vw, 4.2rem);
+  font-weight: 400;
+  letter-spacing: -0.028em;
+  line-height: 1.04;
+  color: var(--navy);
+}
+
+@utility pv-heading {
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 1.4rem + 1.45vw, 2.85rem);
+  letter-spacing: -0.021em;
+  font-weight: 400;
+  line-height: 1.1;
+  color: var(--navy);
+}
+
+@utility pv-panel {
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 1.25rem;
+  background: var(--card);
+  box-shadow: var(--shadow-soft);
 }
 
 @utility pv-lift {
@@ -236,12 +267,10 @@
 
 @keyframes pv-page-transition {
   from {
-    opacity: 0;
-    transform: translateY(10px);
+    opacity: 0.65;
   }
   to {
     opacity: 1;
-    transform: none;
   }
 }
 

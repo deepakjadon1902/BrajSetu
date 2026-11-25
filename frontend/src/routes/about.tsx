@@ -70,7 +70,7 @@ function AboutPage() {
                 text: "Verification badges describe the checks recorded for a listing. They do not replace independent document checks.",
               },
             ].map(({ icon: Icon, title, text }) => (
-              <article key={title} className="rounded-xl border border-border bg-card p-6">
+              <article key={title} className="pv-panel p-5 sm:p-6">
                 <Icon className="h-6 w-6 text-gold-deep" />
                 <h3 className="mt-5 text-lg font-semibold text-navy">{title}</h3>
                 <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{text}</p>

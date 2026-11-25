@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import type { PropertyImage } from "@/types/property";
 
 const galleryButton =
-  "grid size-10 touch-manipulation place-items-center rounded-full bg-[#10192a]/80 text-white shadow-sm transition-colors hover:bg-[#10192a] focus-visible:outline-white sm:size-11";
+  "grid size-11 touch-manipulation place-items-center rounded-full bg-[#10192a]/80 text-white shadow-sm transition-colors hover:bg-[#10192a] focus-visible:outline-white";
 
 function PhotoNavigation({ onMove }: { onMove: (step: number) => void }) {
   return (

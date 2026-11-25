@@ -16,13 +16,14 @@ import { Footer } from "@/components/layout/Footer";
 import { Toaster } from "@/components/ui/sonner";
 import { StoreProvider, useStore } from "@/lib/mock-store";
 import { NotificationBar } from "@/components/NotificationBar";
+import { cn } from "@/lib/utils";
 
 const SITE_URL = "https://www.brajsetuproperties.com";
 const SITE_LOGO_URL = `${SITE_URL}/braj-setu-logo.jpeg`;
 
 function NotFoundComponent() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <div className="pv-page-intro flex min-h-[55dvh] items-center justify-center px-4 py-12">
       <div className="max-w-md text-center">
         <h1 className="text-7xl font-extrabold text-navy">404</h1>
         <h2 className="mt-4 text-xl font-semibold text-navy">Page not found</h2>
@@ -47,7 +48,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   const router = useRouter();
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <div className="pv-page-intro flex min-h-[55dvh] items-center justify-center px-4 py-12">
       <div className="max-w-md text-center">
         <h1 className="text-xl font-semibold tracking-tight text-navy">This page didn't load</h1>
         <p className="mt-2 text-sm text-muted-foreground">
@@ -111,7 +112,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@400;500;600;700;800;900&display=swap",
       },
       { rel: "icon", href: "/favicon.png", type: "image/png" },
       { rel: "shortcut icon", href: "/favicon.ico" },
@@ -186,7 +187,13 @@ function RootComponent() {
           /* Admin console renders standalone, without the public site chrome. */
           <Outlet />
         ) : (
-          <div className="flex min-h-screen flex-col">
+          <div
+            className={cn(
+              "flex min-h-dvh flex-col bg-background",
+              pathname.startsWith("/property/") &&
+                "pb-[calc(4.5rem+env(safe-area-inset-bottom))] lg:pb-0",
+            )}
+          >
             <a
               href="#main-content"
               className="fixed left-4 top-3 z-[100] -translate-y-24 rounded-lg bg-navy px-5 py-3 text-sm font-semibold text-white focus:translate-y-0"

@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowUpRight, Bath, BedDouble, Camera, MapPin, Maximize } from "lucide-react";
+import { ArrowUpRight, Bath, BedDouble, Camera, Heart, MapPin, Maximize } from "lucide-react";
 import { SmartImage } from "@/components/SmartImage";
 import { VerificationBadge } from "@/components/VerificationBadge";
 import { formatArea, formatPrice } from "@/lib/api";
@@ -11,6 +11,8 @@ interface PropertyCardProps {
   property: Property;
   variant?: "standard" | "compact" | "featured";
   active?: boolean;
+  saved?: boolean;
+  onToggleSaved?: (id: string) => void;
   onSelect?: (property: Property) => void;
 }
 
@@ -44,6 +46,8 @@ export function PropertyCard({
   property,
   variant = "standard",
   active = false,
+  saved = false,
+  onToggleSaved,
 }: PropertyCardProps) {
   const compact = variant === "compact";
   const photos = getPropertyPhotos(property.images);
@@ -58,11 +62,26 @@ export function PropertyCard({
   return (
     <article
       className={cn(
-        "group min-w-0 overflow-hidden rounded-2xl border border-border bg-card shadow-[var(--shadow-soft)] transition-[border-color,box-shadow,transform] duration-300 hover:border-navy/25 hover:shadow-[var(--shadow-lift)] motion-safe:hover:-translate-y-0.5",
+        "pv-panel group relative overflow-hidden transition-[border-color,box-shadow,transform] duration-300 hover:border-navy/25 hover:shadow-[var(--shadow-lift)] motion-safe:hover:-translate-y-0.5",
         active && "ring-2 ring-navy",
         variant === "featured" && "border-gold/50",
       )}
     >
+      {onToggleSaved && (
+        <button
+          type="button"
+          aria-label={`Save ${property.title}`}
+          aria-pressed={saved}
+          onClick={() => onToggleSaved(property.id)}
+          className={cn(
+            "pv-smooth-state absolute top-3 right-3 z-10 grid size-11 place-items-center rounded-full border border-white/80 bg-white/95 text-navy shadow-sm hover:bg-smoke",
+            compact && "sm:border-border sm:shadow-none",
+            saved && "border-gold bg-[#f6eddb] text-gold-deep",
+          )}
+        >
+          <Heart className={cn("size-[1.125rem]", saved && "fill-current")} aria-hidden="true" />
+        </button>
+      )}
       <Link
         to="/property/$propertyId"
         params={{ propertyId: property.id }}
@@ -84,22 +103,28 @@ export function PropertyCard({
             wrapperClassName={cn("bg-smoke", compact && "sm:aspect-auto sm:h-full sm:min-h-44")}
             className="absolute inset-0 h-full w-full object-cover object-center transition-[transform,opacity] duration-300 motion-safe:group-hover:scale-[1.035]"
           />
+          <span className="absolute top-3 left-3 rounded-full bg-white/95 px-2.5 py-1 text-xs font-semibold text-navy shadow-sm">
+            {property.category}
+          </span>
           {totalPhotos > 1 && (
             <span className="absolute right-3 bottom-3 inline-flex items-center gap-1.5 rounded-full bg-[#10192a]/80 px-2.5 py-1 text-xs font-medium text-white">
               <Camera className="size-3.5" aria-hidden="true" /> {totalPhotos} photos
             </span>
           )}
         </div>
-        <div className="flex min-w-0 flex-1 flex-col p-4">
+        <div
+          className={cn(
+            "flex min-w-0 flex-1 flex-col p-4 sm:p-5",
+            compact && onToggleSaved && "sm:pr-16",
+          )}
+        >
           <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 text-[11px] leading-4 text-muted-foreground">
-            <span>
-              {property.category} · {property.intent === "Rent" ? "For rent" : "For sale"}
-            </span>
+            <span>{property.intent === "Rent" ? "For rent" : "For sale"}</span>
             {(property.status === "New" || property.status === "Price Drop") && (
               <span className="font-medium text-gold-deep">{property.status}</span>
             )}
           </div>
-          <p className="mt-1 text-lg font-semibold leading-6 tracking-tight text-navy">
+          <p className="mt-1 text-[1.35rem] font-semibold leading-7 tracking-tight text-navy">
             {formatPrice(property.price, property.intent)}
           </p>
           <h3 className="mt-1 break-words text-[0.9375rem] font-semibold leading-6 text-navy [text-wrap:pretty]">

@@ -158,12 +158,8 @@ function ContactPage() {
         description="Ask about a property, request a visit or get help with a listing. Our team will follow up on your enquiry."
       />
 
-      <div className="pv-container grid gap-8 py-12 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
-        <form
-          onSubmit={handleSubmit}
-          noValidate
-          className="rounded-xl bg-card p-6 shadow-[var(--shadow-soft)] sm:p-8"
-        >
+      <div className="pv-container grid grid-cols-1 items-start gap-5 py-8 sm:gap-7 sm:py-12 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
+        <form onSubmit={handleSubmit} noValidate className="pv-panel p-4 sm:p-8">
           <h2 className="text-xl font-bold text-navy">Send an enquiry</h2>
 
           {submitted && (
@@ -309,8 +305,8 @@ function ContactPage() {
           </div>
         </form>
 
-        <div className="space-y-6">
-          <div className="rounded-xl bg-card p-6 shadow-[var(--shadow-soft)]">
+        <div className="min-w-0 space-y-6">
+          <div className="pv-panel p-5 sm:p-6">
             <h2 className="text-lg font-bold text-navy">Prefer to talk?</h2>
             <p className="mt-2 text-sm text-muted-foreground">
               Our advisory desk is staffed through the working week.
@@ -361,17 +357,19 @@ function ContactPage() {
             </ul>
           </div>
 
-          <div className="overflow-hidden rounded-xl bg-card shadow-[var(--shadow-soft)]">
-            <div className="flex items-center justify-between gap-4 border-b border-border p-4">
-              <div className="min-w-0">
+          <div className="pv-panel overflow-hidden">
+            <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border p-4">
+              <div className="min-w-0 flex-1 basis-40">
                 <h2 className="text-sm font-bold text-navy">Office location</h2>
-                <p className="mt-1 truncate text-xs text-muted-foreground">{settings.address}</p>
+                <p className="mt-1 break-words text-xs leading-relaxed text-muted-foreground">
+                  {settings.address}
+                </p>
               </div>
               <a
                 href={OFFICE_DIRECTIONS_URL}
                 target="_blank"
                 rel="noreferrer"
-                className="pv-smooth-state inline-flex h-10 shrink-0 items-center gap-2 rounded-full bg-navy px-4 text-xs font-semibold text-background hover:scale-[1.02]"
+                className="pv-smooth-state inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full bg-navy px-4 text-xs font-semibold text-background hover:bg-navy-soft"
               >
                 <Navigation className="h-4 w-4" />
                 Directions

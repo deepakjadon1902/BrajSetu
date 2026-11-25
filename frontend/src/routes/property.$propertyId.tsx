@@ -149,11 +149,11 @@ function PropertyDetailPage() {
     ["Beds", details.beds],
     ["Geysers", details.geysers],
   ].filter(([, value]) => typeof value === "number" && value > 0);
-  const sectionClass = "scroll-mt-24 rounded-xl border border-border bg-card p-5 sm:p-7";
+  const sectionClass = "pv-panel scroll-mt-6 p-4 sm:p-7";
 
   return (
     <div className="bg-smoke pb-24 lg:pb-12">
-      <div className="border-b border-border bg-card">
+      <div className="pv-page-intro border-b border-border">
         <div className="pv-container pt-4 pb-5 sm:pt-5 sm:pb-6">
           <nav
             aria-label="Breadcrumb"
@@ -173,9 +173,9 @@ function PropertyDetailPage() {
             <span aria-hidden="true">/</span>
             <span>{property.location.city}</span>
           </nav>
-          <div className="mt-3 grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+          <div className="mt-3 grid items-end gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
             <div className="min-w-0 max-w-3xl">
-              <h1 className="text-2xl font-semibold text-navy sm:text-3xl">{property.title}</h1>
+              <h1 className="pv-heading max-w-[25ch]">{property.title}</h1>
               <p className="mt-3 flex items-start gap-2 text-sm text-muted-foreground">
                 <MapPin className="mt-0.5 h-4 w-4 shrink-0" />
                 {property.location.locality}, {property.location.city}
@@ -185,7 +185,9 @@ function PropertyDetailPage() {
               </div>
             </div>
             <div className="lg:text-right">
-              <p className="text-2xl font-semibold text-navy sm:text-3xl">{price}</p>
+              <p className="text-[clamp(1.55rem,1.3rem+1vw,2.35rem)] font-semibold tracking-tight text-navy">
+                {price}
+              </p>
               <div className="mt-3 flex gap-2 lg:justify-end">
                 <button
                   type="button"
@@ -206,17 +208,38 @@ function PropertyDetailPage() {
               </div>
             </div>
           </div>
+          <nav
+            aria-label="Property sections"
+            className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-0.5 border-t border-border sm:mt-5 sm:gap-x-6"
+          >
+            {[
+              ["Photos", "#property-photos"],
+              ["Overview", "#overview"],
+              ["Amenities", "#property-amenities"],
+              ["Location", "#property-location"],
+            ].map(([label, target]) => (
+              <a
+                key={target}
+                href={target}
+                className="pv-tap inline-flex items-center text-sm font-medium text-navy hover:underline hover:underline-offset-4"
+              >
+                {label}
+              </a>
+            ))}
+          </nav>
         </div>
       </div>
-      <div className="pv-container mt-6 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="pv-container mt-5 grid items-start gap-6 lg:mt-7 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-8">
         <div className="min-w-0 space-y-5">
-          <PropertyGallery key={propertyId} title={property.title} photos={photos} />
+          <div id="property-photos" className="scroll-mt-6">
+            <PropertyGallery key={propertyId} title={property.title} photos={photos} />
+          </div>
           <section id="overview" className={sectionClass}>
             <h2 className="text-xl font-semibold text-navy">About this property</h2>
             <p className="mt-4 whitespace-pre-line text-sm leading-7 text-muted-foreground">
               {property.description || "Contact our team for more information about this listing."}
             </p>
-            <dl className="mt-6 grid gap-x-6 gap-y-5 border-t border-border pt-6 sm:grid-cols-2">
+            <dl className="mt-6 grid gap-x-4 gap-y-5 border-t border-border pt-5 min-[360px]:grid-cols-2 sm:gap-x-6">
               {facts.map(([label, value]) => (
                 <div key={label}>
                   <dt className="text-xs text-muted-foreground">{label}</dt>
@@ -235,7 +258,7 @@ function PropertyDetailPage() {
               </ul>
             </section>
           )}
-          <section className={sectionClass}>
+          <section id="property-amenities" className={sectionClass}>
             <h2 className="text-xl font-semibold text-navy">Amenities and furnishings</h2>
             {property.amenities.length || furnishings.length ? (
               <div className="mt-5 flex flex-wrap gap-2">
@@ -294,7 +317,7 @@ function PropertyDetailPage() {
               </div>
             )}
           </section>
-          <section className={sectionClass}>
+          <section id="property-location" className={sectionClass}>
             <h2 className="text-xl font-semibold text-navy">Explore the location</h2>
             <MapPlaceholder
               className="mt-5"
@@ -310,7 +333,7 @@ function PropertyDetailPage() {
           </section>
           <ReportPropertyCard property={property} />
         </div>
-        <aside className="hidden rounded-xl border border-border bg-card p-5 lg:sticky lg:top-24 lg:block">
+        <aside className="pv-panel hidden p-5 lg:sticky lg:top-24 lg:block">
           <h2 className="text-lg font-semibold text-navy">Interested in this property?</h2>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
             Ask a question or request a visit. Our team will follow up with you.
@@ -323,19 +346,29 @@ function PropertyDetailPage() {
       </div>
       {similar.length > 0 && (
         <section className="pv-container mt-10">
-          <h2 className="text-2xl font-semibold text-navy">More properties to explore</h2>
+          <h2 className="pv-heading">More properties to explore</h2>
           <div className="pv-property-grid mt-6">
             {similar.map((item) => (
-              <PropertyCard key={item.id} property={item} />
+              <PropertyCard
+                key={item.id}
+                property={item}
+                saved={savedIds.includes(item.id)}
+                onToggleSaved={toggleSaved}
+              />
             ))}
           </div>
         </section>
       )}
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-card p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-card/95 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-md lg:hidden">
         <div className="mx-auto flex max-w-lg items-center justify-between gap-3">
-          <p className="text-base font-semibold text-navy">{price}</p>
-          <button type="button" onClick={() => setContactOpen(true)} className="pv-button-primary">
-            Enquire / request visit
+          <p className="min-w-0 break-words text-base font-semibold text-navy">{price}</p>
+          <button
+            type="button"
+            onClick={() => setContactOpen(true)}
+            className="pv-button-primary shrink-0"
+            aria-label="Enquire or request a visit"
+          >
+            Enquire
           </button>
         </div>
       </div>

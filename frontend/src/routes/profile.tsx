@@ -91,7 +91,7 @@ function ProfilePage() {
     return (
       <div className="bg-smoke py-12 sm:py-16">
         <div className="pv-container">
-          <div className="mx-auto max-w-md rounded-xl border border-border bg-card p-6 sm:p-8">
+          <div className="pv-panel mx-auto max-w-md p-6 sm:p-8">
             <p className="pv-eyebrow">Your account</p>
             <h1 className="mt-4 text-2xl font-semibold text-navy">Sign in to view your profile.</h1>
             <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
@@ -118,10 +118,7 @@ function ProfilePage() {
         description="Keep your contact details and property preferences up to date."
       />
       <div className="pv-container mt-7 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
-        <form
-          onSubmit={submit}
-          className="min-w-0 rounded-xl border border-border bg-card p-5 sm:p-7"
-        >
+        <form onSubmit={submit} className="pv-panel p-5 sm:p-7">
           <h2 className="text-lg font-semibold text-navy">Contact details</h2>
           <div className="mt-5 grid gap-5 sm:grid-cols-2">
             <Field label="Full name">
@@ -235,7 +232,7 @@ function ProfilePage() {
           </button>
         </form>
         <aside className="space-y-5">
-          <section className="rounded-xl border border-border bg-card p-5">
+          <section className="pv-panel p-5">
             <h2 className="text-base font-semibold text-navy">Your next step</h2>
             <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
               Explore current listings or share the details of a property you would like to sell or
@@ -254,7 +251,7 @@ function ProfilePage() {
               </Link>
             </div>
           </section>
-          <section className="rounded-xl border border-border bg-card p-5">
+          <section className="pv-panel p-5">
             <h2 className="text-base font-semibold text-navy">Need some help?</h2>
             <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
               Our team can help with enquiries, property visits and listing questions.
